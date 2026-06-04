@@ -1,0 +1,12 @@
+[project]
+name = "brand-marketing-knowledge-skill"
+version = "0.1.0"
+description = "Compile brand marketing materials into AI-readable structured marketing semantic bases."
+requires-python = ">=3.10"
+dependencies = [
+    "pymupdf>=1.24",
+    "pymupdf4llm>=0.0.17",
+]
+
+[project.scripts]
+brand-skill = "brand_skill.cli:main"
