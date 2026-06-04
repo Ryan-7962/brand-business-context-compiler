@@ -11,17 +11,15 @@ from pathlib import Path
 REQUIRED_OUTPUTS = [
     "02_document_profile.md",
     "03_marketing_semantic_transcript.md",
-    "04_key_facts_and_claims.md",
-    "05_strategy_and_execution_map.md",
     "06_risk_and_review_items.md",
 ]
 
 
 SECTION_CONFIG = [
-    ("overview", "整个文件的概述", ["02_document_profile.md"]),
-    ("content-structure", "PDF 转述结构与核心内容", ["03_marketing_semantic_transcript.md"]),
-    ("key-points", "核心观点和关键信息", ["04_key_facts_and_claims.md", "05_strategy_and_execution_map.md"]),
-    ("uncertain-items", "没识别清楚、需要你确认的点", ["06_risk_and_review_items.md"]),
+    ("overview", "这个文件大概讲什么"),
+    ("outline", "PDF 大纲"),
+    ("main-content", "核心内容转述"),
+    ("unclear", "没识别清楚、需要你修正的地方"),
 ]
 
 
@@ -58,6 +56,8 @@ TEXT_REPLACEMENTS = {
     "Missing Context": "缺失信息",
     "Overall Assessment": "总体判断",
     "Big Idea": "核心创意主张",
+    "轻量转写": "当前自动识别",
+    "后续接 OCR/MinerU": "需要对照原图人工确认",
 }
 
 
@@ -92,6 +92,8 @@ def _extract_review_title(sections: dict[str, str], fallback: str) -> str:
         for prefix in ["Document Profile｜", "Document Profile|", "文件概述｜", "文件概述|"]:
             if title.startswith(prefix):
                 return title[len(prefix) :].strip()
+        if title in TEXT_REPLACEMENTS:
+            return fallback
         return title
     return fallback
 
@@ -100,6 +102,121 @@ def _display_text(text: str) -> str:
     for source, target in TEXT_REPLACEMENTS.items():
         text = text.replace(source, target)
     return text
+
+
+def _extract_heading_section(markdown: str, heading_text: str) -> str:
+    pattern = re.compile(rf"^##\s+\d*\.\s*{re.escape(heading_text)}\s*$", re.MULTILINE)
+    match = pattern.search(markdown)
+    if not match:
+        return ""
+    next_heading = re.search(r"^##\s+", markdown[match.end() :], re.MULTILINE)
+    end = match.end() + next_heading.start() if next_heading else len(markdown)
+    return markdown[match.end() : end].strip()
+
+
+def _remove_source_noise(text: str) -> str:
+    text = re.sub(r"(?m)^-\s*(Source Anchor|来源位置)[：:].*$", "", text)
+    text = re.sub(r"(?m)^(Source Anchor|来源位置)[：:].*$", "", text)
+    text = re.sub(r"S\d{3}#page=[\d,-]+", "", text)
+    text = re.sub(r"来源[：:][^。\n]*(。)?", "", text)
+    text = re.sub(r"信息状态[：:][^。\n]*(。)?", "", text)
+    text = re.sub(r"AI 结构化转述，待确认", "待确认", text)
+    text = re.sub(r"AI 初步拟定，待品牌确认", "待确认", text)
+    text = re.sub(r"已从来源资料提取", "", text)
+    text = re.sub(r"`([^`]+)`", r"\1", text)
+    text = re.sub(r"\s+。", "。", text)
+    text = re.sub(r"。\s*。", "。", text)
+    return text.strip()
+
+
+def _extract_profile_summary(profile: str) -> str:
+    file_position = _extract_heading_section(profile, "文件定位")
+    if file_position:
+        return _remove_source_noise(file_position)
+
+    rows = _parse_markdown_table(profile)
+    fields = []
+    for row in rows:
+        field = row.get("字段", "")
+        value = row.get("内容", "")
+        if field and value and field in {"文件类型", "文件目的", "业务阶段", "核心材料类型"}:
+            fields.append(f"- {field}：{value}")
+    return "\n".join(fields) if fields else "这份文件的整体概述仍需补充。"
+
+
+def _extract_outline(transcript: str) -> str:
+    outline = _extract_heading_section(transcript, "总体结构")
+    return _remove_source_noise(outline) if outline else "暂未稳定抽取出文件大纲，需要先补全文转述。"
+
+
+def _extract_main_content(transcript: str) -> str:
+    main_content = _extract_heading_section(transcript, "可读转述")
+    if not main_content:
+        main_content = transcript
+    return _remove_source_noise(main_content)
+
+
+def _extract_unclear_items(transcript: str, review_items: str) -> str:
+    parts = []
+    low_confidence = _extract_heading_section(transcript, "低置信度说明")
+    if low_confidence:
+        filtered_lines = [
+            line
+            for line in _remove_source_noise(low_confidence).splitlines()
+            if _keep_user_confirmation_issue(line)
+        ]
+        if filtered_lines:
+            parts.append("\n".join(filtered_lines))
+
+    issues = _review_table_to_issue_list(review_items)
+    if issues:
+        parts.append(issues)
+    elif review_items.strip():
+        parts.append(_remove_source_noise(review_items))
+
+    return "\n\n".join(parts) if parts else "目前没有额外标记需要人工修正的识别问题。"
+
+
+def _parse_markdown_table(markdown: str) -> list[dict[str, str]]:
+    lines = [line.strip() for line in markdown.splitlines() if line.strip().startswith("|")]
+    if len(lines) < 2:
+        return []
+    table_lines = []
+    for line in lines:
+        table_lines.append(line)
+        if len(table_lines) > 1 and not line.startswith("|---"):
+            continue
+    rows = [[cell.strip() for cell in line.strip("|").split("|")] for line in lines]
+    rows = [row for row in rows if not all(set(cell) <= {"-", ":"} for cell in row)]
+    if len(rows) < 2:
+        return []
+    header = rows[0]
+    return [dict(zip(header, row)) for row in rows[1:] if len(row) == len(header)]
+
+
+def _review_table_to_issue_list(review_items: str) -> str:
+    rows = _parse_markdown_table(review_items)
+    items = []
+    for row in rows:
+        issue = row.get("审核项", "").strip()
+        suggestion = row.get("建议处理", "").strip()
+        if not issue or not _keep_user_confirmation_issue(issue):
+            continue
+        text = f"- {issue}"
+        if suggestion:
+            text += f"。建议：{suggestion}"
+        items.append(_remove_source_noise(text))
+    return "\n".join(items)
+
+
+def _keep_user_confirmation_issue(text: str) -> bool:
+    if not text.strip():
+        return False
+    excluded_terms = ["外发", "法务", "敏感", "攻击", "竞品", "不能外发", "风险"]
+    if any(term in text for term in excluded_terms):
+        return False
+    included_terms = ["未稳定", "错位", "小字", "图表", "图片", "OCR", "识别", "抽取", "会议", "日期", "参会", "决策", "口径", "归因"]
+    return any(term in text for term in included_terms)
 
 
 def _strip_title(markdown: str) -> str:
@@ -196,15 +313,19 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
     escaped_title = html.escape(display_title)
     js_title = json.dumps(display_title, ensure_ascii=False)
     initial_decisions = html.escape(json.dumps({"文件": display_title, "确认意见": {}}, ensure_ascii=False))
-    review_stats = {
-        "待补充": _count_term(sections, "待补充"),
-        "待确认": _count_term(sections, "待确认"),
-        "来源锚点": len(re.findall(r"S\d{3}#page=\d+", "\n".join(sections.values()))),
+    profile = sections["02_document_profile.md"]
+    transcript = sections["03_marketing_semantic_transcript.md"]
+    review_items = sections["06_risk_and_review_items.md"]
+    review_content = {
+        "overview": _extract_profile_summary(profile),
+        "outline": _extract_outline(transcript),
+        "main-content": _extract_main_content(transcript),
+        "unclear": _extract_unclear_items(transcript, review_items),
     }
-    nav = "\n".join(f'<a href="#{section_id}">{label}</a>' for section_id, label, _filenames in SECTION_CONFIG)
+    unclear_count = max(0, review_content["unclear"].count("\n- ") + (1 if review_content["unclear"].startswith("- ") else 0))
+    nav = "\n".join(f'<a href="#{section_id}">{label}</a>' for section_id, label in SECTION_CONFIG)
     section_html = "\n".join(
-        _render_section(section_id, label, "\n\n".join(sections[filename] for filename in filenames))
-        for section_id, label, filenames in SECTION_CONFIG
+        _render_section(section_id, label, review_content[section_id]) for section_id, label in SECTION_CONFIG
     )
     return f"""<!doctype html>
 <html lang="zh-CN">
@@ -251,9 +372,9 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
     h4 {{ margin: 16px 0 8px; font-size: 14px; }}
     .layout {{
       display: grid;
-      grid-template-columns: 240px minmax(0, 1fr);
+      grid-template-columns: 220px minmax(0, 1fr);
       gap: 20px;
-      max-width: 1440px;
+      max-width: 1280px;
       margin: 0 auto;
       padding: 20px;
     }}
@@ -288,7 +409,7 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
       gap: 8px;
       margin-top: 10px;
     }}
-    .metric, .status-badge, .source-anchor, .risk {{
+    .metric {{
       display: inline-flex;
       align-items: center;
       min-height: 24px;
@@ -298,15 +419,9 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
       white-space: nowrap;
     }}
     .metric {{ background: #edf2f7; color: var(--ink); }}
-    .status-badge {{ background: #eef6f4; color: var(--accent); }}
-    .source-anchor {{ background: #eef2ff; color: #3730a3; }}
-    .risk-高 {{ background: #fef3f2; color: var(--risk); }}
-    .risk-中 {{ background: #fffaeb; color: var(--warn); }}
-    .risk-低 {{ background: #ecfdf3; color: var(--ok); }}
-    .table-wrap {{ overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }}
-    table {{ width: 100%; border-collapse: collapse; min-width: 760px; }}
-    th, td {{ padding: 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 13px; }}
-    th {{ background: #f8fafc; font-weight: 650; }}
+    section p, section li {{ font-size: 15px; }}
+    section li {{ margin: 6px 0; }}
+    section ul {{ padding-left: 22px; }}
     code {{ background: #f1f5f9; padding: 1px 4px; border-radius: 4px; }}
     .review-controls {{
       display: flex;
@@ -349,9 +464,8 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
     <div>
       <h1>{escaped_title}｜内容确认页</h1>
       <div class="summary">
-        <span class="metric">待补充：{review_stats["待补充"]}</span>
-        <span class="metric">待确认：{review_stats["待确认"]}</span>
-        <span class="metric">来源锚点：{review_stats["来源锚点"]}</span>
+        <span class="metric">只确认大纲和转述是否准确</span>
+        <span class="metric">待修正项：{unclear_count}</span>
       </div>
     </div>
     <button class="download" onclick="downloadDecisions()">导出确认意见</button>
@@ -363,8 +477,8 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
         <h2>你只需要确认什么</h2>
         <ul>
           <li>这份文件的整体结构、核心观点和核心内容，是否和原 PDF / PPT 表达一致。</li>
-          <li>下面列出的“没识别清楚、需要你确认的点”，哪些需要修正、补充或删除。</li>
-          <li>不需要在这里审核后台资产分类；那是后续给 AI 调用的内部结构。</li>
+          <li>如果大纲或转述错了，在底部写明页码、错误点和正确说法。</li>
+          <li>只有“没识别清楚”的内容需要你修正；其他后台字段不需要在这里确认。</li>
         </ul>
         <textarea id="decision-json" readonly>{initial_decisions}</textarea>
       </section>

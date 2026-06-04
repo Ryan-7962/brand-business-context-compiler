@@ -43,9 +43,9 @@
     h4 { margin: 16px 0 8px; font-size: 14px; }
     .layout {
       display: grid;
-      grid-template-columns: 240px minmax(0, 1fr);
+      grid-template-columns: 220px minmax(0, 1fr);
       gap: 20px;
-      max-width: 1440px;
+      max-width: 1280px;
       margin: 0 auto;
       padding: 20px;
     }
@@ -80,7 +80,7 @@
       gap: 8px;
       margin-top: 10px;
     }
-    .metric, .status-badge, .source-anchor, .risk {
+    .metric {
       display: inline-flex;
       align-items: center;
       min-height: 24px;
@@ -90,15 +90,9 @@
       white-space: nowrap;
     }
     .metric { background: #edf2f7; color: var(--ink); }
-    .status-badge { background: #eef6f4; color: var(--accent); }
-    .source-anchor { background: #eef2ff; color: #3730a3; }
-    .risk-高 { background: #fef3f2; color: var(--risk); }
-    .risk-中 { background: #fffaeb; color: var(--warn); }
-    .risk-低 { background: #ecfdf3; color: var(--ok); }
-    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
-    table { width: 100%; border-collapse: collapse; min-width: 760px; }
-    th, td { padding: 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 13px; }
-    th { background: #f8fafc; font-weight: 650; }
+    section p, section li { font-size: 15px; }
+    section li { margin: 6px 0; }
+    section ul { padding-left: 22px; }
     code { background: #f1f5f9; padding: 1px 4px; border-radius: 4px; }
     .review-controls {
       display: flex;
@@ -141,46 +135,43 @@
     <div>
       <h1>夏日城市清爽节｜内容确认页</h1>
       <div class="summary">
-        <span class="metric">待补充：8</span>
-        <span class="metric">待确认：11</span>
-        <span class="metric">来源锚点：38</span>
+        <span class="metric">只确认大纲和转述是否准确</span>
+        <span class="metric">待修正项：1</span>
       </div>
     </div>
     <button class="download" onclick="downloadDecisions()">导出确认意见</button>
   </header>
   <div class="layout">
-    <nav><a href="#overview">整个文件的概述</a>
-<a href="#content-structure">PDF 转述结构与核心内容</a>
-<a href="#key-points">核心观点和关键信息</a>
-<a href="#uncertain-items">没识别清楚、需要你确认的点</a></nav>
+    <nav><a href="#overview">这个文件大概讲什么</a>
+<a href="#outline">PDF 大纲</a>
+<a href="#main-content">核心内容转述</a>
+<a href="#unclear">没识别清楚、需要你修正的地方</a></nav>
     <main>
       <section id="how-to-review">
         <h2>你只需要确认什么</h2>
         <ul>
           <li>这份文件的整体结构、核心观点和核心内容，是否和原 PDF / PPT 表达一致。</li>
-          <li>下面列出的“没识别清楚、需要你确认的点”，哪些需要修正、补充或删除。</li>
-          <li>不需要在这里审核后台资产分类；那是后续给 AI 调用的内部结构。</li>
+          <li>如果大纲或转述错了，在底部写明页码、错误点和正确说法。</li>
+          <li>只有“没识别清楚”的内容需要你修正；其他后台字段不需要在这里确认。</li>
         </ul>
         <textarea id="decision-json" readonly>{&quot;文件&quot;: &quot;夏日城市清爽节&quot;, &quot;确认意见&quot;: {}}</textarea>
       </section>
-      <section id="overview"><h2>整个文件的概述</h2><h3>0. 基础信息</h3>
-<div class="table-wrap"><table><thead><tr><th>字段</th><th>内容</th><th>信息状态</th><th>来源/依据</th><th>待确认</th></tr></thead><tbody><tr><td>文件类型</td><td>活动方案</td><td><span class="status-badge">已从来源资料提取</span></td><td><span class="source-anchor">S001#page=1</span></td><td>否</td></tr><tr><td>文件目的</td><td>建立夏季城市清爽生活方式联想，并沉淀可复用内容资产</td><td><span class="status-badge">AI 结构化转述，待确认</span></td><td><span class="source-anchor">S001#page=1</span>, <span class="source-anchor">S001#page=2</span></td><td>是</td></tr><tr><td>目标读者</td><td>品牌经理、社媒运营、电商运营、门店销售团队</td><td><span class="status-badge">AI 初步拟定，待品牌确认</span></td><td><span class="source-anchor">S001#page=2</span>, <span class="source-anchor">S001#page=5</span></td><td>是</td></tr><tr><td>时间范围</td><td>夏季活动周期，具体日期未提供</td><td><span class="status-badge">待补充</span></td><td><span class="source-anchor">S001#page=6</span></td><td>是</td></tr><tr><td>业务阶段</td><td>活动规划 / 内容资产建设 / 渠道承接准备</td><td><span class="status-badge">AI 结构化转述，待确认</span></td><td><span class="source-anchor">S001#page=2</span>, <span class="source-anchor">S001#page=5</span></td><td>是</td></tr><tr><td>资料可信度</td><td><span class="risk risk-中">中</span></td><td><span class="status-badge">AI 结构化转述，待确认</span></td><td>源稿完整但缺少预算、排期和数据依据</td><td>是</td></tr></tbody></table></div>
-<h3>1. 主要内容模块</h3>
-<ul><li>项目背景：从季节性购买扩展到城市日常生活方式场景。</li><li>活动目标：建立品牌关键词、内容资产和后续 brief 调用底稿。</li><li>人群假设：城市通勤人群，但缺少定量验证。</li><li>策略主线：把夏天过成轻一点的城市日常。</li><li>触点规划：线下体验、社媒内容和电商承接。</li><li>审核要求：功效表达、竞品表达和内部信息需要复核。</li></ul>
-<h3>2. 可复用价值</h3>
-<p>本资料适合作为品牌活动上下文、内容资产上下文、渠道触点上下文和后续派生 brief 的基础索引。</p>
-<h3>3. 解析限制</h3>
-<p>本 demo 不包含真实版式、图片、图表或复杂 OCR。若用于真实 PDF / PPT，需要先完成 source conversion 并保留页面锚点。</p>
-<h3>4. 待人工确认问题</h3>
-<ul><li>活动真实时间、区域、渠道名单和预算。</li><li>目标人群是否有调研或历史销售数据支持。</li><li>“清爽”“轻便”等体验表达的品牌可用边界。</li></ul>
+      <section id="overview"><h2>这个文件大概讲什么</h2><ul><li>文件类型：活动方案</li><li>文件目的：建立夏季城市清爽生活方式联想，并沉淀可复用内容资产</li><li>业务阶段：活动规划 / 内容资产建设 / 渠道承接准备</li></ul>
     <div class="review-controls" data-section="overview">
       <button onclick="setDecision('overview', '基本正确')">基本正确</button>
       <button onclick="setDecision('overview', '需要修改')">需要修改</button>
       <button onclick="setDecision('overview', '需要补充')">需要补充</button>
     </div>
     </section>
-<section id="content-structure"><h2>PDF 转述结构与核心内容</h2><h3>页 / 幻灯片 1</h3>
-<ul><li>来源位置：<span class="source-anchor">S001#page=1</span></li><li>页面类型：背景</li><li>信息密度：中</li><li>低置信度说明：未提供历史市场数据。</li></ul>
+<section id="outline"><h2>PDF 大纲</h2><p>暂未稳定抽取出文件大纲，需要先补全文转述。</p>
+    <div class="review-controls" data-section="outline">
+      <button onclick="setDecision('outline', '基本正确')">基本正确</button>
+      <button onclick="setDecision('outline', '需要修改')">需要修改</button>
+      <button onclick="setDecision('outline', '需要补充')">需要补充</button>
+    </div>
+    </section>
+<section id="main-content"><h2>核心内容转述</h2><h3>页 / 幻灯片 1</h3>
+<ul><li>页面类型：背景</li><li>信息密度：中</li><li>低置信度说明：未提供历史市场数据。</li></ul>
 <h4>原页核心内容转述</h4>
 <p>品牌希望把夏季沟通从单次购买引导到日常生活方式管理，核心是建立城市、日常、清爽的品牌联想。</p>
 <h4>图表 / 视觉信息转述</h4>
@@ -192,7 +183,7 @@
 <h4>待人工复核</h4>
 <ul><li>是否已有品牌年度策略支持“城市日常清爽管理”。</li></ul>
 <h3>页 / 幻灯片 2</h3>
-<ul><li>来源位置：<span class="source-anchor">S001#page=2</span></li><li>页面类型：策略</li><li>信息密度：高</li><li>低置信度说明：目标为方向性表述，未提供 KPI。</li></ul>
+<ul><li>页面类型：策略</li><li>信息密度：高</li><li>低置信度说明：目标为方向性表述，未提供 KPI。</li></ul>
 <h4>原页核心内容转述</h4>
 <p>活动希望建立“城市、清爽、轻便、日常”四个关键词，并沉淀街区体验图文、短视频脚本和门店导购话术三类资产。</p>
 <h4>可抽取事实</h4>
@@ -202,7 +193,7 @@
 <h4>待人工复核</h4>
 <ul><li>是否需要增加电商搜索问答资产。</li></ul>
 <h3>页 / 幻灯片 3</h3>
-<ul><li>来源位置：<span class="source-anchor">S001#page=3</span></li><li>页面类型：人群</li><li>信息密度：中</li><li>低置信度说明：缺少定量调研。</li></ul>
+<ul><li>页面类型：人群</li><li>信息密度：中</li><li>低置信度说明：缺少定量调研。</li></ul>
 <h4>原页核心内容转述</h4>
 <p>资料将主要人群设定为 24-35 岁城市通勤人群，关注夏季出行、办公、运动后的体感舒适。</p>
 <h4>可抽取事实</h4>
@@ -210,7 +201,7 @@
 <h4>待人工复核</h4>
 <ul><li>人群年龄段和场景是否有真实调研依据。</li></ul>
 <h3>页 / 幻灯片 4</h3>
-<ul><li>来源位置：<span class="source-anchor">S001#page=4</span></li><li>页面类型：策略</li><li>信息密度：高</li><li>低置信度说明：核心创意主张 需品牌确认。</li></ul>
+<ul><li>页面类型：策略</li><li>信息密度：高</li><li>低置信度说明：核心创意主张 需品牌确认。</li></ul>
 <h4>原页核心内容转述</h4>
 <p>核心创意主张 是“把夏天过成轻一点的城市日常”。资料要求避免医学化、绝对化和夸大即时效果，推荐使用体验型表达。</p>
 <h4>可抽取事实</h4>
@@ -218,7 +209,7 @@
 <h4>可抽取策略 / 执行动作</h4>
 <ul><li>后续种草 brief 和销售话术应优先使用体验型语言。</li><li>风险红线应记录功效表达限制。</li></ul>
 <h3>页 / 幻灯片 5</h3>
-<ul><li>来源位置：<span class="source-anchor">S001#page=5</span></li><li>页面类型：执行</li><li>信息密度：高</li><li>低置信度说明：未提供具体资源分配。</li></ul>
+<ul><li>页面类型：执行</li><li>信息密度：高</li><li>低置信度说明：未提供具体资源分配。</li></ul>
 <h4>原页核心内容转述</h4>
 <p>活动触点包括线下体验台、门店试用区、街区打卡装置、短视频挑战、达人图文、品牌账号内容、电商活动页和搜索问答内容。</p>
 <h4>可抽取事实</h4>
@@ -226,68 +217,24 @@
 <h4>可抽取策略 / 执行动作</h4>
 <ul><li>派生拍摄 brief 应调用街区体验和打卡装置信息。</li><li>GEO brief 应调用搜索问答内容资产。</li></ul>
 <h3>页 / 幻灯片 6</h3>
-<ul><li>来源位置：<span class="source-anchor">S001#page=6</span></li><li>页面类型：审核</li><li>信息密度：高</li><li>低置信度说明：缺少实际审核责任人。</li></ul>
+<ul><li>页面类型：审核</li><li>信息密度：高</li><li>低置信度说明：缺少实际审核责任人。</li></ul>
 <h4>原页核心内容转述</h4>
 <p>资料要求所有功效性表达必须保留证据来源或降级为体验描述。预算、人员分工、渠道合作名单暂未提供。竞品相关表达仅允许使用品类层描述。</p>
 <h4>可抽取事实</h4>
 <ul><li>功效表达必须有证据或降级。</li><li>预算、人员分工、渠道合作名单缺失。</li><li>不允许直接点名攻击竞品。</li></ul>
 <h4>待人工复核</h4>
 <ul><li>法务/品牌/渠道审核责任人。</li></ul>
-    <div class="review-controls" data-section="content-structure">
-      <button onclick="setDecision('content-structure', '基本正确')">基本正确</button>
-      <button onclick="setDecision('content-structure', '需要修改')">需要修改</button>
-      <button onclick="setDecision('content-structure', '需要补充')">需要补充</button>
+    <div class="review-controls" data-section="main-content">
+      <button onclick="setDecision('main-content', '基本正确')">基本正确</button>
+      <button onclick="setDecision('main-content', '需要修改')">需要修改</button>
+      <button onclick="setDecision('main-content', '需要补充')">需要补充</button>
     </div>
     </section>
-<section id="key-points"><h2>核心观点和关键信息</h2><h3>1. 核心事实</h3>
-<div class="table-wrap"><table><thead><tr><th>事实编号</th><th>事实</th><th>来源锚点</th><th>信息状态</th><th>可复用场景</th><th>待确认</th></tr></thead><tbody><tr><td>F001</td><td>活动目标是建立城市、清爽、轻便、日常四个品牌关键词</td><td><span class="source-anchor">S001#page=2</span></td><td><span class="status-badge">已从来源资料提取</span></td><td>GEO / 种草 / 品牌话术</td><td>否</td></tr><tr><td>F002</td><td>活动计划沉淀街区体验图文、短视频脚本、门店导购话术三类资产</td><td><span class="source-anchor">S001#page=2</span></td><td><span class="status-badge">已从来源资料提取</span></td><td>拍摄 / 种草 / 销售</td><td>否</td></tr><tr><td>F003</td><td>目标人群设定为 24-35 岁城市通勤人群</td><td><span class="source-anchor">S001#page=3</span></td><td><span class="status-badge">已从来源资料提取</span></td><td>人群 brief / 内容选题</td><td>是</td></tr><tr><td>F004</td><td>触点覆盖线下、社媒、电商</td><td><span class="source-anchor">S001#page=5</span></td><td><span class="status-badge">已从来源资料提取</span></td><td>项目排期 / 渠道协同</td><td>否</td></tr><tr><td>F005</td><td>预算、人员分工、渠道合作名单暂未提供</td><td><span class="source-anchor">S001#page=6</span></td><td><span class="status-badge">已从来源资料提取</span></td><td>项目管理 / 风险复核</td><td>是</td></tr></tbody></table></div>
-<h3>2. 可用表达 / 待确认表达</h3>
-<div class="table-wrap"><table><thead><tr><th>表达 ID</th><th>表达</th><th>类型</th><th>来源锚点</th><th>风险等级</th><th>建议处理</th><th>信息状态</th></tr></thead><tbody><tr><td>C001</td><td>城市日常清爽管理</td><td>品牌表达</td><td><span class="source-anchor">S001#page=1</span></td><td><span class="risk risk-中">中</span></td><td>可作为品牌方向，但需确认是否属于年度策略</td><td><span class="status-badge">AI 结构化转述，待确认</span></td></tr><tr><td>C002</td><td>把夏天过成轻一点的城市日常</td><td>核心创意主张</td><td><span class="source-anchor">S001#page=4</span></td><td><span class="risk risk-中">中</span></td><td>可用于内部策略，外发前需品牌确认</td><td><span class="status-badge">已从来源资料提取</span></td></tr><tr><td>C003</td><td>清爽感</td><td>体验表达</td><td><span class="source-anchor">S001#page=4</span></td><td><span class="risk risk-低">低</span></td><td>可用，但不应写成可量化功效</td><td><span class="status-badge">已从来源资料提取</span></td></tr><tr><td>C004</td><td>轻便补给</td><td>体验表达</td><td><span class="source-anchor">S001#page=4</span></td><td><span class="risk risk-低">低</span></td><td>可用，需结合具体场景</td><td><span class="status-badge">已从来源资料提取</span></td></tr><tr><td>C005</td><td>适合通勤后整理状态</td><td>场景表达</td><td><span class="source-anchor">S001#page=4</span></td><td><span class="risk risk-中">中</span></td><td>可用于种草和销售话术，避免承诺即时效果</td><td><span class="status-badge">已从来源资料提取</span></td></tr></tbody></table></div>
-<h3>3. 缺失依据</h3>
-<div class="table-wrap"><table><thead><tr><th>缺口</th><th>影响</th><th>建议补充</th></tr></thead><tbody><tr><td>人群调研或历史销售数据</td><td>影响人群定位可信度</td><td>补充调研摘要或历史销售/互动数据</td></tr><tr><td>功效性表达证据</td><td>影响外发内容安全</td><td>补充可公开引用的测试、备案或品牌确认口径</td></tr><tr><td>预算和渠道资源</td><td>影响项目执行判断</td><td>补充预算区间、资源配置和负责人</td></tr></tbody></table></div>
-<h2>策略与执行梳理｜夏日城市清爽节</h2>
-<h3>1. 业务背景</h3>
-<p>品牌希望在夏季从季节性购买沟通转向城市日常生活方式沟通，建立可被后续内容、搜索和销售触点复用的品牌上下文。信息状态：<span class="status-badge">AI 结构化转述，待确认</span>。来源：<span class="source-anchor">S001#page=1</span>。</p>
-<h3>2. 核心目标</h3>
-<div class="table-wrap"><table><thead><tr><th>目标</th><th>来源锚点</th><th>信息状态</th><th>待确认</th></tr></thead><tbody><tr><td>建立城市、清爽、轻便、日常四个关键词</td><td><span class="source-anchor">S001#page=2</span></td><td><span class="status-badge">已从来源资料提取</span></td><td>否</td></tr><tr><td>沉淀街区体验图文、短视频脚本、门店导购话术</td><td><span class="source-anchor">S001#page=2</span></td><td><span class="status-badge">已从来源资料提取</span></td><td>否</td></tr><tr><td>支持后续 GEO / PDP / 种草 / 销售等 brief 调用</td><td><span class="source-anchor">S001#page=2</span></td><td><span class="status-badge">AI 结构化转述，待确认</span></td><td>是</td></tr></tbody></table></div>
-<h3>3. 核心洞察</h3>
-<p>夏季城市通勤人群在出行、办公、运动后需要一种轻负担的状态整理感。该洞察来自资料表述，但缺少定量消费者研究支撑，需标记为 <span class="status-badge">AI 结构化转述，待确认</span>。</p>
-<h3>4. 目标人群</h3>
-<div class="table-wrap"><table><thead><tr><th>人群</th><th>场景</th><th>信息状态</th><th>来源</th></tr></thead><tbody><tr><td>24-35 岁城市通勤人群</td><td>夏季出行、办公、运动后</td><td><span class="status-badge">已从来源资料提取</span></td><td><span class="source-anchor">S001#page=3</span></td></tr></tbody></table></div>
-<h3>5. 策略主线 / 核心创意主张</h3>
-<p>把夏天过成轻一点的城市日常。信息状态：<span class="status-badge">已从来源资料提取</span>。来源：<span class="source-anchor">S001#page=4</span>。</p>
-<h3>6. 渠道和触点</h3>
-<div class="table-wrap"><table><thead><tr><th>渠道</th><th>触点</th><th>来源锚点</th><th>信息状态</th></tr></thead><tbody><tr><td>线下</td><td>快闪体验台、门店试用区、街区打卡装置</td><td><span class="source-anchor">S001#page=5</span></td><td><span class="status-badge">已从来源资料提取</span></td></tr><tr><td>社媒</td><td>短视频挑战、达人图文、品牌账号连续内容</td><td><span class="source-anchor">S001#page=5</span></td><td><span class="status-badge">已从来源资料提取</span></td></tr><tr><td>电商</td><td>活动承接页、套装页、搜索问答内容</td><td><span class="source-anchor">S001#page=5</span></td><td><span class="status-badge">已从来源资料提取</span></td></tr></tbody></table></div>
-<h3>7. 内容资产</h3>
-<ul><li>街区体验图文：用于种草、活动回顾和品牌视觉资产沉淀。</li><li>短视频脚本：用于社媒挑战、达人共创和品牌账号内容。</li><li>门店导购话术：用于销售和线下体验沟通。</li><li>搜索问答内容：用于 GEO / 电商搜索承接。</li></ul>
-<h3>8. 节奏和时间线</h3>
-<p><span class="status-badge">待补充</span>。资料没有提供活动日期、预热期、爆发期、复盘期。</p>
-<h3>9. 预算 / 资源 / 货盘 / 组织分工</h3>
-<p><span class="status-badge">待补充</span>。资料明确预算、人员分工、渠道合作名单暂未提供。来源：<span class="source-anchor">S001#page=6</span>。</p>
-<h3>10. 数据指标</h3>
-<p><span class="status-badge">待补充</span>。资料没有提供曝光、互动、销售、搜索占位或内容引用指标。</p>
-<h3>11. 复盘结论</h3>
-<p><span class="status-badge">不适用</span>。当前资料为活动方案，不是投放总结或复盘报告。</p>
-<h3>12. 下一步动作</h3>
-<ul><li>品牌经理确认 核心创意主张 和关键词是否可作为统一口径。</li><li>项目负责人补充排期、预算、渠道合作名单和责任分工。</li><li>法务或品牌审核人确认体验表达与功效表达边界。</li></ul>
-<h3>13. 待补充 / 不适用</h3>
-<div class="table-wrap"><table><thead><tr><th>项目</th><th>状态</th></tr></thead><tbody><tr><td>具体排期</td><td><span class="status-badge">待补充</span></td></tr><tr><td>预算和资源</td><td><span class="status-badge">待补充</span></td></tr><tr><td>消费者调研依据</td><td><span class="status-badge">待补充</span></td></tr><tr><td>复盘结论</td><td><span class="status-badge">不适用</span></td></tr></tbody></table></div>
-    <div class="review-controls" data-section="key-points">
-      <button onclick="setDecision('key-points', '基本正确')">基本正确</button>
-      <button onclick="setDecision('key-points', '需要修改')">需要修改</button>
-      <button onclick="setDecision('key-points', '需要补充')">需要补充</button>
-    </div>
-    </section>
-<section id="uncertain-items"><h2>没识别清楚、需要你确认的点</h2><h3>1. 高优先级审核项</h3>
-<div class="table-wrap"><table><thead><tr><th>确认项编号</th><th>审核项</th><th>风险等级</th><th>来源锚点</th><th>原因</th><th>建议</th></tr></thead><tbody><tr><td>R001</td><td>核心创意主张 是否可作为正式品牌口径</td><td><span class="risk risk-中">中</span></td><td><span class="source-anchor">S001#page=4</span></td><td>资料提出 核心创意主张，但未显示品牌确认记录</td><td>品牌经理确认后再进入外发 brief</td></tr><tr><td>R002</td><td>功效性表达证据</td><td><span class="risk risk-高">高</span></td><td><span class="source-anchor">S001#page=6</span></td><td>资料要求保留证据或降级，但未附证据</td><td>所有功效词先降级为体验描述</td></tr><tr><td>R003</td><td>人群定位依据</td><td><span class="risk risk-中">中</span></td><td><span class="source-anchor">S001#page=3</span></td><td>目标人群缺少调研或数据支持</td><td>补充调研摘要或历史内容数据</td></tr><tr><td>R004</td><td>预算和渠道合作信息</td><td><span class="risk risk-中">中</span></td><td><span class="source-anchor">S001#page=6</span></td><td>影响执行可行性</td><td>项目人员补充后再派生项目执行 brief</td></tr></tbody></table></div>
-<h3>2. 外发表达风险</h3>
-<div class="table-wrap"><table><thead><tr><th>表达方向</th><th>风险</th><th>可用替代表达</th></tr></thead><tbody><tr><td>医学化、绝对化、即时效果</td><td><span class="risk risk-高">高</span></td><td>清爽感、轻便、适合通勤后整理状态</td></tr><tr><td>直接点名攻击竞品</td><td><span class="risk risk-高">高</span></td><td>使用品类层差异，不使用攻击性语言</td></tr><tr><td>把活动策略写成商品功效</td><td><span class="risk risk-中">中</span></td><td>保持活动体验和场景表达</td></tr></tbody></table></div>
-<h3>3. 待确认问题</h3>
-<ul><li>是否存在品牌年度策略文件支持“城市日常清爽管理”。</li><li>哪些体验表达可以进入外发内容。</li><li>哪些内容资产可以被达人、门店和电商同时调用。</li><li>是否需要为不同渠道设置不同风险等级。</li></ul>
-    <div class="review-controls" data-section="uncertain-items">
-      <button onclick="setDecision('uncertain-items', '基本正确')">基本正确</button>
-      <button onclick="setDecision('uncertain-items', '需要修改')">需要修改</button>
-      <button onclick="setDecision('uncertain-items', '需要补充')">需要补充</button>
+<section id="unclear"><h2>没识别清楚、需要你修正的地方</h2><ul><li>核心创意主张 是否可作为正式品牌口径</li></ul>
+    <div class="review-controls" data-section="unclear">
+      <button onclick="setDecision('unclear', '基本正确')">基本正确</button>
+      <button onclick="setDecision('unclear', '需要修改')">需要修改</button>
+      <button onclick="setDecision('unclear', '需要补充')">需要补充</button>
     </div>
     </section>
       <section id="manual-feedback">
