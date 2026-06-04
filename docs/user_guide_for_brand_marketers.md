@@ -79,15 +79,20 @@
 
 `08_review_pack.md` 会把最需要人工确认的内容集中列出。品牌经理不需要逐个打开所有 Markdown 文件，可以先从 Review Pack 开始。
 
-静态 HTML Review Pack 会把这些审核项放到一个本地网页里集中确认，并导出 `review_decisions.json`。
+静态 HTML Review Pack 是中文轻量确认页，只要求确认：
+
+- PDF / PPT 输出内容的大概结构、核心观点、核心内容是否和原资料一致。
+- AI 没识别清楚或不确定的点，哪些需要人工矫正、补充或删除。
+
+它不展示后台 8 类 Context Asset 分类，也不要求品牌经理逐项审核下游 AI 调用索引。
 
 注意：如果 Review Pack 来自真实测试 PDF，它只属于本地私有测试结果，不应作为正式 Skill 内置 demo 或公开示例发布。
 
-## 8. 审核 Context Asset Index
+## 8. 后台 Context Asset Index
 
 `10_context_asset_index.md` 是后续 AI 使用这些资料的关键索引。它不是给人看的总结，而是告诉后续 Skill：哪些内容可以调用、哪些必须限制、哪些还缺品牌确认。
 
-请重点确认：
+如果后续要进入 GEO、PDP、拍摄、种草、销售、客服或复盘派生 Skill，再由项目负责人或 AI 操作者复核：
 
 - 8 类上下文资产是否归类正确：品牌、商品、素材、项目、话术、人设、网络、案例。
 - 是否把活动方案、投放复盘、广告提案错误归成产品资料。

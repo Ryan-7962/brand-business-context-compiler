@@ -184,7 +184,14 @@ brand-skill convert-source <project_dir> --engine pymupdf4llm
 
 ### Step 9. Review Pack
 
-生成 `08_review_pack.md`，并可进一步生成静态 HTML Review Pack。审核对象是通用营销关键项，而不是只审核产品 SKU 和 claim。
+生成 `08_review_pack.md`，并可进一步生成静态 HTML Review Pack。
+
+静态 HTML 面向品牌经理，必须是中文轻量确认页。它只要求确认：
+
+- PDF / PPT 输出内容的大概结构、核心观点、核心内容是否和原资料一致。
+- AI 没识别清楚或不确定的点，哪些需要人工矫正、补充或删除。
+
+HTML 不应把后台 Context Asset 8 类分类作为第一眼审核对象。
 
 ### Step 10. Quality Check
 

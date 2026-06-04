@@ -1,4 +1,4 @@
-"""Static HTML review pack generator."""
+"""Static HTML review pack generator for brand-manager confirmation."""
 
 from __future__ import annotations
 
@@ -10,22 +10,55 @@ from pathlib import Path
 
 REQUIRED_OUTPUTS = [
     "02_document_profile.md",
+    "03_marketing_semantic_transcript.md",
     "04_key_facts_and_claims.md",
     "05_strategy_and_execution_map.md",
     "06_risk_and_review_items.md",
-    "09_quality_check_report.md",
-    "10_context_asset_index.md",
 ]
 
 
 SECTION_CONFIG = [
-    ("document-profile", "Document Profile Review", "02_document_profile.md"),
-    ("key-facts", "Key Facts / Claims Review", "04_key_facts_and_claims.md"),
-    ("strategy", "Strategy and Execution Review", "05_strategy_and_execution_map.md"),
-    ("risk-review", "Risk and Review Items", "06_risk_and_review_items.md"),
-    ("quality", "Quality Check", "09_quality_check_report.md"),
-    ("context-assets", "Context Asset Index Review", "10_context_asset_index.md"),
+    ("overview", "整个文件的概述", ["02_document_profile.md"]),
+    ("content-structure", "PDF 转述结构与核心内容", ["03_marketing_semantic_transcript.md"]),
+    ("key-points", "核心观点和关键信息", ["04_key_facts_and_claims.md", "05_strategy_and_execution_map.md"]),
+    ("uncertain-items", "没识别清楚、需要你确认的点", ["06_risk_and_review_items.md"]),
 ]
+
+
+TEXT_REPLACEMENTS = {
+    "Document Profile": "文件概述",
+    "Marketing Semantic Transcript": "PDF 转述稿",
+    "Semantic Transcript": "语义转述稿",
+    "Key Facts and Claims": "核心事实和表达",
+    "Key Facts / Claims": "核心事实和表达",
+    "Key Facts": "核心事实",
+    "Claims / Expressions": "可用表达 / 待确认表达",
+    "Claim": "表达",
+    "Strategy and Execution Map": "策略与执行梳理",
+    "Strategy Map": "策略梳理",
+    "Risk and Review Items": "未识别清楚、需要确认的点",
+    "Risk Items": "风险项",
+    "Quality Check Report": "识别质量检查",
+    "Source Index": "来源索引",
+    "Source Conversion Report": "来源转换报告",
+    "Context Asset Index": "后台资产索引",
+    "Brand Context Asset": "品牌上下文资产",
+    "Page / Slide": "页 / 幻灯片",
+    "Source Anchor": "来源位置",
+    "Fact ID": "事实编号",
+    "Claim ID": "表达编号",
+    "Review ID": "确认项编号",
+    "Missing Evidence": "缺失依据",
+    "Brief Base Summary": "底稿概述",
+    "Confirmed Source-backed Context": "来源中明确出现的内容",
+    "AI-Structured Context Pending Confirmation": "AI 转述后待确认的内容",
+    "Prompt-use Notes": "后续 AI 使用注意",
+    "Completeness": "完整性",
+    "Source Anchor Check": "来源位置检查",
+    "Missing Context": "缺失信息",
+    "Overall Assessment": "总体判断",
+    "Big Idea": "核心创意主张",
+}
 
 
 def build_review_pack(project_dir: Path) -> None:
@@ -49,6 +82,24 @@ def build_review_pack(project_dir: Path) -> None:
 
 def _read_sections(outputs_dir: Path) -> dict[str, str]:
     return {filename: (outputs_dir / filename).read_text(encoding="utf-8") for filename in REQUIRED_OUTPUTS}
+
+
+def _extract_review_title(sections: dict[str, str], fallback: str) -> str:
+    profile = sections.get("02_document_profile.md", "")
+    first_line = profile.splitlines()[0].strip() if profile.splitlines() else ""
+    if first_line.startswith("# "):
+        title = first_line[2:].strip()
+        for prefix in ["Document Profile｜", "Document Profile|", "文件概述｜", "文件概述|"]:
+            if title.startswith(prefix):
+                return title[len(prefix) :].strip()
+        return title
+    return fallback
+
+
+def _display_text(text: str) -> str:
+    for source, target in TEXT_REPLACEMENTS.items():
+        text = text.replace(source, target)
+    return text
 
 
 def _strip_title(markdown: str) -> str:
@@ -82,11 +133,11 @@ def _render_blocks(markdown: str) -> str:
             blocks.append(_render_table(table_lines))
             continue
         if line.startswith("### "):
-            blocks.append(f"<h4>{html.escape(line[4:].strip())}</h4>")
+            blocks.append(f"<h4>{html.escape(_display_text(line[4:].strip()))}</h4>")
         elif line.startswith("## "):
-            blocks.append(f"<h3>{html.escape(line[3:].strip())}</h3>")
+            blocks.append(f"<h3>{html.escape(_display_text(line[3:].strip()))}</h3>")
         elif line.startswith("# "):
-            blocks.append(f"<h2>{html.escape(line[2:].strip())}</h2>")
+            blocks.append(f"<h2>{html.escape(_display_text(line[2:].strip()))}</h2>")
         elif line.startswith("- "):
             items = []
             while index < len(lines) and lines[index].strip().startswith("- "):
@@ -116,7 +167,7 @@ def _render_table(lines: list[str]) -> str:
         return ""
     header = rows[0]
     body = rows[1:]
-    thead = "".join(f"<th>{html.escape(cell)}</th>" for cell in header)
+    thead = "".join(f"<th>{html.escape(_display_text(cell))}</th>" for cell in header)
     body_rows = []
     for row in body:
         cells = "".join(f"<td>{_inline_markup(cell)}</td>" for cell in row)
@@ -125,6 +176,7 @@ def _render_table(lines: list[str]) -> str:
 
 
 def _inline_markup(text: str) -> str:
+    text = _display_text(text)
     escaped = html.escape(text)
     escaped = re.sub(r"`([^`]+)`", r"<code>\1</code>", escaped)
     escaped = re.sub(r"(S\d{3}#page=\d+)", r'<span class="source-anchor">\1</span>', escaped)
@@ -140,25 +192,26 @@ def _count_term(sections: dict[str, str], term: str) -> int:
 
 
 def _render_html(title: str, sections: dict[str, str]) -> str:
-    escaped_title = html.escape(title)
-    summary = {
-        "project": title,
-        "required_files": len(REQUIRED_OUTPUTS),
-        "high_risk_count": _count_term(sections, "高"),
-        "needs_supplement_count": _count_term(sections, "待补充"),
-        "source_anchor_count": len(re.findall(r"S\d{3}#page=\d+", "\n".join(sections.values()))),
+    display_title = _extract_review_title(sections, title)
+    escaped_title = html.escape(display_title)
+    js_title = json.dumps(display_title, ensure_ascii=False)
+    initial_decisions = html.escape(json.dumps({"文件": display_title, "确认意见": {}}, ensure_ascii=False))
+    review_stats = {
+        "待补充": _count_term(sections, "待补充"),
+        "待确认": _count_term(sections, "待确认"),
+        "来源锚点": len(re.findall(r"S\d{3}#page=\d+", "\n".join(sections.values()))),
     }
-    summary_json = html.escape(json.dumps(summary, ensure_ascii=False, indent=2))
-    nav = "\n".join(f'<a href="#{section_id}">{label}</a>' for section_id, label, _filename in SECTION_CONFIG)
+    nav = "\n".join(f'<a href="#{section_id}">{label}</a>' for section_id, label, _filenames in SECTION_CONFIG)
     section_html = "\n".join(
-        _render_section(section_id, label, sections[filename]) for section_id, label, filename in SECTION_CONFIG
+        _render_section(section_id, label, "\n\n".join(sections[filename] for filename in filenames))
+        for section_id, label, filenames in SECTION_CONFIG
     )
     return f"""<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{escaped_title}｜Brand Context Review</title>
+  <title>{escaped_title}｜内容确认页</title>
   <style>
     :root {{
       --bg: #f6f7f9;
@@ -294,41 +347,55 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
 <body>
   <header>
     <div>
-      <h1>{escaped_title}｜Brand Context Review</h1>
+      <h1>{escaped_title}｜内容确认页</h1>
       <div class="summary">
-        <span class="metric">Required files: {summary["required_files"]}</span>
-        <span class="metric">High risk marks: {summary["high_risk_count"]}</span>
-        <span class="metric">待补充: {summary["needs_supplement_count"]}</span>
-        <span class="metric">Source anchors: {summary["source_anchor_count"]}</span>
+        <span class="metric">待补充：{review_stats["待补充"]}</span>
+        <span class="metric">待确认：{review_stats["待确认"]}</span>
+        <span class="metric">来源锚点：{review_stats["来源锚点"]}</span>
       </div>
     </div>
-    <button class="download" onclick="downloadDecisions()">Download review_decisions.json</button>
+    <button class="download" onclick="downloadDecisions()">导出确认意见</button>
   </header>
   <div class="layout">
     <nav>{nav}</nav>
     <main>
-      <section id="overview">
-        <h2>Overview</h2>
-        <p class="muted">本页面用于集中审核 Marketing 语义底稿和品牌上下文资产中的关键判断。若本页面由真实测试 PDF 生成，它仅属于本地私有测试结果，不代表正式 Skill 内置 demo。点击每个区块底部按钮可记录审核状态，并导出 review_decisions.json。</p>
-        <textarea id="decision-json" readonly>{summary_json}</textarea>
+      <section id="how-to-review">
+        <h2>你只需要确认什么</h2>
+        <ul>
+          <li>这份文件的整体结构、核心观点和核心内容，是否和原 PDF / PPT 表达一致。</li>
+          <li>下面列出的“没识别清楚、需要你确认的点”，哪些需要修正、补充或删除。</li>
+          <li>不需要在这里审核后台资产分类；那是后续给 AI 调用的内部结构。</li>
+        </ul>
+        <textarea id="decision-json" readonly>{initial_decisions}</textarea>
       </section>
       {section_html}
+      <section id="manual-feedback">
+        <h2>人工补充意见</h2>
+        <p class="muted">如果上面的转述有错，直接在这里写：哪一页、哪里错、应该怎么改。</p>
+        <textarea id="manual-note" placeholder="例如：第 3 页目标人群不是城市通勤人群，而是家庭用户；第 5 页的触点少了线下门店培训。"></textarea>
+      </section>
     </main>
   </div>
   <script>
     const decisions = {{}};
     function setDecision(section, value) {{
       decisions[section] = {{
-        decision: value,
-        updated_at: new Date().toISOString()
+        "结论": value,
+        "更新时间": new Date().toISOString()
       }};
       document.getElementById('decision-json').value = JSON.stringify({{
-        summary: {json.dumps(summary, ensure_ascii=False)},
-        decisions
+        "文件": {js_title},
+        "确认意见": decisions,
+        "人工补充": document.getElementById('manual-note') ? document.getElementById('manual-note').value : ""
       }}, null, 2);
     }}
     function downloadDecisions() {{
-      const payload = document.getElementById('decision-json').value;
+      const payloadObject = {{
+        "文件": {js_title},
+        "确认意见": decisions,
+        "人工补充": document.getElementById('manual-note') ? document.getElementById('manual-note').value : ""
+      }};
+      const payload = JSON.stringify(payloadObject, null, 2);
       const blob = new Blob([payload], {{ type: 'application/json;charset=utf-8' }});
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
@@ -346,10 +413,9 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
 def _render_section(section_id: str, label: str, markdown: str) -> str:
     controls = f"""
     <div class="review-controls" data-section="{section_id}">
-      <button onclick="setDecision('{section_id}', '确认')">确认</button>
-      <button onclick="setDecision('{section_id}', '需修改')">需修改</button>
-      <button onclick="setDecision('{section_id}', '待补充')">待补充</button>
-      <button onclick="setDecision('{section_id}', '不采用')">不采用</button>
+      <button onclick="setDecision('{section_id}', '基本正确')">基本正确</button>
+      <button onclick="setDecision('{section_id}', '需要修改')">需要修改</button>
+      <button onclick="setDecision('{section_id}', '需要补充')">需要补充</button>
     </div>
     """
     return f'<section id="{section_id}"><h2>{html.escape(label)}</h2>{_markdown_to_html(markdown)}{controls}</section>'

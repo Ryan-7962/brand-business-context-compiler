@@ -22,6 +22,7 @@ class Phase1WorkflowTests(unittest.TestCase):
         outputs.mkdir()
         files = {
             "02_document_profile.md": "# Document Profile\n\n| 字段 | 内容 | 信息状态 |\n|---|---|---|\n| 文件类型 | 活动方案 | AI 结构化转述，待确认 |\n",
+            "03_marketing_semantic_transcript.md": "# Marketing Semantic Transcript\n\n## Page / Slide 1\n\n- Source Anchor：S001#page=1\n\n### 原页核心内容转述\n\n活动方案提出提升品牌声量。\n",
             "04_key_facts_and_claims.md": "# Key Facts and Claims\n\n| 项目 | 内容 | 来源 | 信息状态 |\n|---|---|---|---|\n| 核心事实 | 活动目标为提升品牌声量 | S001#page=2 | 已从来源资料提取 |\n",
             "05_strategy_and_execution_map.md": "# Strategy and Execution Map\n\n## 核心目标\n\n提升品牌声量。\n",
             "06_risk_and_review_items.md": "# Risk and Review Items\n\n| Review ID | 类型 | 审核项 | 来源锚点 | 风险等级 | 建议处理 |\n|---|---|---|---|---|---|\n| R001 | 数据口径 | 声量目标缺少衡量口径 | S001#page=2 | 高 | 补充指标定义 |\n",
@@ -181,15 +182,17 @@ class Phase1WorkflowTests(unittest.TestCase):
             html = project_dir / "review" / "brand_review.html"
             text = html.read_text(encoding="utf-8")
             self.assertTrue(html.exists())
-            self.assertIn("Document Profile Review", text)
-            self.assertIn("Key Facts / Claims Review", text)
-            self.assertIn("Strategy and Execution Review", text)
-            self.assertIn("Risk and Review Items", text)
-            self.assertIn("Context Asset Index Review", text)
+            self.assertIn("内容确认页", text)
+            self.assertIn("整个文件的概述", text)
+            self.assertIn("PDF 转述结构与核心内容", text)
+            self.assertIn("核心观点和关键信息", text)
+            self.assertIn("没识别清楚、需要你确认的点", text)
+            self.assertIn("人工补充意见", text)
             self.assertIn("活动方案", text)
-            self.assertIn("Download review_decisions.json", text)
+            self.assertIn("导出确认意见", text)
             self.assertIn('class="source-anchor"', text)
             self.assertNotIn('class=\\"source-anchor\\"', text)
+            self.assertNotIn("Context Asset Index Review", text)
 
     def test_build_review_pack_requires_key_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
