@@ -1,8 +1,8 @@
-# PRD｜Brand Context Skills Pack
+# PRD｜Brand Marketing Context Compiler
 
 ## 1. 一句话定位
 
-Brand Context Skills Pack 是一组面向品牌 Marketing 团队的 **AI Skills / Workflow**：它把品牌方原本“给人看的”PDF、PPT、长图和方案文档，编译成 **AI 更容易理解、检索、引用、审核和二次派生的结构化 Brand Context Assets**。
+Brand Marketing Context Compiler 是一组面向品牌 Marketing 团队的 **AI Skills / Workflow**：它把品牌方原本“给人看的”PDF、PPT、长图和方案文档，编译成 **AI 更容易理解、检索、引用、审核和二次派生的结构化品牌上下文知识库**。
 
 第一阶段不是生成最终营销 brief，而是把资料先转成 AI 能看懂的完整结构化底稿，并进一步归档为品牌上下文资产。后续再由大模型根据具体任务派生 GEO brief、PDP brief、拍摄 brief、种草 brief、销售话术、活动复盘、投放总结、客服 FAQ 等。
 
@@ -29,6 +29,8 @@ AI-ready Marketing Brief Base
   ↓
 Context Asset Index
   ↓
+Context Library Update Plan
+  ↓
 Exception Review Queue 异常复核
   ↓
 后续派生不同场景 brief
@@ -45,6 +47,7 @@ Exception Review Queue 异常复核
 | Context Asset Classifier Skill | 将内容归档为品牌、商品、素材、项目、话术、人设、网络、案例 8 类上下文资产 | 是 |
 | Exception Review Queue Skill | 只在识别质量异常、图片/表格/小字无法稳定解析时生成复核队列 | 是 |
 | Context Asset Indexer Skill | 输出可被后续派生 Skill 调用的 `10_context_asset_index.md` | 是 |
+| Context Library Planner Skill | 输出 `11_context_library_update_plan.md`，说明本次资料如何并入长期品牌知识库 | 是 |
 | Product Context Subskills | Product Knowledge、Claim Matrix、SKU Cards、User Language Map | 仅产品类资料启用 |
 | Derived Brief Skills | GEO、PDP、拍摄、种草、销售、客服、投放复盘、案例复用 | 第二阶段 |
 
@@ -94,6 +97,8 @@ AI-ready Marketing Brief Base
 Review Pack / Quality Check
   ↓
 Context Asset Index
+  ↓
+Context Library Update Plan
 ```
 
 第一阶段具体目标：
@@ -106,7 +111,8 @@ Context Asset Index
 6. 提供 CLI 辅助骨架，用于初始化项目、生成模板、校验关键输出。
 7. 提供 Exception Review Queue，只让用户处理识别异常，不让用户逐项确认正常资料。
 8. 提供 Context Asset Index，将内容归档为可复用上下文资产。
-9. 用本地私有测试样本验证 `product_training`、`brand_strategy` / `channel_strategy` 等资料类型；正式 demo 必须另做匿名化版本，不使用真实测试 PDF。
+9. 提供 Context Library Update Plan，让每次资料编译都能自然回流到长期品牌知识库。
+10. 用本地私有测试样本验证 `product_training`、`brand_strategy` / `channel_strategy` 等资料类型；正式 demo 必须另做匿名化版本，不使用真实测试 PDF。
 
 ## 5. 第一阶段默认输出
 
@@ -122,7 +128,8 @@ outputs/<project_slug>/
 ├── 07_ai_ready_marketing_brief_base.md
 ├── 08_review_pack.md
 ├── 09_quality_check_report.md
-└── 10_context_asset_index.md
+├── 10_context_asset_index.md
+└── 11_context_library_update_plan.md
 ```
 
 ### 5.1 Context Asset Index
@@ -153,6 +160,22 @@ outputs/<project_slug>/optional_product_module/
 └── user_language_map.md
 ```
 
+### 5.3 长期品牌上下文库
+
+`11_context_library_update_plan.md` 用于把一次资料编译结果并入长期品牌上下文库。推荐长期目录见 `docs/brand_context_library_architecture.md`：
+
+- `brand/`
+- `product/`
+- `project/`
+- `asset/`
+- `language/`
+- `persona/`
+- `network/`
+- `case/`
+- `decision/`
+- `retrieval_maps/`
+- `evolution_log.md`
+
 ## 6. 第一阶段成功标准
 
 第一阶段完成后，应满足：
@@ -163,6 +186,7 @@ outputs/<project_slug>/optional_product_module/
 - AI 能生成完整的 Marketing Semantic Transcript，保留策略逻辑和执行逻辑。
 - 关键事实、数据、claim、策略、执行动作、风险和待确认项能被拆清楚。
 - 可复用内容能被归档为 Brand Context Assets，并明确可被哪些下游 Skill 调用。
+- 每次资料编译都能产出长期知识库更新建议，区分“应写入长期库”“只暂存”“不应提升为长期知识”。
 - 绝大多数资料默认自动通过，不要求用户逐项确认；只有低置信度页面、疑似漏读、表格错位、图片文字识别不清、关键业务词无法判断时才进入异常复核队列。
 - 不存在资料缺失却被 AI 写成确定事实的问题。
 - 内部策略、预算、投放数据、竞品攻击和未确认判断不会混入外发安全内容。

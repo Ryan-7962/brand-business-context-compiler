@@ -17,6 +17,7 @@ OUTPUT_FILES = [
     "08_review_pack.md",
     "09_quality_check_report.md",
     "10_context_asset_index.md",
+    "11_context_library_update_plan.md",
 ]
 PHASE1_PROMPT_FILES = [
     "00_source_to_markdown_conversion.md",
@@ -28,6 +29,7 @@ PHASE1_PROMPT_FILES = [
     "06_generate_ai_ready_marketing_brief_base.md",
     "07_generate_review_pack.md",
     "08_generate_context_asset_index.md",
+    "09_generate_context_library_update_plan.md",
     "11_quality_check.md",
 ]
 
@@ -74,7 +76,7 @@ def build_prompt_pack(project_dir: Path) -> None:
     prompt_bundle = project_dir / "prompt_bundle.md"
     prompts_dir = project_dir / "prompts"
     sections = [
-        "# Prompt Bundle｜Phase 1 Brand Context Skills Pack",
+        "# Prompt Bundle｜Phase 1 Brand Marketing Context Compiler",
         "",
         "按以下顺序执行第一阶段品牌上下文资产编译提示词。第二阶段派生 brief prompt 不纳入本 bundle。",
         "",

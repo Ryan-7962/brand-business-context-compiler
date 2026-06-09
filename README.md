@@ -1,6 +1,6 @@
-# Brand Context Skills Pack
+# Brand Marketing Context Compiler
 
-将品牌方“给人看的”Marketing 资料，例如活动方案、广告公司提案、新品上市方案、销售策略、经销商大会 PPT、抖音爆品打法计划书、爆款视频复盘、投放总结、产品培训资料、品牌策略 PPT，编译为 **AI 更容易理解、检索、引用、审核和复用的结构化 Brand Context Assets**。
+将品牌方“给人看的”Marketing 资料，例如活动方案、广告公司提案、新品上市方案、销售策略、经销商大会 PPT、抖音爆品打法计划书、爆款视频复盘、投放总结、产品培训资料、品牌策略 PPT，编译为 **AI 更容易理解、检索、引用、审核和复用的结构化品牌上下文知识库**。
 
 本项目第一阶段不是做复杂平台，也不是直接生成 GEO / PDP / 拍摄 / 种草 brief，而是沉淀一组可被 Codex / Claude / ChatGPT 等 AI 代理稳定执行的 Skills：
 
@@ -9,7 +9,8 @@
 3. 将资料完整转述成 AI-readable Marketing Semantic Transcript。
 4. 抽取关键事实、claim、策略、执行动作、风险和待确认项。
 5. 生成 Context Asset Index，把资料沉淀为可复用的品牌上下文资产。
-6. 生成 Exception Review Queue，只在识别异常时请用户修正。
+6. 生成 Context Library Update Plan，说明本次资料如何并入长期品牌知识库。
+7. 生成 Exception Review Queue，只在识别异常时请用户修正。
 
 ## Skill 组结构
 
@@ -20,6 +21,7 @@
 | Context Asset Classifier Skill | 将底稿归入品牌、商品、素材、项目、话术、人设、网络、案例 8 类上下文资产 |
 | Exception Review Queue Skill | 输出 Markdown 和静态 HTML 异常队列，只处理识别问题 |
 | Context Asset Indexer Skill | 输出 `10_context_asset_index.md`，作为后续派生 Skill 的调用索引 |
+| Context Library Planner Skill | 输出 `11_context_library_update_plan.md`，说明如何更新长期品牌知识库 |
 
 第二阶段再开发 Derived Brief Skills，例如 GEO、PDP、拍摄、种草、销售、客服、投放复盘、案例复用等。
 
@@ -53,7 +55,8 @@ outputs/<project_slug>/
 ├── 07_ai_ready_marketing_brief_base.md
 ├── 08_review_pack.md
 ├── 09_quality_check_report.md
-└── 10_context_asset_index.md
+├── 10_context_asset_index.md
+└── 11_context_library_update_plan.md
 ```
 
 产品资料可选模块可输出：
@@ -117,7 +120,7 @@ brand-skill check-claim-matrix <project_dir>
 ## 目录说明
 
 - `00_Codex_开发总提示词.md`：可直接复制给 Codex 的完整开发提示词。
-- `01_PRD_Brand_Product_Knowledge_Compiler.md`：当前保留原文件名，但内容已按 Brand Context Skills Pack 重写。
+- `01_PRD_Brand_Product_Knowledge_Compiler.md`：当前保留原文件名，但内容已按 Brand Marketing Context Compiler 重写。
 - `02_Skill_Spec.md`：Skill 工作流与规则。
 - `prompts/`：各步骤可复用提示词。
 - `schemas/`：每类输出的 Markdown Schema。
@@ -125,4 +128,5 @@ brand-skill check-claim-matrix <project_dir>
 - `_private_test_runs/private_brand_bpm_sample/`：本地私有品牌 BPM 测试样本，已加入 `.gitignore`，不属于正式 Skill 内置 demo。
 - `examples/`：正式匿名化 demo 目录，后续只放虚构品牌、合成数据或已授权公开资料。
 - `docs/source_converter_strategy.md`：资料转写层策略，包含 MinerU 等高保真解析项目可吸收经验。
+- `docs/brand_context_library_architecture.md`：长期品牌上下文知识库结构。
 - `discussion_context/`：本次对话沉淀的开发背景与关键讨论摘录。

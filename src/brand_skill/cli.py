@@ -1,4 +1,4 @@
-"""CLI skeleton for Brand Context Skills Pack.
+"""CLI skeleton for Brand Marketing Context Compiler.
 
 This is intentionally lightweight. Codex should expand it in the first development pass.
 """

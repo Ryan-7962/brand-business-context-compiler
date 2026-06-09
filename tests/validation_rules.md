@@ -1,4 +1,4 @@
-# Validation Rules｜Brand Context Skills Pack
+# Validation Rules｜Brand Marketing Context Compiler
 
 ## Default Phase-One Checks
 

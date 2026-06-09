@@ -1,6 +1,6 @@
 # Anonymous Marketing Campaign Demo
 
-这是一个完全虚构的营销活动方案 demo，用于展示 Brand Context Skills Pack 第一阶段默认产物。
+这是一个完全虚构的营销活动方案 demo，用于展示 Brand Marketing Context Compiler 第一阶段默认产物。
 
 场景设定：
 

@@ -1,12 +1,12 @@
-# Implementation Roadmap｜Brand Context Skills Pack
+# Implementation Roadmap｜Brand Marketing Context Compiler
 
 ## Phase 0. Repositioning
 
-目标：确认项目从 Product Knowledge Compiler 上移为 Brand Context Skills Pack。
+目标：确认项目从 Product Knowledge Compiler 上移为 Brand Marketing Context Compiler。
 
 交付：
 
-- README、PRD、Skill Spec 改为品牌上下文资产 Skill 组。
+- README、PRD、Skill Spec 改为品牌营销上下文编译器。
 - 产品资料相关输出降级为 optional product module。
 - 示例产品训练资料和示例品牌策略资料均仅作为本地私有测试样本，不能作为正式 Skill 内置 demo 发布。
 - 正式 `examples/` 只使用匿名化假数据或已授权公开资料。
@@ -43,6 +43,7 @@
 - `08_review_pack.md`
 - `09_quality_check_report.md`
 - `10_context_asset_index.md`
+- `11_context_library_update_plan.md`
 
 成功标准：
 
@@ -52,9 +53,9 @@
 - 不把所有资料强行产品化。
 - 能将可复用内容归档为品牌、商品、素材、项目、话术、人设、网络、案例 8 类上下文资产。
 
-## Phase 3. Context Asset Index and Review Pack
+## Phase 3. Context Asset Index and Exception Review Queue
 
-目标：让品牌经理能集中确认关键判断，并知道哪些内容已经沉淀为可复用上下文资产。
+目标：让系统默认自动入库候选内容，只把识别异常、疑似漏读、表格错位、小字图片识别问题交给用户处理。
 
 交付：
 
@@ -65,10 +66,25 @@
 
 成功标准：
 
-- 高风险项优先展示。
-- 待补充和待确认项清楚。
-- Context Asset 能显示来源、状态、风险、下游调用限制。
+- 没有异常的文件显示自动通过。
+- 异常页只展示识别问题，不展示后台字段。
+- Context Asset 在后台保留来源、状态、风险、下游调用限制。
 - 审核结果可被后续流程读取。
+
+## Phase 3.5. Context Library Update Plan
+
+目标：让每次资料编译都能形成长期品牌知识库更新建议。
+
+交付：
+
+- `11_context_library_update_plan.md`
+- `docs/brand_context_library_architecture.md`
+
+成功标准：
+
+- 区分写入长期库、暂存待验证、不应提升为长期知识。
+- 能把项目过程、被否方向、复盘结论沉淀到 decision / case。
+- 能给后续 GEO、PDP、种草、销售、复盘等调用场景提供检索提示。
 
 ## Phase 4. Optional Product Module
 

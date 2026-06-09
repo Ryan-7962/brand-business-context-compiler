@@ -46,6 +46,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("03_marketing_semantic_transcript.md", output_files)
             self.assertIn("07_ai_ready_marketing_brief_base.md", output_files)
             self.assertIn("10_context_asset_index.md", output_files)
+            self.assertIn("11_context_library_update_plan.md", output_files)
             self.assertNotIn("04_product_knowledge_base_internal.md", output_files)
             self.assertNotIn("10_geo_activation_pack.md", output_files)
 
@@ -101,6 +102,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             (prompts_dir / "02_generate_marketing_semantic_transcript.md").write_text("# Prompt 02\n", encoding="utf-8")
             (prompts_dir / "03_generate_key_facts_and_claims.md").write_text("# Prompt 03\n", encoding="utf-8")
             (prompts_dir / "08_generate_context_asset_index.md").write_text("# Context Asset Prompt\n", encoding="utf-8")
+            (prompts_dir / "09_generate_context_library_update_plan.md").write_text("# Library Update Prompt\n", encoding="utf-8")
             (prompts_dir / "05_generate_claim_matrix.md").write_text("# Optional Product Module\n", encoding="utf-8")
             (prompts_dir / "07_generate_geo_pack.md").write_text("# Second Phase\n", encoding="utf-8")
 
@@ -112,6 +114,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("# Prompt 02", bundle)
             self.assertIn("# Prompt 03", bundle)
             self.assertIn("# Context Asset Prompt", bundle)
+            self.assertIn("# Library Update Prompt", bundle)
             self.assertNotIn("# Optional Product Module", bundle)
             self.assertNotIn("# Second Phase", bundle)
 

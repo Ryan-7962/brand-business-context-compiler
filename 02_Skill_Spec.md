@@ -1,8 +1,8 @@
-# Skill Spec｜Brand Context Skills Pack
+# Skill Spec｜Brand Marketing Context Compiler
 
 ## 1. Skill 名称
 
-Brand Context Skills Pack / 品牌上下文资产 Skill 组
+Brand Marketing Context Compiler / 品牌营销上下文编译器
 
 ## 2. Skill 目标
 
@@ -22,6 +22,8 @@ Marketing Semantic Transcript
 AI-ready Marketing Brief Base
   ↓
 Context Asset Index
+  ↓
+Context Library Update Plan
   ↓
 Exception Review Queue
 ```
@@ -76,7 +78,8 @@ outputs/<project_slug>/
 ├── 07_ai_ready_marketing_brief_base.md
 ├── 08_review_pack.md
 ├── 09_quality_check_report.md
-└── 10_context_asset_index.md
+├── 10_context_asset_index.md
+└── 11_context_library_update_plan.md
 ```
 
 产品资料可选模块：
@@ -216,6 +219,17 @@ HTML 不应展示后台 Context Asset 8 类分类、来源锚点、信息状态�
 | 案例上下文 | 成功/失败案例、复盘结论、可迁移打法、不可复用条件 |
 
 每个 Context Asset 必须记录来源锚点、信息状态、Review Priority、适用下游 Skill 和禁止/限制使用条件。
+
+### Step 12. Context Library Update Plan
+
+生成 `11_context_library_update_plan.md`，说明本次资料应如何并入长期品牌上下文知识库。
+
+必须区分：
+
+- 应写入长期库的稳定品牌、商品、项目、话术、案例、决策知识。
+- 只在项目期有效、需要暂存的内容。
+- 不应提升为长期知识的一次性价格、临时促销、阶段激励和未验证推断。
+- 需要后续会议纪要、复盘数据、销售反馈或素材表现补齐的演化钩子。
 
 ## 6. 核心规则
 
