@@ -19,6 +19,7 @@ brand_context_library/
 ├── case/
 ├── decision/
 ├── retrieval_maps/
+├── review_queue/
 └── evolution_log.md
 ```
 
@@ -36,6 +37,7 @@ brand_context_library/
 | `case/` | 成功/失败案例、复盘结论、可迁移打法 |
 | `decision/` | 关键决策、被否方案、判断理由和会议结论 |
 | `retrieval_maps/` | 不同任务应调用哪些上下文 |
+| `review_queue/` | 可能重复、冲突或需要人工合并的条目 |
 | `evolution_log.md` | 每次资料入库、修正、冲突和更新记录 |
 
 ## 4. 入库原则
@@ -66,4 +68,4 @@ brand-skill apply-library-update <project_dir> --library-dir <brand_context_libr
 
 它会读取 `outputs/11_context_library_update_plan.md` 的 `New Context Entries` 表，把 `写入建议` 为 `写入` 或 `暂存` 的条目写入对应目录，并追加 `evolution_log.md`。
 
-第一版不会自动覆盖旧知识，也不会处理冲突合并；冲突和替换应保留给后续 Library Writer 增强版。
+当前版本不会自动覆盖旧知识。若同目录下已经存在相同 slug 或相同标题的条目，新条目会进入 `review_queue/conflicts.md`，等待人工判断是补充、替换还是另存。

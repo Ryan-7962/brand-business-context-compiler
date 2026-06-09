@@ -264,6 +264,45 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("demo_project", log_text)
             self.assertIn("LCE001", log_text)
 
+    def test_apply_context_library_update_queues_conflicts_without_overwriting(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            outputs = project_dir / "outputs"
+            outputs.mkdir(parents=True)
+            (outputs / "11_context_library_update_plan.md").write_text(
+                "\n".join(
+                    [
+                        "# Context Library Update Plan",
+                        "",
+                        "## 2. New Context Entries",
+                        "",
+                        "| Entry ID | 建议归档位置 | 标题 | 内容摘要 | 来源资产 | 稳定性 | 写入建议 |",
+                        "|---|---|---|---|---|---|---|",
+                        "| LCE009 | brand | 夏季关键词 | 新版本关键词摘要。 | CA009 | 项目期有效 | 写入 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            library_dir = Path(temp_dir) / "brand_context_library"
+            existing = library_dir / "brand" / "existing-summer.md"
+            existing.parent.mkdir(parents=True)
+            existing.write_text("# 夏季关键词\n\n旧版本内容。\n", encoding="utf-8")
+
+            with redirect_stdout(StringIO()):
+                apply_context_library_update(project_dir, library_dir=library_dir)
+
+            brand_entries = list((library_dir / "brand").glob("*.md"))
+            self.assertEqual(brand_entries, [existing])
+            self.assertIn("旧版本内容", existing.read_text(encoding="utf-8"))
+            conflicts = library_dir / "review_queue" / "conflicts.md"
+            self.assertTrue(conflicts.exists())
+            conflict_text = conflicts.read_text(encoding="utf-8")
+            self.assertIn("LCE009", conflict_text)
+            self.assertIn("新版本关键词摘要", conflict_text)
+            self.assertIn("brand/existing-summer.md", conflict_text)
+            log_text = (library_dir / "evolution_log.md").read_text(encoding="utf-8")
+            self.assertIn("No context entries applied", log_text)
+
     def test_cli_apply_library_update_command(self) -> None:
         import sys
 

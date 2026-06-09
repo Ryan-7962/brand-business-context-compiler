@@ -34,21 +34,29 @@ def apply_context_library_update(project_dir: Path, library_dir: Path | None = N
     text = update_plan.read_text(encoding="utf-8")
     entries = _parse_new_context_entries(text)
     applied = []
+    conflicts = []
     for entry in entries:
         action = entry.get("写入建议", "").strip()
         if action not in {"写入", "暂存"}:
             continue
         location = _normalize_location(entry.get("建议归档位置", ""))
+        conflict_path = _find_conflict(target_dir, location, entry)
+        if conflict_path:
+            conflicts.append((entry, conflict_path))
+            continue
         entry_path = _write_library_entry(target_dir, location, entry)
         applied.append((entry, entry_path))
 
+    if conflicts:
+        _append_conflict_queue(target_dir, project_dir.name, conflicts)
     _append_evolution_log(target_dir, project_dir.name, applied)
     print(f"Context library updated: {target_dir}")
     print(f"Entries applied: {len(applied)}")
+    print(f"Conflicts queued: {len(conflicts)}")
 
 
 def _ensure_library_scaffold(library_dir: Path) -> None:
-    for dirname in sorted(VALID_LIBRARY_DIRS | {"retrieval_maps"}):
+    for dirname in sorted(VALID_LIBRARY_DIRS | {"retrieval_maps", "review_queue"}):
         (library_dir / dirname).mkdir(parents=True, exist_ok=True)
     index = library_dir / "00_library_index.md"
     if not index.exists():
@@ -106,6 +114,23 @@ def _write_library_entry(library_dir: Path, location: str, entry: dict[str, str]
     return path
 
 
+def _find_conflict(library_dir: Path, location: str, entry: dict[str, str]) -> Path | None:
+    entry_id = entry.get("Entry ID", "LCE000").strip() or "LCE000"
+    title = entry.get("标题", "Untitled Context Entry").strip() or "Untitled Context Entry"
+    slug = _slugify(f"{entry_id}-{title}")
+    exact_path = library_dir / location / f"{slug}.md"
+    if exact_path.exists():
+        return exact_path
+
+    normalized_title = _normalize_match_text(title)
+    for existing in (library_dir / location).glob("*.md"):
+        text = existing.read_text(encoding="utf-8")
+        first_heading = _first_heading(text)
+        if _normalize_match_text(first_heading) == normalized_title:
+            return existing
+    return None
+
+
 def _render_entry(entry: dict[str, str], location: str) -> str:
     title = entry.get("标题", "Untitled Context Entry").strip() or "Untitled Context Entry"
     return "\n".join(
@@ -139,8 +164,51 @@ def _append_evolution_log(library_dir: Path, project_name: str, applied: list[tu
         handle.write("\n".join(lines))
 
 
+def _append_conflict_queue(library_dir: Path, project_name: str, conflicts: list[tuple[dict[str, str], Path]]) -> None:
+    path = library_dir / "review_queue" / "conflicts.md"
+    if not path.exists():
+        path.write_text("# Context Library Conflict Queue\n\n", encoding="utf-8")
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    lines = [f"## {timestamp}｜{project_name}", ""]
+    for entry, existing_path in conflicts:
+        lines.extend(
+            [
+                f"### {entry.get('Entry ID', '')}｜{entry.get('标题', '')}",
+                "",
+                f"- Suggested Section: {entry.get('建议归档位置', '')}",
+                f"- Existing Entry: `{existing_path.relative_to(library_dir)}`",
+                f"- Stability: {entry.get('稳定性', '')}",
+                f"- Write Recommendation: {entry.get('写入建议', '')}",
+                f"- Source Asset: {entry.get('来源资产', '')}",
+                "",
+                "#### New Summary",
+                "",
+                entry.get("内容摘要", "").strip(),
+                "",
+                "#### Required Action",
+                "",
+                "- 判断是补充已有条目、替换旧条目，还是作为新条目另存。",
+                "",
+            ]
+        )
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write("\n".join(lines))
+
+
 def _slugify(text: str) -> str:
     text = text.strip().lower()
     text = re.sub(r"\s+", "-", text)
     text = re.sub(r"[^0-9a-zA-Z\u4e00-\u9fff_-]+", "", text)
     return text.strip("-_") or "context-entry"
+
+
+def _first_heading(markdown: str) -> str:
+    for line in markdown.splitlines():
+        if line.startswith("# "):
+            return line[2:].strip()
+    return ""
+
+
+def _normalize_match_text(text: str) -> str:
+    return re.sub(r"\s+", "", text).lower()
