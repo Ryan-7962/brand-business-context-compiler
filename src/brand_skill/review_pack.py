@@ -1,4 +1,4 @@
-"""Static HTML review pack generator for brand-manager confirmation."""
+"""Static HTML exception review queue generator."""
 
 from __future__ import annotations
 
@@ -16,10 +16,8 @@ REQUIRED_OUTPUTS = [
 
 
 SECTION_CONFIG = [
-    ("overview", "这个文件大概讲什么"),
-    ("outline", "PDF 大纲"),
-    ("main-content", "核心内容转述"),
-    ("unclear", "没识别清楚、需要你修正的地方"),
+    ("exceptions", "需要处理的问题"),
+    ("context", "文件大纲参考"),
 ]
 
 
@@ -171,10 +169,15 @@ def _extract_unclear_items(transcript: str, review_items: str) -> str:
     issues = _review_table_to_issue_list(review_items)
     if issues:
         parts.append(issues)
-    elif review_items.strip():
+    elif review_items.strip() and "|" not in review_items:
         parts.append(_remove_source_noise(review_items))
 
     return "\n\n".join(parts) if parts else "目前没有额外标记需要人工修正的识别问题。"
+
+
+def _has_exception_items(text: str) -> bool:
+    normalized = text.strip()
+    return bool(normalized and "目前没有额外标记" not in normalized)
 
 
 def _parse_markdown_table(markdown: str) -> list[dict[str, str]]:
@@ -212,10 +215,26 @@ def _review_table_to_issue_list(review_items: str) -> str:
 def _keep_user_confirmation_issue(text: str) -> bool:
     if not text.strip():
         return False
-    excluded_terms = ["外发", "法务", "敏感", "攻击", "竞品", "不能外发", "风险"]
+    excluded_terms = [
+        "外发",
+        "法务",
+        "敏感",
+        "攻击",
+        "竞品",
+        "不能外发",
+        "风险",
+        "品牌口径",
+        "正式",
+        "策略",
+        "预算",
+        "功效",
+        "人群定位",
+        "数据口径",
+        "归因",
+    ]
     if any(term in text for term in excluded_terms):
         return False
-    included_terms = ["未稳定", "错位", "小字", "图表", "图片", "OCR", "识别", "抽取", "会议", "日期", "参会", "决策", "口径", "归因"]
+    included_terms = ["未稳定", "错位", "小字", "图表", "图片", "OCR", "识别", "抽取", "会议", "日期", "参会", "决策"]
     return any(term in text for term in included_terms)
 
 
@@ -316,13 +335,14 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
     profile = sections["02_document_profile.md"]
     transcript = sections["03_marketing_semantic_transcript.md"]
     review_items = sections["06_risk_and_review_items.md"]
+    outline = _extract_outline(transcript)
+    exceptions = _extract_unclear_items(transcript, review_items)
+    has_exceptions = _has_exception_items(exceptions)
     review_content = {
-        "overview": _extract_profile_summary(profile),
-        "outline": _extract_outline(transcript),
-        "main-content": _extract_main_content(transcript),
-        "unclear": _extract_unclear_items(transcript, review_items),
+        "exceptions": exceptions if has_exceptions else "这份文件当前没有识别异常需要人工处理，可以先进入结构化知识库。",
+        "context": outline,
     }
-    unclear_count = max(0, review_content["unclear"].count("\n- ") + (1 if review_content["unclear"].startswith("- ") else 0))
+    unclear_count = max(0, exceptions.count("\n- ") + (1 if exceptions.startswith("- ") else 0)) if has_exceptions else 0
     nav = "\n".join(f'<a href="#{section_id}">{label}</a>' for section_id, label in SECTION_CONFIG)
     section_html = "\n".join(
         _render_section(section_id, label, review_content[section_id]) for section_id, label in SECTION_CONFIG
@@ -332,7 +352,7 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{escaped_title}｜内容确认页</title>
+  <title>{escaped_title}｜识别问题待处理</title>
   <style>
     :root {{
       --bg: #f6f7f9;
@@ -462,10 +482,10 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
 <body>
   <header>
     <div>
-      <h1>{escaped_title}｜内容确认页</h1>
+      <h1>{escaped_title}｜识别问题待处理</h1>
       <div class="summary">
-        <span class="metric">只确认大纲和转述是否准确</span>
-        <span class="metric">待修正项：{unclear_count}</span>
+        <span class="metric">{'需要人工处理' if has_exceptions else '自动通过，无需人工处理'}</span>
+        <span class="metric">待处理问题：{unclear_count}</span>
       </div>
     </div>
     <button class="download" onclick="downloadDecisions()">导出确认意见</button>
@@ -474,19 +494,19 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
     <nav>{nav}</nav>
     <main>
       <section id="how-to-review">
-        <h2>你只需要确认什么</h2>
+        <h2>处理规则</h2>
         <ul>
-          <li>这份文件的整体结构、核心观点和核心内容，是否和原 PDF / PPT 表达一致。</li>
-          <li>如果大纲或转述错了，在底部写明页码、错误点和正确说法。</li>
-          <li>只有“没识别清楚”的内容需要你修正；其他后台字段不需要在这里确认。</li>
+          <li>没有识别异常的文件默认自动进入结构化知识库，不需要逐项确认。</li>
+          <li>只有图片、表格、小字、漏读、关键业务字段不明确等问题需要你处理。</li>
+          <li>如果确实有问题，在底部写明页码、错误点和正确说法。</li>
         </ul>
         <textarea id="decision-json" readonly>{initial_decisions}</textarea>
       </section>
       {section_html}
       <section id="manual-feedback">
-        <h2>人工补充意见</h2>
-        <p class="muted">如果上面的转述有错，直接在这里写：哪一页、哪里错、应该怎么改。</p>
-        <textarea id="manual-note" placeholder="例如：第 3 页目标人群不是城市通勤人群，而是家庭用户；第 5 页的触点少了线下门店培训。"></textarea>
+        <h2>人工修正</h2>
+        <p class="muted">只在上方问题确实需要修正时填写。没有问题可以不处理。</p>
+        <textarea id="manual-note" placeholder="例如：第 41 页表格第 3 列识别错了，正确内容是……"></textarea>
       </section>
     </main>
   </div>
@@ -527,9 +547,9 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
 def _render_section(section_id: str, label: str, markdown: str) -> str:
     controls = f"""
     <div class="review-controls" data-section="{section_id}">
-      <button onclick="setDecision('{section_id}', '基本正确')">基本正确</button>
-      <button onclick="setDecision('{section_id}', '需要修改')">需要修改</button>
-      <button onclick="setDecision('{section_id}', '需要补充')">需要补充</button>
+      <button onclick="setDecision('{section_id}', '无需处理')">无需处理</button>
+      <button onclick="setDecision('{section_id}', '已补充修正')">已补充修正</button>
+      <button onclick="setDecision('{section_id}', '暂时跳过')">暂时跳过</button>
     </div>
     """
     return f'<section id="{section_id}"><h2>{html.escape(label)}</h2>{_markdown_to_html(markdown)}{controls}</section>'

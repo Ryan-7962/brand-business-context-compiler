@@ -29,7 +29,7 @@ AI-ready Marketing Brief Base
   ↓
 Context Asset Index
   ↓
-Review Pack 人工审核
+Exception Review Queue 异常复核
   ↓
 后续派生不同场景 brief
 ```
@@ -43,7 +43,7 @@ Review Pack 人工审核
 | Source Conversion Skill | 将 PDF / PPT / 长图 / 文档尽量保真转成 Markdown 中间稿 | 是 |
 | Marketing Semantic Compiler Skill | 生成文件画像、语义转述、事实、策略、执行和风险底稿 | 是 |
 | Context Asset Classifier Skill | 将内容归档为品牌、商品、素材、项目、话术、人设、网络、案例 8 类上下文资产 | 是 |
-| Review Pack Skill | 输出 Markdown 和静态 HTML 审核页，帮助品牌经理确认关键判断 | 是 |
+| Exception Review Queue Skill | 只在识别质量异常、图片/表格/小字无法稳定解析时生成复核队列 | 是 |
 | Context Asset Indexer Skill | 输出可被后续派生 Skill 调用的 `10_context_asset_index.md` | 是 |
 | Product Context Subskills | Product Knowledge、Claim Matrix、SKU Cards、User Language Map | 仅产品类资料启用 |
 | Derived Brief Skills | GEO、PDP、拍摄、种草、销售、客服、投放复盘、案例复用 | 第二阶段 |
@@ -104,7 +104,7 @@ Context Asset Index
 4. 定义 Marketing Semantic Transcript，不只做摘要，而是更完整的 AI-readable 转述。
 5. 定义通用营销结构：事实、claim、策略、执行、指标、复盘、风险、待确认。
 6. 提供 CLI 辅助骨架，用于初始化项目、生成模板、校验关键输出。
-7. 提供 Review Pack，让用户集中确认关键内容。
+7. 提供 Exception Review Queue，只让用户处理识别异常，不让用户逐项确认正常资料。
 8. 提供 Context Asset Index，将内容归档为可复用上下文资产。
 9. 用本地私有测试样本验证 `product_training`、`brand_strategy` / `channel_strategy` 等资料类型；正式 demo 必须另做匿名化版本，不使用真实测试 PDF。
 
@@ -163,6 +163,7 @@ outputs/<project_slug>/optional_product_module/
 - AI 能生成完整的 Marketing Semantic Transcript，保留策略逻辑和执行逻辑。
 - 关键事实、数据、claim、策略、执行动作、风险和待确认项能被拆清楚。
 - 可复用内容能被归档为 Brand Context Assets，并明确可被哪些下游 Skill 调用。
+- 绝大多数资料默认自动通过，不要求用户逐项确认；只有低置信度页面、疑似漏读、表格错位、图片文字识别不清、关键业务词无法判断时才进入异常复核队列。
 - 不存在资料缺失却被 AI 写成确定事实的问题。
 - 内部策略、预算、投放数据、竞品攻击和未确认判断不会混入外发安全内容。
 - 仓库内置 demo 和 Skill 发布包不包含真实客户资料；真实测试 PDF 只能保存在本地私有测试目录，若要写进正式样例必须改写为匿名化假数据。
@@ -185,7 +186,7 @@ outputs/<project_slug>/optional_product_module/
 - 完整拍摄 brief / 种草 brief 自动生成。
 - 完整销售话术、投放复盘或活动方案自动生成。
 
-第一阶段可以生成本地静态 Review HTML Pack，但它属于审核辅助，不是复杂 Web UI。
+第一阶段可以生成本地静态异常复核 HTML，但它属于识别问题处理辅助，不是复杂 Web UI，也不是逐份文件确认页。
 
 ## 8. 核心设计原则
 
@@ -214,9 +215,9 @@ AI 可以把资料重新组织成更清晰的结构，但必须区分：
 | 不适用 | 当前资料类型不涉及该字段 |
 | 已品牌确认 | 品牌经理确认后，才能作为最高优先级依据 |
 
-### D5. 人工审核必须保留
+### D5. 人工审核采用异常驱动
 
-本项目不是让 AI 自动替品牌做最终判断。策略、预算、目标、主推方向、外发 claim、竞品表达、平台合规边界都必须保留人工审核位。
+本项目不是让 AI 自动替品牌做最终判断，但第一阶段也不应把所有资料都推给品牌经理逐项确认。默认流程是：先尽量提高 PDF / PPT / 图片识别质量，自动生成结构化 Markdown 知识库；只有识别质量异常、关键页缺失、表格错位、图片文字无法判断或关键业务词不确定时，才向用户发起人工复核。
 
 ### D6. 派生 brief 必须回到底稿
 

@@ -182,17 +182,36 @@ class Phase1WorkflowTests(unittest.TestCase):
             html = project_dir / "review" / "brand_review.html"
             text = html.read_text(encoding="utf-8")
             self.assertTrue(html.exists())
-            self.assertIn("内容确认页", text)
-            self.assertIn("这个文件大概讲什么", text)
-            self.assertIn("PDF 大纲", text)
-            self.assertIn("核心内容转述", text)
-            self.assertIn("没识别清楚、需要你修正的地方", text)
-            self.assertIn("人工补充意见", text)
-            self.assertIn("活动方案", text)
+            self.assertIn("识别问题待处理", text)
+            self.assertIn("需要处理的问题", text)
+            self.assertIn("文件大纲参考", text)
+            self.assertIn("人工修正", text)
+            self.assertIn("待处理问题", text)
             self.assertIn("导出确认意见", text)
             self.assertNotIn('class="source-anchor"', text)
             self.assertNotIn("来源位置：", text)
             self.assertNotIn("Context Asset Index Review", text)
+
+    def test_build_review_pack_auto_passes_without_exceptions(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            outputs = project_dir / "outputs"
+            outputs.mkdir()
+            files = {
+                "02_document_profile.md": "# Document Profile｜示例会议\n\n| 字段 | 内容 |\n|---|---|\n| 文件类型 | 品牌会议资料 |\n",
+                "03_marketing_semantic_transcript.md": "# Marketing Semantic Transcript｜示例会议\n\n## 1. 总体结构\n\n- 会议开场。\n- 品牌策略。\n- 下一步动作。\n\n## 2. 可读转述\n\n### 会议开场\n\n资料说明本次会议用于对齐品牌策略。\n",
+                "06_risk_and_review_items.md": "# Risk and Review Items\n\n| Review ID | 类型 | 审核项 | 建议处理 |\n|---|---|---|---|\n",
+            }
+            for filename, text in files.items():
+                (outputs / filename).write_text(text, encoding="utf-8")
+
+            with redirect_stdout(StringIO()):
+                build_review_pack(project_dir)
+
+            text = (project_dir / "review" / "brand_review.html").read_text(encoding="utf-8")
+            self.assertIn("自动通过，无需人工处理", text)
+            self.assertIn("待处理问题：0", text)
+            self.assertIn("这份文件当前没有识别异常需要人工处理", text)
 
     def test_build_review_pack_requires_key_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

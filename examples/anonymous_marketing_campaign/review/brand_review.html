@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>夏日城市清爽节｜内容确认页</title>
+  <title>夏日城市清爽节｜识别问题待处理</title>
   <style>
     :root {
       --bg: #f6f7f9;
@@ -133,114 +133,45 @@
 <body>
   <header>
     <div>
-      <h1>夏日城市清爽节｜内容确认页</h1>
+      <h1>夏日城市清爽节｜识别问题待处理</h1>
       <div class="summary">
-        <span class="metric">只确认大纲和转述是否准确</span>
-        <span class="metric">待修正项：1</span>
+        <span class="metric">自动通过，无需人工处理</span>
+        <span class="metric">待处理问题：0</span>
       </div>
     </div>
     <button class="download" onclick="downloadDecisions()">导出确认意见</button>
   </header>
   <div class="layout">
-    <nav><a href="#overview">这个文件大概讲什么</a>
-<a href="#outline">PDF 大纲</a>
-<a href="#main-content">核心内容转述</a>
-<a href="#unclear">没识别清楚、需要你修正的地方</a></nav>
+    <nav><a href="#exceptions">需要处理的问题</a>
+<a href="#context">文件大纲参考</a></nav>
     <main>
       <section id="how-to-review">
-        <h2>你只需要确认什么</h2>
+        <h2>处理规则</h2>
         <ul>
-          <li>这份文件的整体结构、核心观点和核心内容，是否和原 PDF / PPT 表达一致。</li>
-          <li>如果大纲或转述错了，在底部写明页码、错误点和正确说法。</li>
-          <li>只有“没识别清楚”的内容需要你修正；其他后台字段不需要在这里确认。</li>
+          <li>没有识别异常的文件默认自动进入结构化知识库，不需要逐项确认。</li>
+          <li>只有图片、表格、小字、漏读、关键业务字段不明确等问题需要你处理。</li>
+          <li>如果确实有问题，在底部写明页码、错误点和正确说法。</li>
         </ul>
         <textarea id="decision-json" readonly>{&quot;文件&quot;: &quot;夏日城市清爽节&quot;, &quot;确认意见&quot;: {}}</textarea>
       </section>
-      <section id="overview"><h2>这个文件大概讲什么</h2><ul><li>文件类型：活动方案</li><li>文件目的：建立夏季城市清爽生活方式联想，并沉淀可复用内容资产</li><li>业务阶段：活动规划 / 内容资产建设 / 渠道承接准备</li></ul>
-    <div class="review-controls" data-section="overview">
-      <button onclick="setDecision('overview', '基本正确')">基本正确</button>
-      <button onclick="setDecision('overview', '需要修改')">需要修改</button>
-      <button onclick="setDecision('overview', '需要补充')">需要补充</button>
+      <section id="exceptions"><h2>需要处理的问题</h2><p>这份文件当前没有识别异常需要人工处理，可以先进入结构化知识库。</p>
+    <div class="review-controls" data-section="exceptions">
+      <button onclick="setDecision('exceptions', '无需处理')">无需处理</button>
+      <button onclick="setDecision('exceptions', '已补充修正')">已补充修正</button>
+      <button onclick="setDecision('exceptions', '暂时跳过')">暂时跳过</button>
     </div>
     </section>
-<section id="outline"><h2>PDF 大纲</h2><p>暂未稳定抽取出文件大纲，需要先补全文转述。</p>
-    <div class="review-controls" data-section="outline">
-      <button onclick="setDecision('outline', '基本正确')">基本正确</button>
-      <button onclick="setDecision('outline', '需要修改')">需要修改</button>
-      <button onclick="setDecision('outline', '需要补充')">需要补充</button>
-    </div>
-    </section>
-<section id="main-content"><h2>核心内容转述</h2><h3>页 / 幻灯片 1</h3>
-<ul><li>页面类型：背景</li><li>信息密度：中</li><li>低置信度说明：未提供历史市场数据。</li></ul>
-<h4>原页核心内容转述</h4>
-<p>品牌希望把夏季沟通从单次购买引导到日常生活方式管理，核心是建立城市、日常、清爽的品牌联想。</p>
-<h4>图表 / 视觉信息转述</h4>
-<p>无图表。</p>
-<h4>可抽取事实</h4>
-<ul><li>品牌希望强化夏季场景。</li><li>资料强调生活方式联想，不以单一商品功效为中心。</li></ul>
-<h4>可抽取策略 / 执行动作</h4>
-<ul><li>后续内容应围绕城市日常场景组织。</li><li>派生 brief 应避免把活动误写成单 SKU 卖点清单。</li></ul>
-<h4>待人工复核</h4>
-<ul><li>是否已有品牌年度策略支持“城市日常清爽管理”。</li></ul>
-<h3>页 / 幻灯片 2</h3>
-<ul><li>页面类型：策略</li><li>信息密度：高</li><li>低置信度说明：目标为方向性表述，未提供 KPI。</li></ul>
-<h4>原页核心内容转述</h4>
-<p>活动希望建立“城市、清爽、轻便、日常”四个关键词，并沉淀街区体验图文、短视频脚本和门店导购话术三类资产。</p>
-<h4>可抽取事实</h4>
-<ul><li>关键词：城市、清爽、轻便、日常。</li><li>内容资产：图文、短视频、导购话术。</li></ul>
-<h4>可抽取策略 / 执行动作</h4>
-<ul><li>后台资产索引 应把关键词归入品牌上下文，把三类内容归入素材和话术上下文。</li></ul>
-<h4>待人工复核</h4>
-<ul><li>是否需要增加电商搜索问答资产。</li></ul>
-<h3>页 / 幻灯片 3</h3>
-<ul><li>页面类型：人群</li><li>信息密度：中</li><li>低置信度说明：缺少定量调研。</li></ul>
-<h4>原页核心内容转述</h4>
-<p>资料将主要人群设定为 24-35 岁城市通勤人群，关注夏季出行、办公、运动后的体感舒适。</p>
-<h4>可抽取事实</h4>
-<ul><li>目标人群：24-35 岁城市通勤人群。</li><li>场景：出行、办公、运动后。</li></ul>
-<h4>待人工复核</h4>
-<ul><li>人群年龄段和场景是否有真实调研依据。</li></ul>
-<h3>页 / 幻灯片 4</h3>
-<ul><li>页面类型：策略</li><li>信息密度：高</li><li>低置信度说明：核心创意主张 需品牌确认。</li></ul>
-<h4>原页核心内容转述</h4>
-<p>核心创意主张 是“把夏天过成轻一点的城市日常”。资料要求避免医学化、绝对化和夸大即时效果，推荐使用体验型表达。</p>
-<h4>可抽取事实</h4>
-<ul><li>可用表达：清爽感、轻便补给、适合通勤后整理状态。</li><li>禁用方向：医学化、绝对化、夸大即时效果。</li></ul>
-<h4>可抽取策略 / 执行动作</h4>
-<ul><li>后续种草 brief 和销售话术应优先使用体验型语言。</li><li>风险红线应记录功效表达限制。</li></ul>
-<h3>页 / 幻灯片 5</h3>
-<ul><li>页面类型：执行</li><li>信息密度：高</li><li>低置信度说明：未提供具体资源分配。</li></ul>
-<h4>原页核心内容转述</h4>
-<p>活动触点包括线下体验台、门店试用区、街区打卡装置、短视频挑战、达人图文、品牌账号内容、电商活动页和搜索问答内容。</p>
-<h4>可抽取事实</h4>
-<ul><li>触点覆盖线下、社媒、电商。</li><li>电商承接包含活动页、套装页和搜索问答。</li></ul>
-<h4>可抽取策略 / 执行动作</h4>
-<ul><li>派生拍摄 brief 应调用街区体验和打卡装置信息。</li><li>GEO brief 应调用搜索问答内容资产。</li></ul>
-<h3>页 / 幻灯片 6</h3>
-<ul><li>页面类型：审核</li><li>信息密度：高</li><li>低置信度说明：缺少实际审核责任人。</li></ul>
-<h4>原页核心内容转述</h4>
-<p>资料要求所有功效性表达必须保留证据来源或降级为体验描述。预算、人员分工、渠道合作名单暂未提供。竞品相关表达仅允许使用品类层描述。</p>
-<h4>可抽取事实</h4>
-<ul><li>功效表达必须有证据或降级。</li><li>预算、人员分工、渠道合作名单缺失。</li><li>不允许直接点名攻击竞品。</li></ul>
-<h4>待人工复核</h4>
-<ul><li>法务/品牌/渠道审核责任人。</li></ul>
-    <div class="review-controls" data-section="main-content">
-      <button onclick="setDecision('main-content', '基本正确')">基本正确</button>
-      <button onclick="setDecision('main-content', '需要修改')">需要修改</button>
-      <button onclick="setDecision('main-content', '需要补充')">需要补充</button>
-    </div>
-    </section>
-<section id="unclear"><h2>没识别清楚、需要你修正的地方</h2><ul><li>核心创意主张 是否可作为正式品牌口径</li></ul>
-    <div class="review-controls" data-section="unclear">
-      <button onclick="setDecision('unclear', '基本正确')">基本正确</button>
-      <button onclick="setDecision('unclear', '需要修改')">需要修改</button>
-      <button onclick="setDecision('unclear', '需要补充')">需要补充</button>
+<section id="context"><h2>文件大纲参考</h2><p>暂未稳定抽取出文件大纲，需要先补全文转述。</p>
+    <div class="review-controls" data-section="context">
+      <button onclick="setDecision('context', '无需处理')">无需处理</button>
+      <button onclick="setDecision('context', '已补充修正')">已补充修正</button>
+      <button onclick="setDecision('context', '暂时跳过')">暂时跳过</button>
     </div>
     </section>
       <section id="manual-feedback">
-        <h2>人工补充意见</h2>
-        <p class="muted">如果上面的转述有错，直接在这里写：哪一页、哪里错、应该怎么改。</p>
-        <textarea id="manual-note" placeholder="例如：第 3 页目标人群不是城市通勤人群，而是家庭用户；第 5 页的触点少了线下门店培训。"></textarea>
+        <h2>人工修正</h2>
+        <p class="muted">只在上方问题确实需要修正时填写。没有问题可以不处理。</p>
+        <textarea id="manual-note" placeholder="例如：第 41 页表格第 3 列识别错了，正确内容是……"></textarea>
       </section>
     </main>
   </div>

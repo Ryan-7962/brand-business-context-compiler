@@ -9,7 +9,7 @@
 3. 将资料完整转述成 AI-readable Marketing Semantic Transcript。
 4. 抽取关键事实、claim、策略、执行动作、风险和待确认项。
 5. 生成 Context Asset Index，把资料沉淀为可复用的品牌上下文资产。
-6. 生成 Review Pack，帮助品牌经理集中确认关键判断。
+6. 生成 Exception Review Queue，只在识别异常时请用户修正。
 
 ## Skill 组结构
 
@@ -18,7 +18,7 @@
 | Source Conversion Skill | 将 PDF / PPT / 长图 / 文档尽量保真转为 Markdown 中间稿 |
 | Marketing Semantic Compiler Skill | 生成文件画像、完整语义转述、事实、策略、执行和风险底稿 |
 | Context Asset Classifier Skill | 将底稿归入品牌、商品、素材、项目、话术、人设、网络、案例 8 类上下文资产 |
-| Review Pack Skill | 输出 Markdown 和静态 HTML 审核页，让品牌经理集中确认 |
+| Exception Review Queue Skill | 输出 Markdown 和静态 HTML 异常队列，只处理识别问题 |
 | Context Asset Indexer Skill | 输出 `10_context_asset_index.md`，作为后续派生 Skill 的调用索引 |
 
 第二阶段再开发 Derived Brief Skills，例如 GEO、PDP、拍摄、种草、销售、客服、投放复盘、案例复用等。
@@ -32,7 +32,8 @@
 - 第一阶段先生成 AI-readable 营销语义底稿，后续再派生不同场景 brief。
 - 不把所有资料强行套成产品项、SKU 或香型。
 - 资料里没有的信息必须标注 `待补充` / `待确认` / `不适用`。
-- 内部策略、未确认判断、平台风险、竞品攻击、敏感数据必须在审核层明确暴露。
+- 默认自动转写和入库，不让用户逐份确认；只有图片/表格/小字识别异常、疑似漏读或关键业务字段不确定时才进入人工复核。
+- 内部策略、未确认判断、平台风险、竞品攻击、敏感数据必须在后台质量层明确暴露，但不应默认塞进给用户的确认页。
 - 仓库内置 demo / Skill 发布包不得包含真实测试 PDF 中的品牌名、竞品名、价格、预算、销量、渠道激励和平台数据；真实客户资料只作为本地私有测试材料使用。
 - 产品类 claim 仍需证据和适用范围，但只在产品资料模块启用。
 

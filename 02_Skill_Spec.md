@@ -23,7 +23,7 @@ AI-ready Marketing Brief Base
   ↓
 Context Asset Index
   ↓
-Review Pack
+Exception Review Queue
 ```
 
 GEO brief、PDP brief、拍摄 brief、种草 brief、客服 FAQ、销售话术、活动复盘等属于第二阶段派生应用，不作为第一阶段主流程。
@@ -60,7 +60,7 @@ brand_input/
 └── review_decisions.json
 ```
 
-如果没有确认输入，Skill 先生成待审核的结构化底稿和 Review Pack。人工确认后，再进入 confirmed 或后续派生 brief。
+如果没有确认输入，Skill 默认先自动生成结构化底稿和异常复核队列。只有识别质量异常的页面或问题需要用户处理；没有异常的资料直接进入知识库沉淀。
 
 ## 4. 第一阶段默认输出
 
@@ -182,16 +182,19 @@ brand-skill convert-source <project_dir> --engine pymupdf4llm
 
 这是给后续大模型调用的营销语义底稿。它不直接生成某个 brief，而是把后续可复用的信息组织成稳定结构。
 
-### Step 9. Review Pack
+### Step 9. Exception Review Queue
 
-生成 `08_review_pack.md`，并可进一步生成静态 HTML Review Pack。
+生成 `08_review_pack.md`，并可进一步生成静态 HTML 异常复核页。
 
-静态 HTML 面向品牌经理，必须是中文轻量确认页。它只要求确认：
+静态 HTML 面向使用者，必须是中文轻量异常队列。它不要求用户逐份确认完整内容，只在以下情况出现问题：
 
-- PDF / PPT 输出内容的大概结构、核心观点、核心内容是否和原资料一致。
-- AI 没识别清楚或不确定的点，哪些需要人工矫正、补充或删除。
+- 图片、图表、小字、角标、脚注无法稳定识别。
+- 表格结构疑似错位。
+- 某页疑似漏读或只抽取到少量文字。
+- 会议背景、日期、参会方、决策结论等关键业务字段无法判断。
+- 关键业务词、数据口径或归因不明确，影响后续知识库准确性。
 
-HTML 不应把后台 Context Asset 8 类分类作为第一眼审核对象。
+HTML 不应展示后台 Context Asset 8 类分类、来源锚点、信息状态、风险等级或可复用状态。
 
 ### Step 10. Quality Check
 
@@ -228,9 +231,9 @@ HTML 不应把后台 Context Asset 8 类分类作为第一眼审核对象。
 
 资料中没有、AI 也不能合理拟定的信息必须写为 `待补充`。当前资料类型不涉及的字段写为 `不适用`。
 
-### R4. 关键判断必须人工审核
+### R4. 人工审核只处理异常
 
-AI 可以结构化、提取和初步归纳，但不能替代品牌经理确认策略、预算、主推方向、外发 claim、竞品表达和合规边界。
+AI 可以结构化、提取和初步归纳，但不能替代品牌经理确认策略、预算、主推方向、外发 claim、竞品表达和合规边界。第一阶段的人工介入不应变成逐项确认，而应只处理识别异常和关键不确定点。
 
 ### R5. 内外分层
 
@@ -257,16 +260,11 @@ Context Asset Index 可以记录 AI 结构化判断，但必须标注 `AI 结构
 
 ## 7. 人工审核位
 
-必须人工审核：
+默认不要求人工逐项审核。只有以下内容进入人工复核：
 
-- Document Profile。
-- Key Facts and Claims。
-- Strategy and Execution Map。
-- Risk and Review Items。
-- AI-ready Marketing Brief Base。
-- Review Pack。
-- Quality Check Report。
-- Context Asset Index。
+- Source Conversion Report 标为低置信度的页面。
+- Marketing Semantic Transcript 中标为无法稳定识别的图片、表格、小字或视觉页。
+- Risk and Review Items 中属于识别质量、表格错位、漏读、关键业务字段不明确的问题。
 - 内置 demo 是否为匿名化样例，未混入真实测试 PDF 的品牌信息和商业数据。
 
 ## 8. 输出风格
