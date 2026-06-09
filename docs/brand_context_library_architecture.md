@@ -55,3 +55,15 @@ brand_context_library/
 - `11_context_library_update_plan.md`：如何并入长期品牌上下文知识库。
 
 后续可以再开发真正的 Library Writer，把 update plan 自动写入 `brand_context_library/`。
+
+## 6. 当前 CLI
+
+当前已提供最小 Library Writer：
+
+```bash
+brand-skill apply-library-update <project_dir> --library-dir <brand_context_library_dir>
+```
+
+它会读取 `outputs/11_context_library_update_plan.md` 的 `New Context Entries` 表，把 `写入建议` 为 `写入` 或 `暂存` 的条目写入对应目录，并追加 `evolution_log.md`。
+
+第一版不会自动覆盖旧知识，也不会处理冲突合并；冲突和替换应保留给后续 Library Writer 增强版。

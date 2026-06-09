@@ -6,6 +6,7 @@ from io import StringIO
 from pathlib import Path
 
 from brand_skill.cli import main as cli_main
+from brand_skill.library_writer import apply_context_library_update
 from brand_skill.review_pack import build_review_pack
 from brand_skill.source_converter import convert_source
 from brand_skill.validators import (
@@ -224,6 +225,76 @@ class Phase1WorkflowTests(unittest.TestCase):
             with redirect_stdout(StringIO()):
                 with self.assertRaises(SystemExit):
                     build_review_pack(project_dir)
+
+    def test_apply_context_library_update_writes_entries_and_log(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            outputs = project_dir / "outputs"
+            outputs.mkdir(parents=True)
+            (outputs / "11_context_library_update_plan.md").write_text(
+                "\n".join(
+                    [
+                        "# Context Library Update Plan",
+                        "",
+                        "## 2. New Context Entries",
+                        "",
+                        "| Entry ID | 建议归档位置 | 标题 | 内容摘要 | 来源资产 | 稳定性 | 写入建议 |",
+                        "|---|---|---|---|---|---|---|",
+                        "| LCE001 | brand | 夏季关键词 | 城市、清爽、轻便、日常。 | CA001 | 项目期有效 | 暂存 |",
+                        "| LCE002 | project | 临时预算 | 一次性预算信息。 | CA002 | 项目期有效 | 不写入 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            library_dir = Path(temp_dir) / "brand_context_library"
+
+            with redirect_stdout(StringIO()):
+                apply_context_library_update(project_dir, library_dir=library_dir)
+
+            self.assertTrue((library_dir / "00_library_index.md").exists())
+            self.assertTrue((library_dir / "evolution_log.md").exists())
+            brand_entries = list((library_dir / "brand").glob("*.md"))
+            project_entries = list((library_dir / "project").glob("*.md"))
+            self.assertEqual(len(brand_entries), 1)
+            self.assertEqual(project_entries, [])
+            entry_text = brand_entries[0].read_text(encoding="utf-8")
+            self.assertIn("# 夏季关键词", entry_text)
+            self.assertIn("城市、清爽、轻便、日常。", entry_text)
+            log_text = (library_dir / "evolution_log.md").read_text(encoding="utf-8")
+            self.assertIn("demo_project", log_text)
+            self.assertIn("LCE001", log_text)
+
+    def test_cli_apply_library_update_command(self) -> None:
+        import sys
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            outputs = project_dir / "outputs"
+            outputs.mkdir(parents=True)
+            (outputs / "11_context_library_update_plan.md").write_text(
+                "\n".join(
+                    [
+                        "# Context Library Update Plan",
+                        "",
+                        "## 2. New Context Entries",
+                        "",
+                        "| Entry ID | 建议归档位置 | 标题 | 内容摘要 | 来源资产 | 稳定性 | 写入建议 |",
+                        "|---|---|---|---|---|---|---|",
+                        "| LCE001 | language | 体验表达 | 使用体验型表达。 | CA009 | 待验证 | 写入 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            library_dir = Path(temp_dir) / "library"
+            argv = sys.argv
+            sys.argv = ["brand-skill", "apply-library-update", str(project_dir), "--library-dir", str(library_dir)]
+            try:
+                with redirect_stdout(StringIO()):
+                    cli_main()
+            finally:
+                sys.argv = argv
+
+            self.assertEqual(len(list((library_dir / "language").glob("*.md"))), 1)
 
 
 if __name__ == "__main__":

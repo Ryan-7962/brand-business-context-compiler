@@ -106,6 +106,7 @@ brand-skill convert-source <project_dir> --engine pymupdf4llm
 brand-skill scaffold-output <project_dir>
 brand-skill build-prompt-pack <project_dir>
 brand-skill build-review-pack <project_dir>
+brand-skill apply-library-update <project_dir> --library-dir <brand_context_library_dir>
 ```
 
 产品资料可选校验：
