@@ -460,6 +460,62 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("经销商政策", text)
             self.assertNotIn("channel_policy</span>", text)
 
+    def test_build_library_report_marks_entry_review_statuses(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            library_dir = Path(temp_dir) / "brand_context_library"
+            (library_dir / "brand").mkdir(parents=True)
+            (library_dir / "language").mkdir()
+            (library_dir / "review_queue").mkdir()
+            (library_dir / "retrieval_maps").mkdir()
+            (library_dir / "brand" / "summer-keywords.md").write_text(
+                "# 夏季关键词\n\n## 内容摘要\n\n需要判断是否替换旧版本。\n",
+                encoding="utf-8",
+            )
+            (library_dir / "language" / "experience-claims.md").write_text(
+                "# 体验表达\n\n## 内容摘要\n\n需要补充新版表达边界。\n",
+                encoding="utf-8",
+            )
+            (library_dir / "review_queue" / "conflicts.md").write_text(
+                "\n".join(
+                    [
+                        "# Context Library Conflict Queue",
+                        "",
+                        "## 2026-06-10T00:00:00Z｜demo",
+                        "",
+                        "### LCE009｜夏季关键词",
+                        "",
+                        "- Existing Entry: `brand/summer-keywords.md`",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (library_dir / "review_queue" / "updates.md").write_text(
+                "\n".join(
+                    [
+                        "# 旧知识更新队列",
+                        "",
+                        "## 2026-06-10T00:00:00Z｜demo",
+                        "",
+                        "### 体验表达",
+                        "",
+                        "- 更新方式：补充",
+                        "- 版本判断依据：来源文件修改时间较新",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_library_report(library_dir)
+
+            text = (library_dir / "library_report.html").read_text(encoding="utf-8")
+            self.assertIn('"title": "夏季关键词"', text)
+            self.assertIn('"status": "冲突"', text)
+            self.assertIn('"reviewNote": "存在冲突待判断"', text)
+            self.assertIn('"title": "体验表达"', text)
+            self.assertIn('"status": "待更新"', text)
+            self.assertIn('"reviewNote": "旧知识可能需要更新"', text)
+
     def test_cli_build_library_report_command(self) -> None:
         import sys
 

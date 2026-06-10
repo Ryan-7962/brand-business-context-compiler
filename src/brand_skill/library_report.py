@@ -28,7 +28,8 @@ def build_library_report(library_dir: Path) -> Path:
         raise SystemExit(1)
 
     taxonomy = _parse_taxonomy(library_dir)
-    entries = _collect_entries(library_dir, taxonomy)
+    review_status = _review_status_index(library_dir)
+    entries = _collect_entries(library_dir, taxonomy, review_status)
     section_counts = _section_counts(library_dir, taxonomy)
     total_entries = sum(section_counts.values())
     queue_counts = {
@@ -103,7 +104,45 @@ def _parse_markdown_table(lines: list[str]) -> list[dict[str, str]]:
     return [dict(zip(header, row)) for row in rows[1:] if len(row) == len(header)]
 
 
-def _collect_entries(library_dir: Path, taxonomy: dict[str, dict[str, str]]) -> list[dict[str, str]]:
+def _review_status_index(library_dir: Path) -> dict[str, dict[str, str]]:
+    conflict_paths = _conflict_paths(library_dir / "review_queue" / "conflicts.md")
+    update_targets = _update_targets(library_dir / "review_queue" / "updates.md")
+    return {"conflict_paths": conflict_paths, "update_targets": update_targets}
+
+
+def _conflict_paths(path: Path) -> dict[str, str]:
+    if not path.exists():
+        return {}
+    paths = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("- Existing Entry:"):
+            continue
+        raw_path = stripped.split(":", 1)[1].strip().strip("`")
+        if raw_path:
+            paths[raw_path] = "存在冲突待判断"
+    return paths
+
+
+def _update_targets(path: Path) -> dict[str, str]:
+    if not path.exists():
+        return {}
+    targets = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("### "):
+            continue
+        target = stripped[4:].strip()
+        if target and target != "待检索":
+            targets[_normalize_review_match(target)] = "旧知识可能需要更新"
+    return targets
+
+
+def _collect_entries(
+    library_dir: Path,
+    taxonomy: dict[str, dict[str, str]],
+    review_status: dict[str, dict[str, str]],
+) -> list[dict[str, str]]:
     entries = []
     category_ids = set(taxonomy)
     category_ids.update(path.name for path in library_dir.iterdir() if path.is_dir())
@@ -113,18 +152,40 @@ def _collect_entries(library_dir: Path, taxonomy: dict[str, dict[str, str]]) -> 
             continue
         for markdown_path in sorted(category_dir.glob("*.md")):
             text = markdown_path.read_text(encoding="utf-8")
+            relative_path = str(markdown_path.relative_to(library_dir))
+            title = _first_heading(text) or markdown_path.stem
+            status, review_note = _entry_review_status(relative_path, title, review_status)
             entries.append(
                 {
                     "id": markdown_path.stem,
-                    "title": _first_heading(text) or markdown_path.stem,
+                    "title": title,
                     "summary": _extract_summary(text),
                     "category": category_id,
                     "categoryLabel": taxonomy.get(category_id, {}).get("label", category_id),
-                    "path": str(markdown_path.relative_to(library_dir)),
-                    "status": "正常",
+                    "path": relative_path,
+                    "status": status,
+                    "reviewNote": review_note,
                 }
             )
     return entries
+
+
+def _entry_review_status(
+    relative_path: str,
+    title: str,
+    review_status: dict[str, dict[str, str]],
+) -> tuple[str, str]:
+    conflict_note = review_status["conflict_paths"].get(relative_path)
+    if conflict_note:
+        return "冲突", conflict_note
+    update_note = review_status["update_targets"].get(_normalize_review_match(title))
+    if update_note:
+        return "待更新", update_note
+    return "正常", ""
+
+
+def _normalize_review_match(text: str) -> str:
+    return "".join(text.split()).lower()
 
 
 def _section_counts(library_dir: Path, taxonomy: dict[str, dict[str, str]]) -> dict[str, int]:
@@ -575,6 +636,7 @@ function selectEntry(entryId) {
       <dt>分类</dt><dd>${escapeHtml(entry.categoryLabel)}</dd>
       <dt>文件路径</dt><dd>${escapeHtml(entry.path)}</dd>
       <dt>状态</dt><dd>${escapeHtml(entry.status)}</dd>
+      <dt>处理提示</dt><dd>${escapeHtml(entry.reviewNote || '无需处理')}</dd>
     </dl>
   `;
 }
