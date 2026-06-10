@@ -1,4 +1,5 @@
 _private_test_runs/
+contract_verification_report.md
 __pycache__/
 *.py[cod]
 .pytest_cache/

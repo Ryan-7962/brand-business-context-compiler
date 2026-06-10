@@ -19,7 +19,12 @@ REQUIRED_OUTPUTS = [
 ]
 
 
-def verify_project_contract(project_dir: Path, library_dir: Path | None = None, repo_dir: Path | None = None) -> None:
+def verify_project_contract(
+    project_dir: Path,
+    library_dir: Path | None = None,
+    repo_dir: Path | None = None,
+    report_path: Path | None = None,
+) -> None:
     issues: list[str] = []
     target_library = library_dir or (project_dir / "brand_context_library")
     target_repo = repo_dir or _find_repo_dir(project_dir)
@@ -32,6 +37,9 @@ def verify_project_contract(project_dir: Path, library_dir: Path | None = None, 
     _check_library(target_library, issues)
     _check_unapproved_confirmed_status(project_dir, target_library, issues)
 
+    if report_path:
+        _write_verification_report(report_path, project_dir, target_library, target_repo, issues)
+
     if issues:
         print("Contract verification failed:")
         for issue in issues:
@@ -39,6 +47,45 @@ def verify_project_contract(project_dir: Path, library_dir: Path | None = None, 
         raise SystemExit(1)
 
     print("Contract verification passed.")
+
+
+def _write_verification_report(
+    report_path: Path,
+    project_dir: Path,
+    library_dir: Path,
+    repo_dir: Path | None,
+    issues: list[str],
+) -> None:
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    status = "failed" if issues else "passed"
+    lines = [
+        "# Contract Verification Report",
+        "",
+        f"- Status: {status}",
+        f"- Project: {project_dir}",
+        f"- Library: {library_dir}",
+        f"- Repo: {repo_dir if repo_dir else 'not detected'}",
+        "",
+        "## Checked Evidence",
+        "",
+        "- Required structured outputs",
+        "- Source conversion report and source transcripts",
+        "- Exception review page",
+        "- Context library entries and review queues",
+        "- Brand Context Map report",
+        "- Private test file tracking",
+        "- Optional privacy term scan",
+        "- Unapproved confirmed-status claims",
+        "",
+        "## Issues",
+        "",
+    ]
+    if issues:
+        lines.extend(f"- {issue}" for issue in issues)
+    else:
+        lines.append("No issues found.")
+    lines.append("")
+    report_path.write_text("\n".join(lines), encoding="utf-8")
 
 
 def _find_repo_dir(path: Path) -> Path | None:

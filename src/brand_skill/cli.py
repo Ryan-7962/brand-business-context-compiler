@@ -56,6 +56,7 @@ def main() -> None:
     p_contract = sub.add_parser("verify-contract")
     p_contract.add_argument("project_dir")
     p_contract.add_argument("--library-dir")
+    p_contract.add_argument("--write-report", action="store_true")
 
     args = parser.parse_args()
     project_dir = Path(getattr(args, "project_dir", getattr(args, "project_name", ".")))
@@ -83,7 +84,8 @@ def main() -> None:
         build_library_report(Path(args.library_dir))
     elif args.command == "verify-contract":
         library_dir = Path(args.library_dir) if args.library_dir else None
-        verify_project_contract(project_dir, library_dir=library_dir)
+        report_path = project_dir / "contract_verification_report.md" if args.write_report else None
+        verify_project_contract(project_dir, library_dir=library_dir, report_path=report_path)
 
 
 if __name__ == "__main__":
