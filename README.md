@@ -157,4 +157,5 @@ brand-skill check-claim-matrix <project_dir>
 - `examples/`：正式匿名化 demo 目录，后续只放虚构品牌、合成数据或已授权公开资料。
 - `docs/source_converter_strategy.md`：资料转写层策略，包含 MinerU 等高保真解析项目可吸收经验。
 - `docs/brand_context_library_architecture.md`：长期品牌上下文知识库结构。
+- `docs/project_success_contract.md`：项目执行准则，定义最终目标、验证证据、限制条件、操作边界、下一步判断规则和阻塞报告格式。
 - `discussion_context/`：本次对话沉淀的开发背景与关键讨论摘录。
