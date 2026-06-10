@@ -26,7 +26,9 @@ def build_library_report(library_dir: Path) -> Path:
         print(f"Missing context library: {library_dir}")
         raise SystemExit(1)
 
-    section_counts = _section_counts(library_dir)
+    taxonomy = _parse_taxonomy(library_dir)
+    entries = _collect_entries(library_dir, taxonomy)
+    section_counts = _section_counts(library_dir, taxonomy)
     total_entries = sum(section_counts.values())
     queue_counts = {
         "冲突待判断": _count_queue_batches(library_dir / "review_queue" / "conflicts.md"),
@@ -39,17 +41,98 @@ def build_library_report(library_dir: Path) -> Path:
 
     report_path = library_dir / "library_report.html"
     report_path.write_text(
-        _render_report(total_entries, pending_count, section_counts, queue_counts, recent_updates, reusable_notes),
+        _render_report(
+            total_entries,
+            pending_count,
+            section_counts,
+            queue_counts,
+            recent_updates,
+            reusable_notes,
+            taxonomy,
+            entries,
+        ),
         encoding="utf-8",
     )
     print(f"Library report generated: {report_path}")
     return report_path
 
 
-def _section_counts(library_dir: Path) -> dict[str, int]:
+def _parse_taxonomy(library_dir: Path) -> dict[str, dict[str, str]]:
+    taxonomy_path = library_dir / "taxonomy.md"
+    taxonomy = {
+        section: {
+            "id": section,
+            "label": SECTION_LABELS.get(section, section),
+            "description": "默认推荐分类",
+            "source": "默认推荐",
+            "status": "已启用",
+        }
+        for section in sorted(VALID_LIBRARY_DIRS)
+    }
+    if not taxonomy_path.exists():
+        return taxonomy
+
+    table_lines = [
+        line.strip()
+        for line in taxonomy_path.read_text(encoding="utf-8").splitlines()
+        if line.strip().startswith("|")
+    ]
+    for row in _parse_markdown_table(table_lines):
+        category_id = row.get("分类 ID", "").strip()
+        if not category_id:
+            continue
+        taxonomy[category_id] = {
+            "id": category_id,
+            "label": row.get("展示名称", category_id).strip() or category_id,
+            "description": row.get("说明", "").strip(),
+            "source": row.get("来源", "").strip() or "AI 建议",
+            "status": row.get("状态", "").strip() or "待确认",
+        }
+    return taxonomy
+
+
+def _parse_markdown_table(lines: list[str]) -> list[dict[str, str]]:
+    if len(lines) < 2:
+        return []
+    rows = [[cell.strip() for cell in line.strip("|").split("|")] for line in lines]
+    rows = [row for row in rows if not all(set(cell) <= {"-", ":"} for cell in row)]
+    if len(rows) < 2:
+        return []
+    header = rows[0]
+    return [dict(zip(header, row)) for row in rows[1:] if len(row) == len(header)]
+
+
+def _collect_entries(library_dir: Path, taxonomy: dict[str, dict[str, str]]) -> list[dict[str, str]]:
+    entries = []
+    category_ids = set(taxonomy)
+    category_ids.update(path.name for path in library_dir.iterdir() if path.is_dir())
+    for category_id in sorted(category_ids):
+        category_dir = library_dir / category_id
+        if not category_dir.is_dir() or category_id in {"review_queue", "retrieval_maps"}:
+            continue
+        for markdown_path in sorted(category_dir.glob("*.md")):
+            text = markdown_path.read_text(encoding="utf-8")
+            entries.append(
+                {
+                    "id": markdown_path.stem,
+                    "title": _first_heading(text) or markdown_path.stem,
+                    "summary": _extract_summary(text),
+                    "category": category_id,
+                    "categoryLabel": taxonomy.get(category_id, {}).get("label", category_id),
+                    "path": str(markdown_path.relative_to(library_dir)),
+                    "status": "正常",
+                }
+            )
+    return entries
+
+
+def _section_counts(library_dir: Path, taxonomy: dict[str, dict[str, str]]) -> dict[str, int]:
+    category_ids = set(taxonomy)
+    category_ids.update(path.name for path in library_dir.iterdir() if path.is_dir())
     return {
         section: len(list((library_dir / section).glob("*.md")))
-        for section in sorted(VALID_LIBRARY_DIRS)
+        for section in sorted(category_ids)
+        if (library_dir / section).is_dir() and section not in {"review_queue", "retrieval_maps"}
     }
 
 
@@ -86,12 +169,15 @@ def _render_report(
     queue_counts: dict[str, int],
     recent_updates: list[str],
     reusable_notes: list[str],
+    taxonomy: dict[str, dict[str, str]],
+    entries: list[dict[str, str]],
 ) -> str:
     sections = "\n".join(
         f"""
         <li>
-          <span>{html.escape(SECTION_LABELS.get(section, section))}</span>
+          <span>{html.escape(taxonomy.get(section, {}).get("label", section))}</span>
           <strong>{count}</strong>
+          <small>{html.escape(taxonomy.get(section, {}).get("source", ""))} · {html.escape(taxonomy.get(section, {}).get("status", ""))}</small>
         </li>
         """.strip()
         for section, count in section_counts.items()
@@ -216,6 +302,10 @@ def _render_report(
       <h2>后续可直接复用的场景</h2>
       {reusable}
     </section>
+    <section>
+      <h2>知识条目</h2>
+      {_render_entry_list(entries)}
+    </section>
   </main>
 </body>
 </html>
@@ -227,3 +317,38 @@ def _render_list(items: list[str], empty_text: str) -> str:
         return f"<p class=\"muted\">{html.escape(empty_text)}</p>"
     rendered = "".join(f"<li>{html.escape(item)}</li>" for item in items)
     return f"<ul>{rendered}</ul>"
+
+
+def _render_entry_list(entries: list[dict[str, str]]) -> str:
+    if not entries:
+        return "<p class=\"muted\">还没有知识条目。</p>"
+    rendered = "".join(
+        f"<li><strong>{html.escape(entry['title'])}</strong><span>{html.escape(entry['categoryLabel'])}</span><p>{html.escape(entry['summary'])}</p></li>"
+        for entry in entries
+    )
+    return f"<ul>{rendered}</ul>"
+
+
+def _first_heading(markdown: str) -> str:
+    for line in markdown.splitlines():
+        if line.startswith("# "):
+            return line[2:].strip()
+    return ""
+
+
+def _extract_summary(markdown: str) -> str:
+    lines = markdown.splitlines()
+    for index, line in enumerate(lines):
+        if line.strip() == "## 内容摘要":
+            summary_lines = []
+            for next_line in lines[index + 1 :]:
+                if next_line.startswith("## "):
+                    break
+                if next_line.strip():
+                    summary_lines.append(next_line.strip())
+            return " ".join(summary_lines).strip() or "暂无摘要。"
+    for line in lines:
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#") and not stripped.startswith("-"):
+            return stripped
+    return "暂无摘要。"

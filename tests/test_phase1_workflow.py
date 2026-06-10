@@ -412,6 +412,39 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertNotIn("Source Anchor", text)
             self.assertNotIn("Risk Level", text)
 
+    def test_build_library_report_uses_taxonomy_for_dynamic_categories(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            library_dir = Path(temp_dir) / "brand_context_library"
+            (library_dir / "channel_policy").mkdir(parents=True)
+            (library_dir / "review_queue").mkdir()
+            (library_dir / "retrieval_maps").mkdir()
+            (library_dir / "taxonomy.md").write_text(
+                "\n".join(
+                    [
+                        "# Knowledge Taxonomy",
+                        "",
+                        "| 分类 ID | 展示名称 | 说明 | 来源 | 状态 |",
+                        "|---|---|---|---|---|",
+                        "| channel_policy | 渠道政策 | 经销商、平台、渠道动作和政策 | AI 建议 | 待确认 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (library_dir / "channel_policy" / "dealer-policy.md").write_text(
+                "# 经销商政策\n\n## 内容摘要\n\n用于沉淀渠道政策。\n",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_library_report(library_dir)
+
+            text = (library_dir / "library_report.html").read_text(encoding="utf-8")
+            self.assertIn("渠道政策", text)
+            self.assertIn("AI 建议", text)
+            self.assertIn("待确认", text)
+            self.assertIn("经销商政策", text)
+            self.assertNotIn("channel_policy</span>", text)
+
     def test_cli_build_library_report_command(self) -> None:
         import sys
 
