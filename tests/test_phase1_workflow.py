@@ -730,6 +730,31 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertTrue(report.exists())
             self.assertIn("Status: failed", report.read_text(encoding="utf-8"))
 
+    def test_cli_demo_contract_runs_library_report_and_verification(self) -> None:
+        import sys
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path("examples/anonymous_marketing_campaign")
+            library_dir = Path(temp_dir) / "brand_context_library"
+            report_path = project_dir / "contract_verification_report.md"
+            if report_path.exists():
+                report_path.unlink()
+            argv = sys.argv
+            sys.argv = ["brand-skill", "demo-contract", str(project_dir), "--library-dir", str(library_dir)]
+            try:
+                with redirect_stdout(StringIO()) as stdout:
+                    cli_main()
+            finally:
+                sys.argv = argv
+
+            output = stdout.getvalue()
+            self.assertIn("Context library updated", output)
+            self.assertIn("Library report generated", output)
+            self.assertIn("Contract verification passed", output)
+            self.assertTrue((library_dir / "library_report.html").exists())
+            self.assertIn("Status: passed", report_path.read_text(encoding="utf-8"))
+            report_path.unlink()
+
     def test_verify_project_contract_fails_without_exception_review_page(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir) / "demo_project"
