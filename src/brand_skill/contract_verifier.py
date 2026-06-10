@@ -213,3 +213,6 @@ def _check_library(library_dir: Path, issues: list[str]) -> None:
         for remote_marker in ["https://", "http://", "src=\"//", "href=\"//"]:
             if remote_marker in report_text:
                 issues.append(f"Library report references remote resource: {remote_marker}")
+        for backend_marker in ["Source Anchor", "Risk Level", "来源锚点", "风险等级"]:
+            if backend_marker in report_text:
+                issues.append(f"Library report overexposes backend marker: {backend_marker}")
