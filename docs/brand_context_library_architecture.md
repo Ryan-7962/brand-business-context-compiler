@@ -69,3 +69,8 @@ brand-skill apply-library-update <project_dir> --library-dir <brand_context_libr
 它会读取 `outputs/11_context_library_update_plan.md` 的 `New Context Entries` 表，把 `写入建议` 为 `写入` 或 `暂存` 的条目写入对应目录，并追加 `evolution_log.md`。
 
 当前版本不会自动覆盖旧知识。若同目录下已经存在相同 slug 或相同标题的条目，新条目会进入 `review_queue/conflicts.md`，等待人工判断是补充、替换还是另存。
+
+同时会维护两个运营文件：
+
+- `review_queue/do_not_promote.md`：记录不应提升为长期品牌知识的临时信息、一次性政策或未验证判断。
+- `retrieval_maps/source_packages.md`：记录本次资料未来适合在哪些任务中被调用，以及不应在哪些场景误用。

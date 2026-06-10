@@ -33,6 +33,8 @@ def apply_context_library_update(project_dir: Path, library_dir: Path | None = N
 
     text = update_plan.read_text(encoding="utf-8")
     entries = _parse_new_context_entries(text)
+    do_not_promote = _extract_section(text, "4. Do Not Promote")
+    retrieval_notes = _extract_section(text, "6. Retrieval Notes")
     applied = []
     conflicts = []
     for entry in entries:
@@ -49,6 +51,10 @@ def apply_context_library_update(project_dir: Path, library_dir: Path | None = N
 
     if conflicts:
         _append_conflict_queue(target_dir, project_dir.name, conflicts)
+    if do_not_promote:
+        _append_do_not_promote_queue(target_dir, project_dir.name, do_not_promote)
+    if retrieval_notes:
+        _append_retrieval_notes(target_dir, project_dir.name, retrieval_notes)
     _append_evolution_log(target_dir, project_dir.name, applied)
     print(f"Context library updated: {target_dir}")
     print(f"Entries applied: {len(applied)}")
@@ -196,11 +202,35 @@ def _append_conflict_queue(library_dir: Path, project_name: str, conflicts: list
         handle.write("\n".join(lines))
 
 
+def _append_do_not_promote_queue(library_dir: Path, project_name: str, content: str) -> None:
+    path = library_dir / "review_queue" / "do_not_promote.md"
+    if not path.exists():
+        path.write_text("# Do Not Promote Queue\n\n", encoding="utf-8")
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    lines = [f"## {timestamp}｜{project_name}", "", _clean_section_content(content), ""]
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write("\n".join(lines))
+
+
+def _append_retrieval_notes(library_dir: Path, project_name: str, content: str) -> None:
+    path = library_dir / "retrieval_maps" / "source_packages.md"
+    if not path.exists():
+        path.write_text("# Source Package Retrieval Notes\n\n", encoding="utf-8")
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    lines = [f"## {timestamp}｜{project_name}", "", _clean_section_content(content), ""]
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write("\n".join(lines))
+
+
 def _slugify(text: str) -> str:
     text = text.strip().lower()
     text = re.sub(r"\s+", "-", text)
     text = re.sub(r"[^0-9a-zA-Z\u4e00-\u9fff_-]+", "", text)
     return text.strip("-_") or "context-entry"
+
+
+def _clean_section_content(content: str) -> str:
+    return content.strip() or "- No content."
 
 
 def _first_heading(markdown: str) -> str:

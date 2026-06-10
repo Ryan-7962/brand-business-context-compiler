@@ -242,6 +242,14 @@ class Phase1WorkflowTests(unittest.TestCase):
                         "|---|---|---|---|---|---|---|",
                         "| LCE001 | brand | 夏季关键词 | 城市、清爽、轻便、日常。 | CA001 | 项目期有效 | 暂存 |",
                         "| LCE002 | project | 临时预算 | 一次性预算信息。 | CA002 | 项目期有效 | 不写入 |",
+                        "",
+                        "## 4. Do Not Promote",
+                        "",
+                        "- 不把临时预算写入长期库。",
+                        "",
+                        "## 6. Retrieval Notes",
+                        "",
+                        "生成夏季活动方案时可以调用本资料。",
                     ]
                 ),
                 encoding="utf-8",
@@ -263,6 +271,10 @@ class Phase1WorkflowTests(unittest.TestCase):
             log_text = (library_dir / "evolution_log.md").read_text(encoding="utf-8")
             self.assertIn("demo_project", log_text)
             self.assertIn("LCE001", log_text)
+            do_not_promote = (library_dir / "review_queue" / "do_not_promote.md").read_text(encoding="utf-8")
+            self.assertIn("不把临时预算写入长期库", do_not_promote)
+            retrieval_notes = (library_dir / "retrieval_maps" / "source_packages.md").read_text(encoding="utf-8")
+            self.assertIn("生成夏季活动方案时可以调用本资料", retrieval_notes)
 
     def test_apply_context_library_update_queues_conflicts_without_overwriting(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
