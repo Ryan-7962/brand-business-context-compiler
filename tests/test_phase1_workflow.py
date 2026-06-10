@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 import warnings
+import subprocess
 from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
@@ -659,6 +660,25 @@ class Phase1WorkflowTests(unittest.TestCase):
                 sys.argv = argv
 
             self.assertIn("Contract verification failed", stdout.getvalue())
+
+    def test_verify_contract_fails_when_private_test_runs_are_tracked(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_dir = Path(temp_dir)
+            subprocess.run(["git", "init"], cwd=repo_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            private_file = repo_dir / "_private_test_runs" / "sample.md"
+            private_file.parent.mkdir()
+            private_file.write_text("private fixture", encoding="utf-8")
+            subprocess.run(["git", "add", str(private_file)], cwd=repo_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+            project_dir = repo_dir / "demo_project"
+            project_dir.mkdir()
+            with redirect_stdout(StringIO()) as stdout:
+                with self.assertRaises(SystemExit):
+                    verify_project_contract(project_dir, library_dir=repo_dir / "missing_library", repo_dir=repo_dir)
+
+            output = stdout.getvalue()
+            self.assertIn("Tracked private test file", output)
+            self.assertIn("_private_test_runs/sample.md", output)
 
 
 if __name__ == "__main__":

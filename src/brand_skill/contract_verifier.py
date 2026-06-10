@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 
@@ -16,10 +17,13 @@ REQUIRED_OUTPUTS = [
 ]
 
 
-def verify_project_contract(project_dir: Path, library_dir: Path | None = None) -> None:
+def verify_project_contract(project_dir: Path, library_dir: Path | None = None, repo_dir: Path | None = None) -> None:
     issues: list[str] = []
     target_library = library_dir or (project_dir / "brand_context_library")
+    target_repo = repo_dir or _find_repo_dir(project_dir)
 
+    if target_repo:
+        _check_repo_privacy(target_repo, issues)
     _check_outputs(project_dir, issues)
     _check_source_conversion(project_dir, issues)
     _check_library(target_library, issues)
@@ -31,6 +35,33 @@ def verify_project_contract(project_dir: Path, library_dir: Path | None = None) 
         raise SystemExit(1)
 
     print("Contract verification passed.")
+
+
+def _find_repo_dir(path: Path) -> Path | None:
+    current = path.resolve()
+    for candidate in [current, *current.parents]:
+        if (candidate / ".git").exists():
+            return candidate
+    return None
+
+
+def _check_repo_privacy(repo_dir: Path, issues: list[str]) -> None:
+    try:
+        result = subprocess.run(
+            ["git", "ls-files"],
+            cwd=repo_dir,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        issues.append(f"Unable to inspect git tracked files for repo: {repo_dir}")
+        return
+
+    for tracked_path in result.stdout.splitlines():
+        if tracked_path.startswith("_private_test_runs/"):
+            issues.append(f"Tracked private test file: {tracked_path}")
 
 
 def _check_outputs(project_dir: Path, issues: list[str]) -> None:
