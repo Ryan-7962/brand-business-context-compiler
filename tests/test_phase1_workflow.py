@@ -460,6 +460,53 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("经销商政策", text)
             self.assertNotIn("channel_policy</span>", text)
 
+    def test_build_library_report_hides_empty_default_categories_without_taxonomy(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            library_dir = Path(temp_dir) / "brand_context_library"
+            (library_dir / "brand").mkdir(parents=True)
+            (library_dir / "asset").mkdir()
+            (library_dir / "review_queue").mkdir()
+            (library_dir / "retrieval_maps").mkdir()
+            (library_dir / "brand" / "brand-tone.md").write_text("# 品牌语气\n", encoding="utf-8")
+
+            with redirect_stdout(StringIO()):
+                build_library_report(library_dir)
+
+            text = (library_dir / "library_report.html").read_text(encoding="utf-8")
+            self.assertIn("品牌认知", text)
+            self.assertIn('"id": "brand"', text)
+            self.assertNotIn("素材资产", text)
+            self.assertNotIn('"id": "asset"', text)
+
+    def test_build_library_report_shows_empty_categories_declared_by_taxonomy(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            library_dir = Path(temp_dir) / "brand_context_library"
+            (library_dir / "brand").mkdir(parents=True)
+            (library_dir / "asset").mkdir()
+            (library_dir / "review_queue").mkdir()
+            (library_dir / "retrieval_maps").mkdir()
+            (library_dir / "brand" / "brand-tone.md").write_text("# 品牌语气\n", encoding="utf-8")
+            (library_dir / "taxonomy.md").write_text(
+                "\n".join(
+                    [
+                        "# Knowledge Taxonomy",
+                        "",
+                        "| 分类 ID | 展示名称 | 说明 | 来源 | 状态 |",
+                        "|---|---|---|---|---|",
+                        "| asset | 素材资产 | 图片、视频、脚本、视觉风格 | 用户确认 | 已启用 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_library_report(library_dir)
+
+            text = (library_dir / "library_report.html").read_text(encoding="utf-8")
+            self.assertIn("素材资产", text)
+            self.assertIn('"id": "asset"', text)
+            self.assertIn("用户确认", text)
+
     def test_build_library_report_marks_entry_review_statuses(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             library_dir = Path(temp_dir) / "brand_context_library"

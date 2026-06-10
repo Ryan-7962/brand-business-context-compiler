@@ -68,6 +68,7 @@ def _parse_taxonomy(library_dir: Path) -> dict[str, dict[str, str]]:
             "description": "默认推荐分类",
             "source": "默认推荐",
             "status": "已启用",
+            "explicit": "否",
         }
         for section in sorted(VALID_LIBRARY_DIRS)
     }
@@ -89,6 +90,7 @@ def _parse_taxonomy(library_dir: Path) -> dict[str, dict[str, str]]:
             "description": row.get("说明", "").strip(),
             "source": row.get("来源", "").strip() or "AI 建议",
             "status": row.get("状态", "").strip() or "待确认",
+            "explicit": "是",
         }
     return taxonomy
 
@@ -191,11 +193,15 @@ def _normalize_review_match(text: str) -> str:
 def _section_counts(library_dir: Path, taxonomy: dict[str, dict[str, str]]) -> dict[str, int]:
     category_ids = set(taxonomy)
     category_ids.update(path.name for path in library_dir.iterdir() if path.is_dir())
-    return {
-        section: len(list((library_dir / section).glob("*.md")))
-        for section in sorted(category_ids)
-        if (library_dir / section).is_dir() and section not in {"review_queue", "retrieval_maps"}
-    }
+    counts = {}
+    for section in sorted(category_ids):
+        section_dir = library_dir / section
+        if not section_dir.is_dir() or section in {"review_queue", "retrieval_maps"}:
+            continue
+        count = len(list(section_dir.glob("*.md")))
+        if count > 0 or taxonomy.get(section, {}).get("explicit") == "是":
+            counts[section] = count
+    return counts
 
 
 def _count_queue_batches(path: Path) -> int:
