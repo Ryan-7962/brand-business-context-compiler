@@ -71,6 +71,15 @@ def _ensure_library_scaffold(library_dir: Path) -> None:
     log = library_dir / "evolution_log.md"
     if not log.exists():
         log.write_text("# Context Evolution Log\n\n", encoding="utf-8")
+    scaffold_files = {
+        library_dir / "review_queue" / "conflicts.md": "# Context Library Conflict Queue\n\n",
+        library_dir / "review_queue" / "updates.md": "# 旧知识更新队列\n\n",
+        library_dir / "review_queue" / "do_not_promote.md": "# Do Not Promote Queue\n\n",
+        library_dir / "retrieval_maps" / "source_packages.md": "# Source Package Retrieval Notes\n\n",
+    }
+    for path, content in scaffold_files.items():
+        if not path.exists():
+            path.write_text(content, encoding="utf-8")
     index = library_dir / "00_library_index.md"
     if not index.exists():
         _refresh_library_index(library_dir)

@@ -108,6 +108,7 @@ brand-skill build-prompt-pack <project_dir>
 brand-skill build-review-pack <project_dir>
 brand-skill apply-library-update <project_dir> --library-dir <brand_context_library_dir>
 brand-skill build-library-report <brand_context_library_dir>
+brand-skill verify-contract <project_dir> --library-dir <brand_context_library_dir>
 ```
 
 ## 最小使用路径
@@ -119,7 +120,8 @@ brand-skill build-library-report <brand_context_library_dir>
 4. 查看 review/brand_review.html，只处理识别异常
 5. 运行 apply-library-update，把可沉淀内容写入 brand_context_library/
 6. 运行 build-library-report，生成一页中文知识库概览
-7. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
+7. 运行 verify-contract，检查当前产物是否满足项目执行准则里的核心证据
+8. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
 ```
 
 长期库会持续维护：
@@ -133,6 +135,8 @@ brand-skill build-library-report <brand_context_library_dir>
 - `retrieval_maps/source_packages.md`：每份资料未来适合在哪些任务中调用。
 
 `build-library-report` 会生成 `library_report.html`，作为 Brand Context Map 使用：上方展示知识地图，下方提供搜索、筛选和条目详情。分类默认参考内置 Brand Marketing 分类；如果长期库中存在 `taxonomy.md`，则优先使用用户或 AI 确认过的动态分类。
+
+`verify-contract` 会检查 `docs/project_success_contract.md` 中定义的核心证据，例如 source conversion、关键 outputs、长期库条目、review queue、retrieval map 和 Brand Context Map。它用于每轮开发后的本地门禁，不替代人工业务判断。
 
 产品资料可选校验：
 

@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from .contract_verifier import verify_project_contract
 from .library_report import build_library_report
 from .library_writer import apply_context_library_update
 from .review_pack import build_review_pack
@@ -52,6 +53,10 @@ def main() -> None:
     p_library_report = sub.add_parser("build-library-report")
     p_library_report.add_argument("library_dir")
 
+    p_contract = sub.add_parser("verify-contract")
+    p_contract.add_argument("project_dir")
+    p_contract.add_argument("--library-dir")
+
     args = parser.parse_args()
     project_dir = Path(getattr(args, "project_dir", getattr(args, "project_name", ".")))
 
@@ -76,6 +81,9 @@ def main() -> None:
         apply_context_library_update(project_dir, library_dir=library_dir)
     elif args.command == "build-library-report":
         build_library_report(Path(args.library_dir))
+    elif args.command == "verify-contract":
+        library_dir = Path(args.library_dir) if args.library_dir else None
+        verify_project_contract(project_dir, library_dir=library_dir)
 
 
 if __name__ == "__main__":

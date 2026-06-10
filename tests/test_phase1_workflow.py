@@ -6,6 +6,7 @@ from io import StringIO
 from pathlib import Path
 
 from brand_skill.cli import main as cli_main
+from brand_skill.contract_verifier import verify_project_contract
 from brand_skill.library_report import build_library_report
 from brand_skill.library_writer import apply_context_library_update
 from brand_skill.review_pack import build_review_pack
@@ -286,6 +287,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("LCE001", log_text)
             do_not_promote = (library_dir / "review_queue" / "do_not_promote.md").read_text(encoding="utf-8")
             self.assertIn("不把临时预算写入长期库", do_not_promote)
+            self.assertTrue((library_dir / "review_queue" / "conflicts.md").exists())
             updates = (library_dir / "review_queue" / "updates.md").read_text(encoding="utf-8")
             self.assertIn("夏季关键词需要补充轻便表达", updates)
             self.assertIn("可能与旧品牌口径不一致", updates)
@@ -581,6 +583,82 @@ class Phase1WorkflowTests(unittest.TestCase):
                 sys.argv = argv
 
             self.assertTrue((library_dir / "library_report.html").exists())
+
+    def test_verify_project_contract_passes_when_required_evidence_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            outputs = project_dir / "outputs"
+            converted = project_dir / "converted_markdown"
+            transcripts = converted / "source_transcripts"
+            transcripts.mkdir(parents=True)
+            outputs.mkdir(parents=True)
+            required_outputs = [
+                "02_document_profile.md",
+                "03_marketing_semantic_transcript.md",
+                "04_key_facts_and_claims.md",
+                "05_strategy_and_execution_map.md",
+                "06_risk_and_review_items.md",
+                "10_context_asset_index.md",
+                "11_context_library_update_plan.md",
+            ]
+            for filename in required_outputs:
+                (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
+            (converted / "conversion_report.md").write_text(
+                "| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                encoding="utf-8",
+            )
+            (transcripts / "S001_demo.md").write_text(
+                "Source Anchor：S001#page=1\nPage Screenshot：../assets/S001/page_01.png\n低置信度\n",
+                encoding="utf-8",
+            )
+            library_dir = Path(temp_dir) / "brand_context_library"
+            for dirname in ["brand", "review_queue", "retrieval_maps"]:
+                (library_dir / dirname).mkdir(parents=True, exist_ok=True)
+            (library_dir / "brand" / "brand-tone.md").write_text("# 品牌语气\n", encoding="utf-8")
+            (library_dir / "review_queue" / "conflicts.md").write_text("# Context Library Conflict Queue\n", encoding="utf-8")
+            (library_dir / "review_queue" / "updates.md").write_text("# 旧知识更新队列\n", encoding="utf-8")
+            (library_dir / "review_queue" / "do_not_promote.md").write_text("# Do Not Promote Queue\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "library_report.html").write_text(
+                "Brand Context Map Knowledge Explorer categoryFilter statusFilter 条目详情",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()) as stdout:
+                verify_project_contract(project_dir, library_dir=library_dir)
+
+            self.assertIn("Contract verification passed", stdout.getvalue())
+
+    def test_verify_project_contract_fails_with_missing_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            (project_dir / "outputs").mkdir(parents=True)
+
+            with redirect_stdout(StringIO()) as stdout:
+                with self.assertRaises(SystemExit):
+                    verify_project_contract(project_dir, library_dir=Path(temp_dir) / "missing_library")
+
+            output = stdout.getvalue()
+            self.assertIn("Contract verification failed", output)
+            self.assertIn("Missing required output", output)
+            self.assertIn("Missing context library", output)
+
+    def test_cli_verify_contract_command_reports_missing_evidence(self) -> None:
+        import sys
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            project_dir.mkdir()
+            argv = sys.argv
+            sys.argv = ["brand-skill", "verify-contract", str(project_dir)]
+            try:
+                with redirect_stdout(StringIO()) as stdout:
+                    with self.assertRaises(SystemExit):
+                        cli_main()
+            finally:
+                sys.argv = argv
+
+            self.assertIn("Contract verification failed", stdout.getvalue())
 
 
 if __name__ == "__main__":
