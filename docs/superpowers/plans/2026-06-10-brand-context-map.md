@@ -378,7 +378,7 @@ Expected: no output and exit code 0.
 Run:
 
 ```bash
-rg -n "六神|舒肤佳|随身蛋|清爽香氛|59\.9|53\.9|49\.9|44\.9|672W|300W|20 亿|100 万|搜索量 \+51|预算 \+25|一瓶一码|防窜|liushen" --glob '!_private_test_runs/**' . || true
+rg -n "<PRIVATE_TEST_TERMS_REGEX>" --glob '!_private_test_runs/**' . || true
 ```
 
 Expected: no matches.
@@ -401,4 +401,3 @@ Expected: `/tmp/bmcc_context_map_demo/library_report.html` exists and contains `
 git add README.md docs/brand_context_library_architecture.md src/brand_skill/library_report.py tests/test_phase1_workflow.py
 git commit -m "docs: describe brand context map report"
 ```
-

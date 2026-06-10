@@ -42,6 +42,8 @@ brand_context_library/
 
 `00_library_index.md` 会由 Library Writer 自动刷新，显示各目录条目数量、待处理队列数量和最近入库记录。
 
+可选 `taxonomy.md` 用于定义当前知识库的一级分类。默认分类只是建议；当使用者的资料更偏销售、渠道、产品、客服或个人知识库时，可以由 AI 建议新的分类，再由用户确认后长期沿用。
+
 ## 4. 入库原则
 
 - 默认先完整转写，再判断是否入库。
@@ -80,4 +82,4 @@ brand-skill build-library-report <brand_context_library_dir>
 - `review_queue/updates.md`：记录可能需要补充、修正、替换旧知识的更新请求。
 - `retrieval_maps/source_packages.md`：记录本次资料未来适合在哪些任务中被调用，以及不应在哪些场景误用。
 
-`build-library-report` 会生成 `library_report.html`，用于给 marketer 快速查看知识库规模、待处理事项、最近入库内容和后续可复用场景。
+`build-library-report` 会生成 `library_report.html`，用于给使用者快速查看知识库规模、待处理事项、最近入库内容和后续可复用场景。当前版本同时包含 Brand Context Map、Knowledge Explorer、分类筛选、状态筛选和条目详情。

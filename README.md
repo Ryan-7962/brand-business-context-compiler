@@ -132,6 +132,8 @@ brand-skill build-library-report <brand_context_library_dir>
 - `review_queue/do_not_promote.md`：不应提升为长期知识的临时信息。
 - `retrieval_maps/source_packages.md`：每份资料未来适合在哪些任务中调用。
 
+`build-library-report` 会生成 `library_report.html`，作为 Brand Context Map 使用：上方展示知识地图，下方提供搜索、筛选和条目详情。分类默认参考内置 Brand Marketing 分类；如果长期库中存在 `taxonomy.md`，则优先使用用户或 AI 确认过的动态分类。
+
 产品资料可选校验：
 
 ```bash
