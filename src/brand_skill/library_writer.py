@@ -56,6 +56,7 @@ def apply_context_library_update(project_dir: Path, library_dir: Path | None = N
     if retrieval_notes:
         _append_retrieval_notes(target_dir, project_dir.name, retrieval_notes)
     _append_evolution_log(target_dir, project_dir.name, applied)
+    _refresh_library_index(target_dir)
     print(f"Context library updated: {target_dir}")
     print(f"Entries applied: {len(applied)}")
     print(f"Conflicts queued: {len(conflicts)}")
@@ -64,16 +65,12 @@ def apply_context_library_update(project_dir: Path, library_dir: Path | None = N
 def _ensure_library_scaffold(library_dir: Path) -> None:
     for dirname in sorted(VALID_LIBRARY_DIRS | {"retrieval_maps", "review_queue"}):
         (library_dir / dirname).mkdir(parents=True, exist_ok=True)
-    index = library_dir / "00_library_index.md"
-    if not index.exists():
-        index.write_text(
-            "# Brand Context Library Index\n\n"
-            "本目录用于沉淀长期品牌上下文。条目由 `11_context_library_update_plan.md` 写入或暂存。\n",
-            encoding="utf-8",
-        )
     log = library_dir / "evolution_log.md"
     if not log.exists():
         log.write_text("# Context Evolution Log\n\n", encoding="utf-8")
+    index = library_dir / "00_library_index.md"
+    if not index.exists():
+        _refresh_library_index(library_dir)
 
 
 def _parse_new_context_entries(markdown: str) -> list[dict[str, str]]:
@@ -220,6 +217,59 @@ def _append_retrieval_notes(library_dir: Path, project_name: str, content: str) 
     lines = [f"## {timestamp}｜{project_name}", "", _clean_section_content(content), ""]
     with path.open("a", encoding="utf-8") as handle:
         handle.write("\n".join(lines))
+
+
+def _refresh_library_index(library_dir: Path) -> None:
+    rows = []
+    for dirname in sorted(VALID_LIBRARY_DIRS):
+        count = len(list((library_dir / dirname).glob("*.md")))
+        rows.append(f"| {dirname} | {count} |")
+
+    conflict_count = _count_queue_sections(library_dir / "review_queue" / "conflicts.md")
+    do_not_promote_count = _count_queue_sections(library_dir / "review_queue" / "do_not_promote.md")
+    retrieval_count = _count_queue_sections(library_dir / "retrieval_maps" / "source_packages.md")
+    recent_log = _recent_log_entries(library_dir / "evolution_log.md")
+
+    text = "\n".join(
+        [
+            "# Brand Context Library Index",
+            "",
+            "本目录用于沉淀长期品牌上下文。条目由 `11_context_library_update_plan.md` 写入或暂存。",
+            "",
+            "## Section Counts",
+            "",
+            "| Section | Entries |",
+            "|---|---:|",
+            *rows,
+            "",
+            "## Review Queues",
+            "",
+            f"- Conflicts: {conflict_count}",
+            f"- Do Not Promote Records: {do_not_promote_count}",
+            f"- Retrieval Note Batches: {retrieval_count}",
+            "",
+            "## Recent Evolution",
+            "",
+            recent_log,
+            "",
+        ]
+    )
+    (library_dir / "00_library_index.md").write_text(text, encoding="utf-8")
+
+
+def _count_queue_sections(path: Path) -> int:
+    if not path.exists():
+        return 0
+    return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.startswith("## "))
+
+
+def _recent_log_entries(path: Path) -> str:
+    if not path.exists():
+        return "- No evolution log yet."
+    headings = [line for line in path.read_text(encoding="utf-8").splitlines() if line.startswith("## ")]
+    if not headings:
+        return "- No evolution log yet."
+    return "\n".join(f"- {line[3:]}" for line in headings[-5:])
 
 
 def _slugify(text: str) -> str:

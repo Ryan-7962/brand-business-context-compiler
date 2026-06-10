@@ -275,6 +275,11 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("不把临时预算写入长期库", do_not_promote)
             retrieval_notes = (library_dir / "retrieval_maps" / "source_packages.md").read_text(encoding="utf-8")
             self.assertIn("生成夏季活动方案时可以调用本资料", retrieval_notes)
+            index_text = (library_dir / "00_library_index.md").read_text(encoding="utf-8")
+            self.assertIn("| brand | 1 |", index_text)
+            self.assertIn("| project | 0 |", index_text)
+            self.assertIn("Do Not Promote Records: 1", index_text)
+            self.assertIn("Retrieval Note Batches: 1", index_text)
 
     def test_apply_context_library_update_queues_conflicts_without_overwriting(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -314,6 +319,8 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("brand/existing-summer.md", conflict_text)
             log_text = (library_dir / "evolution_log.md").read_text(encoding="utf-8")
             self.assertIn("No context entries applied", log_text)
+            index_text = (library_dir / "00_library_index.md").read_text(encoding="utf-8")
+            self.assertIn("Conflicts: 1", index_text)
 
     def test_cli_apply_library_update_command(self) -> None:
         import sys

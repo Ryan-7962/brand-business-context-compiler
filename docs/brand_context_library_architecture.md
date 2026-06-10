@@ -40,6 +40,8 @@ brand_context_library/
 | `review_queue/` | 可能重复、冲突或需要人工合并的条目 |
 | `evolution_log.md` | 每次资料入库、修正、冲突和更新记录 |
 
+`00_library_index.md` 会由 Library Writer 自动刷新，显示各目录条目数量、待处理队列数量和最近入库记录。
+
 ## 4. 入库原则
 
 - 默认先完整转写，再判断是否入库。
