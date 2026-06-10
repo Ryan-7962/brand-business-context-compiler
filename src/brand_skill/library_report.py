@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+import json
 from pathlib import Path
 
 from .library_writer import VALID_LIBRARY_DIRS
@@ -172,6 +173,15 @@ def _render_report(
     taxonomy: dict[str, dict[str, str]],
     entries: list[dict[str, str]],
 ) -> str:
+    categories = _report_categories(section_counts, taxonomy)
+    data = {
+        "categories": categories,
+        "entries": entries,
+        "queueCounts": queue_counts,
+        "recentUpdates": recent_updates,
+        "reusableNotes": reusable_notes,
+    }
+    embedded_data = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     sections = "\n".join(
         f"""
         <li>
@@ -188,6 +198,11 @@ def _render_report(
     )
     recent = _render_list(recent_updates, "还没有入库记录。")
     reusable = _render_list(reusable_notes, "还没有可复用场景说明。")
+    context_map = _render_context_map(categories, entries)
+    category_options = "\n".join(
+        f'<option value="{html.escape(category["id"])}">{html.escape(category["label"])}</option>'
+        for category in categories
+    )
 
     return f"""<!doctype html>
 <html lang="zh-CN">
@@ -232,7 +247,7 @@ def _render_report(
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
     }}
-    .metric, section {{
+    .metric, section, aside {{
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -250,6 +265,12 @@ def _render_report(
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
     }}
+    .workbench {{
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+      gap: 16px;
+      align-items: start;
+    }}
     ul {{ margin: 0; padding-left: 20px; }}
     .count-list {{
       display: grid;
@@ -261,16 +282,116 @@ def _render_report(
     .count-list li {{
       display: flex;
       justify-content: space-between;
+      flex-wrap: wrap;
       gap: 12px;
       border: 1px solid var(--line);
       border-radius: 6px;
       padding: 10px 12px;
       background: #fbfcfe;
     }}
+    .count-list small {{
+      flex-basis: 100%;
+      color: var(--muted);
+      font-size: 12px;
+    }}
+    .context-map {{
+      overflow: hidden;
+    }}
+    .map-canvas {{
+      display: grid;
+      gap: 14px;
+    }}
+    .map-center {{
+      justify-self: center;
+      border: 2px solid var(--accent);
+      border-radius: 999px;
+      padding: 16px 22px;
+      font-weight: 700;
+      color: var(--accent);
+      background: #effcf9;
+    }}
+    .map-branches {{
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }}
+    .map-category {{
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcfe;
+    }}
+    .map-category > button, .map-entry {{
+      width: 100%;
+      border: 0;
+      text-align: left;
+      background: transparent;
+      color: var(--ink);
+      font: inherit;
+      cursor: pointer;
+    }}
+    .map-category > button {{
+      font-weight: 700;
+    }}
+    .map-entry {{
+      display: block;
+      margin-top: 8px;
+      border-left: 3px solid #b7c5d4;
+      padding: 7px 8px;
+      background: #ffffff;
+      border-radius: 6px;
+    }}
+    .map-entry span, .explorer-item span {{
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+    }}
+    .explorer-controls {{
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }}
+    .explorer-controls input, .explorer-controls select {{
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 10px;
+      font: inherit;
+      background: #ffffff;
+    }}
+    .explorer-list {{
+      display: grid;
+      gap: 8px;
+    }}
+    .explorer-item {{
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 12px;
+      text-align: left;
+      background: #fbfcfe;
+      color: var(--ink);
+      font: inherit;
+      cursor: pointer;
+    }}
+    .detail-panel dl {{
+      display: grid;
+      grid-template-columns: 72px minmax(0, 1fr);
+      gap: 8px 12px;
+      margin: 0;
+    }}
+    .detail-panel dt {{
+      color: var(--muted);
+    }}
+    .detail-panel dd {{
+      margin: 0;
+      overflow-wrap: anywhere;
+    }}
     @media (max-width: 760px) {{
       header {{ padding: 22px 18px 14px; }}
       main {{ padding: 14px; }}
-      .metrics, .grid, .count-list {{ grid-template-columns: 1fr; }}
+      .metrics, .grid, .count-list, .workbench, .map-branches, .explorer-controls {{ grid-template-columns: 1fr; }}
     }}
   </style>
 </head>
@@ -283,6 +404,32 @@ def _render_report(
     <div class="metrics">
       <div class="metric"><strong>已沉淀 {total_entries} 个知识条目</strong><span>来自品牌、产品、活动、话术、人群、案例等长期上下文。</span></div>
       <div class="metric"><strong>待处理 {pending_count} 项</strong><span>只统计需要人工判断的冲突和旧知识更新，不要求逐条确认全部内容。</span></div>
+    </div>
+    {context_map}
+    <div class="workbench">
+      <section class="knowledge-explorer" aria-label="Knowledge Explorer">
+        <h2>Knowledge Explorer｜知识目录</h2>
+        <div class="explorer-controls">
+          <input data-role="searchInput" type="search" placeholder="搜索知识条目">
+          <select data-role="categoryFilter" aria-label="分类筛选">
+            <option value="all">全部分类</option>
+            {category_options}
+          </select>
+          <select data-role="statusFilter" aria-label="状态筛选">
+            <option value="all">全部状态</option>
+            <option value="正常">正常</option>
+            <option value="待更新">待更新</option>
+            <option value="冲突">冲突</option>
+          </select>
+        </div>
+        <div class="explorer-list" data-role="explorerList">
+          {_render_explorer_items(entries)}
+        </div>
+      </section>
+      <aside class="detail-panel" data-role="detailPanel">
+        <h2>条目详情</h2>
+        <p class="muted">点击知识地图或目录里的条目，查看摘要、分类、路径和状态。</p>
+      </aside>
     </div>
     <section>
       <h2>知识分布</h2>
@@ -306,10 +453,76 @@ def _render_report(
       <h2>知识条目</h2>
       {_render_entry_list(entries)}
     </section>
+    <script>
+      window.__BRAND_CONTEXT_LIBRARY__ = {embedded_data};
+    </script>
   </main>
 </body>
 </html>
 """
+
+
+def _report_categories(section_counts: dict[str, int], taxonomy: dict[str, dict[str, str]]) -> list[dict[str, str | int]]:
+    return [
+        {
+            "id": category_id,
+            "label": taxonomy.get(category_id, {}).get("label", category_id),
+            "description": taxonomy.get(category_id, {}).get("description", ""),
+            "source": taxonomy.get(category_id, {}).get("source", ""),
+            "status": taxonomy.get(category_id, {}).get("status", ""),
+            "count": count,
+        }
+        for category_id, count in section_counts.items()
+    ]
+
+
+def _render_context_map(categories: list[dict[str, str | int]], entries: list[dict[str, str]]) -> str:
+    branches = []
+    for category in categories:
+        category_entries = [entry for entry in entries if entry["category"] == category["id"]]
+        entry_nodes = "\n".join(
+            f"""
+            <button class="map-entry" type="button" data-node-type="entry" data-entry-id="{html.escape(entry["id"])}">
+              {html.escape(entry["title"])}
+              <span>{html.escape(entry["status"])}</span>
+            </button>
+            """.strip()
+            for entry in category_entries
+        )
+        branches.append(
+            f"""
+            <div class="map-category">
+              <button type="button" data-node-type="category" data-category-id="{html.escape(str(category["id"]))}">
+                {html.escape(str(category["label"]))}
+                <span>{category["count"]} 个条目 · {html.escape(str(category["status"]))}</span>
+              </button>
+              {entry_nodes or '<p class="muted">暂无条目。</p>'}
+            </div>
+            """.strip()
+        )
+    return f"""
+    <section class="context-map" aria-label="Brand Context Map">
+      <h2>Brand Context Map｜知识地图</h2>
+      <div class="map-canvas">
+        <div class="map-center">品牌知识库</div>
+        <div class="map-branches">{''.join(branches)}</div>
+      </div>
+    </section>
+    """
+
+
+def _render_explorer_items(entries: list[dict[str, str]]) -> str:
+    if not entries:
+        return '<p class="muted">还没有知识条目。</p>'
+    return "".join(
+        f"""
+        <button class="explorer-item" type="button" data-entry-id="{html.escape(entry["id"])}">
+          {html.escape(entry["title"])}
+          <span>{html.escape(entry["categoryLabel"])} · {html.escape(entry["status"])}</span>
+        </button>
+        """.strip()
+        for entry in entries
+    )
 
 
 def _render_list(items: list[str], empty_text: str) -> str:
