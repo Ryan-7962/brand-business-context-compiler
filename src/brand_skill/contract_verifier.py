@@ -28,6 +28,7 @@ def verify_project_contract(project_dir: Path, library_dir: Path | None = None, 
         _check_repo_privacy(target_repo, issues)
     _check_outputs(project_dir, issues)
     _check_source_conversion(project_dir, issues)
+    _check_review_pack(project_dir, issues)
     _check_library(target_library, issues)
     _check_unapproved_confirmed_status(project_dir, target_library, issues)
 
@@ -156,6 +157,27 @@ def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
     for marker in ["Source Anchor", "Page Screenshot", "低置信度"]:
         if marker not in transcript_text:
             issues.append(f"Source transcripts missing marker: {marker}")
+
+
+def _check_review_pack(project_dir: Path, issues: list[str]) -> None:
+    review_page = project_dir / "review" / "brand_review.html"
+    if not review_page.exists():
+        issues.append("Missing exception review page: review/brand_review.html")
+        return
+
+    text = review_page.read_text(encoding="utf-8")
+    required_markers = ["识别问题待处理", "文件大纲参考"]
+    for marker in required_markers:
+        if marker not in text:
+            issues.append(f"Review page missing exception-review marker: {marker}")
+
+    if not any(marker in text for marker in ["需要处理的问题", "自动通过，无需人工处理"]):
+        issues.append("Review page missing exception-review marker: 需要处理的问题 or 自动通过，无需人工处理")
+
+    backend_markers = ["Context Asset Index Review", 'class="source-anchor"', "来源位置：", "Risk Level"]
+    for marker in backend_markers:
+        if marker in text:
+            issues.append(f"Review page overexposes backend marker: {marker}")
 
 
 def _check_library(library_dir: Path, issues: list[str]) -> None:

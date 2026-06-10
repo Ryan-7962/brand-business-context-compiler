@@ -613,6 +613,12 @@ class Phase1WorkflowTests(unittest.TestCase):
                 "Source Anchor：S001#page=1\nPage Screenshot：../assets/S001/page_01.png\n低置信度\n",
                 encoding="utf-8",
             )
+            review_dir = project_dir / "review"
+            review_dir.mkdir()
+            (review_dir / "brand_review.html").write_text(
+                "识别问题待处理 需要处理的问题 文件大纲参考 自动通过，无需人工处理",
+                encoding="utf-8",
+            )
             library_dir = Path(temp_dir) / "brand_context_library"
             for dirname in ["brand", "review_queue", "retrieval_maps"]:
                 (library_dir / dirname).mkdir(parents=True, exist_ok=True)
@@ -630,6 +636,104 @@ class Phase1WorkflowTests(unittest.TestCase):
                 verify_project_contract(project_dir, library_dir=library_dir)
 
             self.assertIn("Contract verification passed", stdout.getvalue())
+
+    def test_verify_project_contract_fails_without_exception_review_page(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            outputs = project_dir / "outputs"
+            converted = project_dir / "converted_markdown"
+            transcripts = converted / "source_transcripts"
+            transcripts.mkdir(parents=True)
+            outputs.mkdir(parents=True)
+            for filename in [
+                "02_document_profile.md",
+                "03_marketing_semantic_transcript.md",
+                "04_key_facts_and_claims.md",
+                "05_strategy_and_execution_map.md",
+                "06_risk_and_review_items.md",
+                "10_context_asset_index.md",
+                "11_context_library_update_plan.md",
+            ]:
+                (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
+            (converted / "conversion_report.md").write_text(
+                "| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                encoding="utf-8",
+            )
+            (transcripts / "S001_demo.md").write_text(
+                "Source Anchor：S001#page=1\nPage Screenshot：../assets/S001/page_01.png\n低置信度\n",
+                encoding="utf-8",
+            )
+            library_dir = Path(temp_dir) / "brand_context_library"
+            for dirname in ["brand", "review_queue", "retrieval_maps"]:
+                (library_dir / dirname).mkdir(parents=True, exist_ok=True)
+            (library_dir / "brand" / "brand-tone.md").write_text("# 品牌语气\n", encoding="utf-8")
+            (library_dir / "review_queue" / "conflicts.md").write_text("# Context Library Conflict Queue\n", encoding="utf-8")
+            (library_dir / "review_queue" / "updates.md").write_text("# 旧知识更新队列\n", encoding="utf-8")
+            (library_dir / "review_queue" / "do_not_promote.md").write_text("# Do Not Promote Queue\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "library_report.html").write_text(
+                "Brand Context Map Knowledge Explorer categoryFilter statusFilter 条目详情",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()) as stdout:
+                with self.assertRaises(SystemExit):
+                    verify_project_contract(project_dir, library_dir=library_dir)
+
+            self.assertIn("Missing exception review page", stdout.getvalue())
+
+    def test_verify_project_contract_fails_when_review_page_overexposes_backend_assets(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            outputs = project_dir / "outputs"
+            converted = project_dir / "converted_markdown"
+            transcripts = converted / "source_transcripts"
+            transcripts.mkdir(parents=True)
+            outputs.mkdir(parents=True)
+            for filename in [
+                "02_document_profile.md",
+                "03_marketing_semantic_transcript.md",
+                "04_key_facts_and_claims.md",
+                "05_strategy_and_execution_map.md",
+                "06_risk_and_review_items.md",
+                "10_context_asset_index.md",
+                "11_context_library_update_plan.md",
+            ]:
+                (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
+            (converted / "conversion_report.md").write_text(
+                "| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                encoding="utf-8",
+            )
+            (transcripts / "S001_demo.md").write_text(
+                "Source Anchor：S001#page=1\nPage Screenshot：../assets/S001/page_01.png\n低置信度\n",
+                encoding="utf-8",
+            )
+            review_dir = project_dir / "review"
+            review_dir.mkdir()
+            (review_dir / "brand_review.html").write_text(
+                "Context Asset Index Review 来源位置：S001#page=1 class=\"source-anchor\"",
+                encoding="utf-8",
+            )
+            library_dir = Path(temp_dir) / "brand_context_library"
+            for dirname in ["brand", "review_queue", "retrieval_maps"]:
+                (library_dir / dirname).mkdir(parents=True, exist_ok=True)
+            (library_dir / "brand" / "brand-tone.md").write_text("# 品牌语气\n", encoding="utf-8")
+            (library_dir / "review_queue" / "conflicts.md").write_text("# Context Library Conflict Queue\n", encoding="utf-8")
+            (library_dir / "review_queue" / "updates.md").write_text("# 旧知识更新队列\n", encoding="utf-8")
+            (library_dir / "review_queue" / "do_not_promote.md").write_text("# Do Not Promote Queue\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "library_report.html").write_text(
+                "Brand Context Map Knowledge Explorer categoryFilter statusFilter 条目详情",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()) as stdout:
+                with self.assertRaises(SystemExit):
+                    verify_project_contract(project_dir, library_dir=library_dir)
+
+            output = stdout.getvalue()
+            self.assertIn("Review page missing exception-review marker", output)
+            self.assertIn("Review page overexposes backend marker", output)
 
     def test_verify_project_contract_fails_with_missing_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
