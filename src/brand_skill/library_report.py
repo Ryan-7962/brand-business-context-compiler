@@ -203,6 +203,7 @@ def _render_report(
         f'<option value="{html.escape(category["id"])}">{html.escape(category["label"])}</option>'
         for category in categories
     )
+    interaction_script = _interaction_script()
 
     return f"""<!doctype html>
 <html lang="zh-CN">
@@ -455,6 +456,7 @@ def _render_report(
     </section>
     <script>
       window.__BRAND_CONTEXT_LIBRARY__ = {embedded_data};
+      {interaction_script}
     </script>
   </main>
 </body>
@@ -523,6 +525,78 @@ def _render_explorer_items(entries: list[dict[str, str]]) -> str:
         """.strip()
         for entry in entries
     )
+
+
+def _interaction_script() -> str:
+    return r"""
+const libraryData = window.__BRAND_CONTEXT_LIBRARY__;
+const searchInput = document.querySelector('[data-role="searchInput"]');
+const categoryFilter = document.querySelector('[data-role="categoryFilter"]');
+const statusFilter = document.querySelector('[data-role="statusFilter"]');
+const explorerList = document.querySelector('[data-role="explorerList"]');
+const detailPanel = document.querySelector('[data-role="detailPanel"]');
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>'"]/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;'
+  }[char]));
+}
+
+function renderExplorer() {
+  const keyword = searchInput.value.trim().toLowerCase();
+  const category = categoryFilter.value;
+  const status = statusFilter.value;
+  const entries = libraryData.entries.filter((entry) => {
+    const haystack = `${entry.title} ${entry.summary} ${entry.categoryLabel}`.toLowerCase();
+    const matchesKeyword = !keyword || haystack.includes(keyword);
+    const matchesCategory = category === 'all' || entry.category === category;
+    const matchesStatus = status === 'all' || entry.status === status;
+    return matchesKeyword && matchesCategory && matchesStatus;
+  });
+  explorerList.innerHTML = entries.map((entry) => `
+    <button class="explorer-item" type="button" data-entry-id="${escapeHtml(entry.id)}">
+      ${escapeHtml(entry.title)}
+      <span>${escapeHtml(entry.categoryLabel)} · ${escapeHtml(entry.status)}</span>
+    </button>
+  `).join('') || '<p class="muted">没有匹配的知识条目。</p>';
+}
+
+function selectEntry(entryId) {
+  const entry = libraryData.entries.find((item) => item.id === entryId);
+  if (!entry) return;
+  detailPanel.innerHTML = `
+    <h2>${escapeHtml(entry.title)}</h2>
+    <p>${escapeHtml(entry.summary)}</p>
+    <dl>
+      <dt>分类</dt><dd>${escapeHtml(entry.categoryLabel)}</dd>
+      <dt>文件路径</dt><dd>${escapeHtml(entry.path)}</dd>
+      <dt>状态</dt><dd>${escapeHtml(entry.status)}</dd>
+    </dl>
+  `;
+}
+
+document.addEventListener('click', (event) => {
+  const entryButton = event.target.closest('[data-entry-id]');
+  if (entryButton) {
+    selectEntry(entryButton.dataset.entryId);
+    return;
+  }
+  const categoryButton = event.target.closest('[data-category-id]');
+  if (categoryButton) {
+    categoryFilter.value = categoryButton.dataset.categoryId;
+    renderExplorer();
+  }
+});
+
+searchInput.addEventListener('input', renderExplorer);
+categoryFilter.addEventListener('change', renderExplorer);
+statusFilter.addEventListener('change', renderExplorer);
+renderExplorer();
+"""
 
 
 def _render_list(items: list[str], empty_text: str) -> str:

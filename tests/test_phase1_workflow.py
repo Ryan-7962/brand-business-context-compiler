@@ -417,6 +417,13 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("搜索知识条目", text)
             self.assertIn("条目详情", text)
             self.assertIn("window.__BRAND_CONTEXT_LIBRARY__", text)
+            self.assertIn("function renderExplorer", text)
+            self.assertIn("function selectEntry", text)
+            self.assertIn("categoryFilter", text)
+            self.assertIn("statusFilter", text)
+            self.assertIn("searchInput", text)
+            self.assertIn("addEventListener", text)
+            self.assertIn("暂无摘要", text)
             self.assertNotIn("Source Anchor", text)
             self.assertNotIn("Risk Level", text)
 
