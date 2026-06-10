@@ -130,3 +130,6 @@ def _check_library(library_dir: Path, issues: list[str]) -> None:
         for marker in ["Brand Context Map", "Knowledge Explorer", "categoryFilter", "statusFilter", "条目详情"]:
             if marker not in report_text:
                 issues.append(f"Library report missing marker: {marker}")
+        for remote_marker in ["https://", "http://", "src=\"//", "href=\"//"]:
+            if remote_marker in report_text:
+                issues.append(f"Library report references remote resource: {remote_marker}")
