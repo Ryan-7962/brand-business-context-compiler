@@ -29,6 +29,7 @@ def verify_project_contract(project_dir: Path, library_dir: Path | None = None, 
     _check_outputs(project_dir, issues)
     _check_source_conversion(project_dir, issues)
     _check_library(target_library, issues)
+    _check_unapproved_confirmed_status(project_dir, target_library, issues)
 
     if issues:
         print("Contract verification failed:")
@@ -102,6 +103,36 @@ def _check_outputs(project_dir: Path, issues: list[str]) -> None:
             issues.append(f"Missing required output: outputs/{filename}")
         elif not path.read_text(encoding="utf-8").strip():
             issues.append(f"Empty required output: outputs/{filename}")
+
+
+def _check_unapproved_confirmed_status(project_dir: Path, library_dir: Path, issues: list[str]) -> None:
+    candidates = []
+    outputs_dir = project_dir / "outputs"
+    if outputs_dir.exists():
+        candidates.extend(outputs_dir.glob("*.md"))
+    if library_dir.exists():
+        candidates.extend(
+            path
+            for path in library_dir.rglob("*.md")
+            if "review_queue" not in path.parts and "retrieval_maps" not in path.parts
+        )
+
+    for path in candidates:
+        if "已品牌确认" not in path.read_text(encoding="utf-8"):
+            continue
+        label = _display_path(path, project_dir, library_dir)
+        issues.append(f"Unapproved confirmed status in generated file: {label}")
+
+
+def _display_path(path: Path, project_dir: Path, library_dir: Path) -> str:
+    try:
+        return str(path.relative_to(project_dir))
+    except ValueError:
+        pass
+    try:
+        return str(path.relative_to(library_dir))
+    except ValueError:
+        return str(path)
 
 
 def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:

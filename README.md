@@ -136,7 +136,7 @@ brand-skill verify-contract <project_dir> --library-dir <brand_context_library_d
 
 `build-library-report` 会生成 `library_report.html`，作为 Brand Context Map 使用：上方展示知识地图，下方提供搜索、筛选和条目详情。分类默认参考内置 Brand Marketing 分类；如果长期库中存在 `taxonomy.md`，则优先使用用户或 AI 确认过的动态分类。
 
-`verify-contract` 会检查 `docs/project_success_contract.md` 中定义的核心证据，例如 source conversion、关键 outputs、长期库条目、review queue、retrieval map、Brand Context Map、私有测试目录未被追踪和报告页离线静态约束。它用于每轮开发后的本地门禁，不替代人工业务判断。
+`verify-contract` 会检查 `docs/project_success_contract.md` 中定义的核心证据，例如 source conversion、关键 outputs、长期库条目、review queue、retrieval map、Brand Context Map、私有测试目录未被追踪、报告页离线静态约束，以及生成产物不得冒充 `已品牌确认`。它用于每轮开发后的本地门禁，不替代人工业务判断。
 
 如果需要在本机扫描私有测试关键词，可临时设置 `BRAND_SKILL_PRIVACY_TERMS_REGEX` 后再运行 `verify-contract`。不要把真实关键词写入仓库文件。
 
