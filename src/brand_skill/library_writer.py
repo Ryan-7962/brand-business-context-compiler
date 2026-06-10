@@ -222,12 +222,14 @@ def _append_update_queue(library_dir: Path, project_name: str, updates: list[dic
         method = update.get("更新方式", "").strip() or "待判断"
         new_info = update.get("新信息", "").strip()
         conflict = update.get("冲突或风险", "").strip()
+        version_basis = update.get("版本判断依据", "").strip() or "待确认"
         lines.extend(
             [
                 f"### {target}",
                 "",
                 f"- 更新方式：{method}",
                 f"- 冲突或风险：{conflict}",
+                f"- 版本判断依据：{version_basis}",
                 "",
                 "#### 新信息",
                 "",

@@ -49,6 +49,7 @@ brand_context_library/
 - 不把一次性价格、临时政策、阶段激励直接提升为长期品牌知识。
 - 被否方向、会议决策理由、复盘教训比成品总结更有长期价值。
 - 每次派生 brief 或人工修正，都应回流到 `evolution_log.md`。
+- 多份品牌资料内容冲突时，参考 source conversion 中记录的原始文件创建/修改时间；通常优先考虑修改时间更新的资料，但关键品牌口径不自动覆盖，进入 `review_queue/updates.md` 或 `review_queue/conflicts.md`。
 
 ## 5. 与当前 Skill 的关系
 
@@ -66,6 +67,7 @@ brand_context_library/
 
 ```bash
 brand-skill apply-library-update <project_dir> --library-dir <brand_context_library_dir>
+brand-skill build-library-report <brand_context_library_dir>
 ```
 
 它会读取 `outputs/11_context_library_update_plan.md` 的 `New Context Entries` 表，把 `写入建议` 为 `写入` 或 `暂存` 的条目写入对应目录，并追加 `evolution_log.md`。
@@ -77,3 +79,5 @@ brand-skill apply-library-update <project_dir> --library-dir <brand_context_libr
 - `review_queue/do_not_promote.md`：记录不应提升为长期品牌知识的临时信息、一次性政策或未验证判断。
 - `review_queue/updates.md`：记录可能需要补充、修正、替换旧知识的更新请求。
 - `retrieval_maps/source_packages.md`：记录本次资料未来适合在哪些任务中被调用，以及不应在哪些场景误用。
+
+`build-library-report` 会生成 `library_report.html`，用于给 marketer 快速查看知识库规模、待处理事项、最近入库内容和后续可复用场景。

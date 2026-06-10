@@ -107,6 +107,7 @@ brand-skill scaffold-output <project_dir>
 brand-skill build-prompt-pack <project_dir>
 brand-skill build-review-pack <project_dir>
 brand-skill apply-library-update <project_dir> --library-dir <brand_context_library_dir>
+brand-skill build-library-report <brand_context_library_dir>
 ```
 
 ## 最小使用路径
@@ -117,12 +118,14 @@ brand-skill apply-library-update <project_dir> --library-dir <brand_context_libr
 3. 用 Prompt Bundle 生成 00-11 输出
 4. 查看 review/brand_review.html，只处理识别异常
 5. 运行 apply-library-update，把可沉淀内容写入 brand_context_library/
-6. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
+6. 运行 build-library-report，生成一页中文知识库概览
+7. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
 ```
 
 长期库会持续维护：
 
 - `00_library_index.md`：知识库首页和统计。
+- `library_report.html`：给 marketer 快速查看的中文知识库概览页。
 - `evolution_log.md`：每次入库记录。
 - `review_queue/conflicts.md`：疑似重复或冲突条目。
 - `review_queue/updates.md`：可能需要更新旧知识的条目。
@@ -137,6 +140,8 @@ brand-skill check-claim-matrix <project_dir>
 ```
 
 `convert-source` 当前支持默认轻量引擎 `pymupdf4llm`。`mineru` 作为高保真 optional engine 已预留架构，但第一版不强制安装。
+
+`convert-source` 会记录原始文件创建时间和修改时间。若多份品牌资料内容冲突，默认把修改时间更新的文件作为版本判断线索，但不会自动覆盖关键品牌口径；相关内容应进入冲突队列或旧知识更新队列。
 
 ## 目录说明
 

@@ -6,6 +6,7 @@ from io import StringIO
 from pathlib import Path
 
 from brand_skill.cli import main as cli_main
+from brand_skill.library_report import build_library_report
 from brand_skill.library_writer import apply_context_library_update
 from brand_skill.review_pack import build_review_pack
 from brand_skill.source_converter import convert_source
@@ -148,7 +149,13 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertTrue(report.exists())
             self.assertTrue(page_image.exists())
             self.assertIn("Source Anchor：S001#page=1", transcript.read_text(encoding="utf-8"))
-            self.assertIn("pymupdf4llm", report.read_text(encoding="utf-8"))
+            transcript_text = transcript.read_text(encoding="utf-8")
+            report_text = report.read_text(encoding="utf-8")
+            self.assertIn("文件创建时间：", transcript_text)
+            self.assertIn("文件修改时间：", transcript_text)
+            self.assertIn("原始文件创建时间", report_text)
+            self.assertIn("原始文件修改时间", report_text)
+            self.assertIn("pymupdf4llm", report_text)
 
     def test_convert_source_marks_mineru_as_optional(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -245,9 +252,9 @@ class Phase1WorkflowTests(unittest.TestCase):
                         "",
                         "## 3. Existing Context Updates",
                         "",
-                        "| 可能影响的已有条目 | 更新方式 | 新信息 | 冲突或风险 |",
-                        "|---|---|---|---|",
-                        "| 待检索 | 补充 | 夏季关键词需要补充轻便表达。 | 可能与旧品牌口径不一致 |",
+                        "| 可能影响的已有条目 | 更新方式 | 新信息 | 冲突或风险 | 版本判断依据 |",
+                        "|---|---|---|---|---|",
+                        "| 待检索 | 补充 | 夏季关键词需要补充轻便表达。 | 可能与旧品牌口径不一致 | 来源文件修改时间较新 |",
                         "",
                         "## 4. Do Not Promote",
                         "",
@@ -282,6 +289,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             updates = (library_dir / "review_queue" / "updates.md").read_text(encoding="utf-8")
             self.assertIn("夏季关键词需要补充轻便表达", updates)
             self.assertIn("可能与旧品牌口径不一致", updates)
+            self.assertIn("来源文件修改时间较新", updates)
             retrieval_notes = (library_dir / "retrieval_maps" / "source_packages.md").read_text(encoding="utf-8")
             self.assertIn("生成夏季活动方案时可以调用本资料", retrieval_notes)
             index_text = (library_dir / "00_library_index.md").read_text(encoding="utf-8")
@@ -363,6 +371,65 @@ class Phase1WorkflowTests(unittest.TestCase):
                 sys.argv = argv
 
             self.assertEqual(len(list((library_dir / "language").glob("*.md"))), 1)
+
+    def test_build_library_report_creates_marketer_friendly_html(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            library_dir = Path(temp_dir) / "brand_context_library"
+            (library_dir / "brand").mkdir(parents=True)
+            (library_dir / "project").mkdir()
+            (library_dir / "review_queue").mkdir()
+            (library_dir / "retrieval_maps").mkdir()
+            (library_dir / "brand" / "summer-keywords.md").write_text("# 夏季关键词\n", encoding="utf-8")
+            (library_dir / "project" / "launch-plan.md").write_text("# 上市计划\n", encoding="utf-8")
+            (library_dir / "review_queue" / "updates.md").write_text(
+                "# 旧知识更新队列\n\n## 2026-06-10T00:00:00Z｜demo\n\n### 待检索\n",
+                encoding="utf-8",
+            )
+            (library_dir / "review_queue" / "conflicts.md").write_text(
+                "# Context Library Conflict Queue\n\n## 2026-06-10T00:00:00Z｜demo\n",
+                encoding="utf-8",
+            )
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text(
+                "# Source Package Retrieval Notes\n\n## 2026-06-10T00:00:00Z｜demo\n\n生成夏季活动方案时可以调用本资料。\n",
+                encoding="utf-8",
+            )
+            (library_dir / "evolution_log.md").write_text(
+                "# Context Evolution Log\n\n## 2026-06-10T00:00:00Z｜demo\n\n- LCE001: 夏季关键词 -> `brand/summer-keywords.md`\n",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_library_report(library_dir)
+
+            report = library_dir / "library_report.html"
+            text = report.read_text(encoding="utf-8")
+            self.assertTrue(report.exists())
+            self.assertIn("品牌知识库概览", text)
+            self.assertIn("已沉淀 2 个知识条目", text)
+            self.assertIn("待处理 2 项", text)
+            self.assertIn("生成夏季活动方案时可以调用本资料", text)
+            self.assertIn("夏季关键词", text)
+            self.assertNotIn("Source Anchor", text)
+            self.assertNotIn("Risk Level", text)
+
+    def test_cli_build_library_report_command(self) -> None:
+        import sys
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            library_dir = Path(temp_dir) / "brand_context_library"
+            (library_dir / "brand").mkdir(parents=True)
+            (library_dir / "review_queue").mkdir()
+            (library_dir / "retrieval_maps").mkdir()
+            (library_dir / "brand" / "brand-tone.md").write_text("# 品牌语气\n", encoding="utf-8")
+            argv = sys.argv
+            sys.argv = ["brand-skill", "build-library-report", str(library_dir)]
+            try:
+                with redirect_stdout(StringIO()):
+                    cli_main()
+            finally:
+                sys.argv = argv
+
+            self.assertTrue((library_dir / "library_report.html").exists())
 
 
 if __name__ == "__main__":

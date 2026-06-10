@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from .library_report import build_library_report
 from .library_writer import apply_context_library_update
 from .review_pack import build_review_pack
 from .source_converter import convert_source
@@ -48,6 +49,9 @@ def main() -> None:
     p_library.add_argument("project_dir")
     p_library.add_argument("--library-dir")
 
+    p_library_report = sub.add_parser("build-library-report")
+    p_library_report.add_argument("library_dir")
+
     args = parser.parse_args()
     project_dir = Path(getattr(args, "project_dir", getattr(args, "project_name", ".")))
 
@@ -70,6 +74,8 @@ def main() -> None:
     elif args.command == "apply-library-update":
         library_dir = Path(args.library_dir) if args.library_dir else None
         apply_context_library_update(project_dir, library_dir=library_dir)
+    elif args.command == "build-library-report":
+        build_library_report(Path(args.library_dir))
 
 
 if __name__ == "__main__":

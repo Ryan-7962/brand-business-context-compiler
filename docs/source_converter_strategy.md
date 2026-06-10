@@ -141,7 +141,7 @@ converted_markdown/source_transcripts/S001_product_training.md
 每个资料生成转换质量记录：
 
 ```markdown
-| 来源编号 | 原始文件 | 转写 Markdown | 提取方式 | 页码/Slide 范围 | 表格保留 | 图片/图表占位 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 |
+| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 提取方式 | 页码/Slide 范围 | 表格保留 | 图片/图表占位 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 |
 ```
 
 后续应增加：
@@ -149,6 +149,8 @@ converted_markdown/source_transcripts/S001_product_training.md
 ```markdown
 | 转写引擎 | OCR 是否启用 | 表格还原质量 | 图片说明质量 |
 ```
+
+文件创建/修改时间用于多版本品牌资料的版本判断。若内容冲突，默认把修改时间更新的文件作为优先参考线索，但关键品牌口径、价格政策、策略判断不应被自动覆盖，应进入后续冲突或旧知识更新队列。
 
 ### 3.3 Source Facts
 
@@ -219,4 +221,3 @@ brand-skill convert-source <project_dir> --engine pymupdf4llm
 3. 给 Source Conversion Report 增加 engine/OCR/table/image quality 字段。
 4. 小规模评估 MinerU。
 5. 再决定是否把 MinerU 做成 optional adapter。
-

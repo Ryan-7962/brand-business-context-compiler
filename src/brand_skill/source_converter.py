@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -31,6 +32,17 @@ def _source_label(project_dir: Path, pdf: Path) -> str:
     if len(relative.parts) > 1:
         return _safe_stem(Path(relative.parts[0]))
     return _safe_stem(pdf)
+
+
+def _file_timestamps(path: Path) -> tuple[str, str]:
+    stat = path.stat()
+    created_ts = getattr(stat, "st_birthtime", stat.st_ctime)
+    modified_ts = stat.st_mtime
+    return _format_timestamp(created_ts), _format_timestamp(modified_ts)
+
+
+def _format_timestamp(timestamp: float) -> str:
+    return datetime.fromtimestamp(timestamp, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE) -> None:
@@ -72,6 +84,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         asset_dir_name = f"{source_id}_{safe_name}"
         asset_dir = assets_root / asset_dir_name
         asset_dir.mkdir(parents=True, exist_ok=True)
+        created_at, modified_at = _file_timestamps(pdf)
 
         doc = fitz.open(pdf)
         chunks = pymupdf4llm.to_markdown(
@@ -90,6 +103,9 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
             f"- Source ID：{source_id}",
             f"- 原始文件：{pdf.name}",
             "- 文件类型：PDF",
+            f"- 文件创建时间：{created_at}",
+            f"- 文件修改时间：{modified_at}",
+            "- 版本判断说明：若多份资料内容冲突，优先参考修改时间更新的文件；但关键品牌口径仍需进入冲突队列或人工复核，不自动覆盖。",
             f"- 页数：{doc.page_count}",
             f"- 转写引擎：{engine}",
             "- 转写方式：PyMuPDF / pymupdf4llm 文本解析 + 每页截图占位",
@@ -151,6 +167,8 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
                 [
                     source_id,
                     pdf.name,
+                    created_at,
+                    modified_at,
                     f"converted_markdown/source_transcripts/{transcript_name}",
                     engine,
                     "文本解析 + 每页截图",
@@ -175,8 +193,8 @@ def _write_conversion_report(path: Path, rows: list[list[str]]) -> None:
     report = [
         "# Source Conversion Report",
         "",
-        "| 来源编号 | 原始文件 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for row in rows:
         report.append("| " + " | ".join(cell.replace("|", "/") for cell in row) + " |")
