@@ -75,4 +75,5 @@ brand-skill apply-library-update <project_dir> --library-dir <brand_context_libr
 同时会维护两个运营文件：
 
 - `review_queue/do_not_promote.md`：记录不应提升为长期品牌知识的临时信息、一次性政策或未验证判断。
+- `review_queue/updates.md`：记录可能需要补充、修正、替换旧知识的更新请求。
 - `retrieval_maps/source_packages.md`：记录本次资料未来适合在哪些任务中被调用，以及不应在哪些场景误用。

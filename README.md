@@ -109,6 +109,26 @@ brand-skill build-review-pack <project_dir>
 brand-skill apply-library-update <project_dir> --library-dir <brand_context_library_dir>
 ```
 
+## 最小使用路径
+
+```text
+1. 把 PDF / PPT / 长图放入 source/
+2. 运行 source conversion，生成带页码和低置信度标记的 Markdown
+3. 用 Prompt Bundle 生成 00-11 输出
+4. 查看 review/brand_review.html，只处理识别异常
+5. 运行 apply-library-update，把可沉淀内容写入 brand_context_library/
+6. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
+```
+
+长期库会持续维护：
+
+- `00_library_index.md`：知识库首页和统计。
+- `evolution_log.md`：每次入库记录。
+- `review_queue/conflicts.md`：疑似重复或冲突条目。
+- `review_queue/updates.md`：可能需要更新旧知识的条目。
+- `review_queue/do_not_promote.md`：不应提升为长期知识的临时信息。
+- `retrieval_maps/source_packages.md`：每份资料未来适合在哪些任务中调用。
+
 产品资料可选校验：
 
 ```bash

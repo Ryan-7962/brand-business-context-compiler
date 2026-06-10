@@ -33,6 +33,7 @@ def apply_context_library_update(project_dir: Path, library_dir: Path | None = N
 
     text = update_plan.read_text(encoding="utf-8")
     entries = _parse_new_context_entries(text)
+    existing_updates = _parse_existing_context_updates(text)
     do_not_promote = _extract_section(text, "4. Do Not Promote")
     retrieval_notes = _extract_section(text, "6. Retrieval Notes")
     applied = []
@@ -51,6 +52,8 @@ def apply_context_library_update(project_dir: Path, library_dir: Path | None = N
 
     if conflicts:
         _append_conflict_queue(target_dir, project_dir.name, conflicts)
+    if existing_updates:
+        _append_update_queue(target_dir, project_dir.name, existing_updates)
     if do_not_promote:
         _append_do_not_promote_queue(target_dir, project_dir.name, do_not_promote)
     if retrieval_notes:
@@ -80,6 +83,14 @@ def _parse_new_context_entries(markdown: str) -> list[dict[str, str]]:
     table_lines = [line.strip() for line in section.splitlines() if line.strip().startswith("|")]
     rows = _parse_table(table_lines)
     return rows
+
+
+def _parse_existing_context_updates(markdown: str) -> list[dict[str, str]]:
+    section = _extract_section(markdown, "3. Existing Context Updates")
+    if not section:
+        return []
+    table_lines = [line.strip() for line in section.splitlines() if line.strip().startswith("|")]
+    return _parse_table(table_lines)
 
 
 def _extract_section(markdown: str, heading: str) -> str:
@@ -199,6 +210,39 @@ def _append_conflict_queue(library_dir: Path, project_name: str, conflicts: list
         handle.write("\n".join(lines))
 
 
+def _append_update_queue(library_dir: Path, project_name: str, updates: list[dict[str, str]]) -> None:
+    path = library_dir / "review_queue" / "updates.md"
+    if not path.exists():
+        path.write_text("# 旧知识更新队列\n\n", encoding="utf-8")
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    lines = [f"## {timestamp}｜{project_name}", ""]
+    for update in updates:
+        target = update.get("可能影响的已有条目", "").strip() or "待检索"
+        method = update.get("更新方式", "").strip() or "待判断"
+        new_info = update.get("新信息", "").strip()
+        conflict = update.get("冲突或风险", "").strip()
+        lines.extend(
+            [
+                f"### {target}",
+                "",
+                f"- 更新方式：{method}",
+                f"- 冲突或风险：{conflict}",
+                "",
+                "#### 新信息",
+                "",
+                new_info or "待补充",
+                "",
+                "#### 建议处理",
+                "",
+                "- 检索长期库中可能相关的旧条目，判断是否补充、修正、替换或暂不处理。",
+                "",
+            ]
+        )
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write("\n".join(lines))
+
+
 def _append_do_not_promote_queue(library_dir: Path, project_name: str, content: str) -> None:
     path = library_dir / "review_queue" / "do_not_promote.md"
     if not path.exists():
@@ -226,6 +270,7 @@ def _refresh_library_index(library_dir: Path) -> None:
         rows.append(f"| {dirname} | {count} |")
 
     conflict_count = _count_queue_sections(library_dir / "review_queue" / "conflicts.md")
+    update_count = _count_queue_sections(library_dir / "review_queue" / "updates.md")
     do_not_promote_count = _count_queue_sections(library_dir / "review_queue" / "do_not_promote.md")
     retrieval_count = _count_queue_sections(library_dir / "retrieval_maps" / "source_packages.md")
     recent_log = _recent_log_entries(library_dir / "evolution_log.md")
@@ -245,6 +290,7 @@ def _refresh_library_index(library_dir: Path) -> None:
             "## Review Queues",
             "",
             f"- Conflicts: {conflict_count}",
+            f"- Existing Updates: {update_count}",
             f"- Do Not Promote Records: {do_not_promote_count}",
             f"- Retrieval Note Batches: {retrieval_count}",
             "",
