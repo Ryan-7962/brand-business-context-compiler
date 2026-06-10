@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 import warnings
+import os
 import subprocess
 from contextlib import redirect_stdout
 from io import StringIO
@@ -724,6 +725,32 @@ class Phase1WorkflowTests(unittest.TestCase):
                     verify_project_contract(project_dir, library_dir=library_dir)
 
             self.assertIn("Library report references remote resource", stdout.getvalue())
+
+    def test_verify_contract_scans_tracked_files_with_privacy_terms_env(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_dir = Path(temp_dir)
+            subprocess.run(["git", "init"], cwd=repo_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            leaked = repo_dir / "README.md"
+            leaked.write_text("This file contains ACME_PRIVATE_MARKER.", encoding="utf-8")
+            subprocess.run(["git", "add", str(leaked)], cwd=repo_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            project_dir = repo_dir / "demo_project"
+            project_dir.mkdir()
+
+            original = os.environ.get("BRAND_SKILL_PRIVACY_TERMS_REGEX")
+            os.environ["BRAND_SKILL_PRIVACY_TERMS_REGEX"] = "ACME_PRIVATE_MARKER"
+            try:
+                with redirect_stdout(StringIO()) as stdout:
+                    with self.assertRaises(SystemExit):
+                        verify_project_contract(project_dir, library_dir=repo_dir / "missing_library", repo_dir=repo_dir)
+            finally:
+                if original is None:
+                    os.environ.pop("BRAND_SKILL_PRIVACY_TERMS_REGEX", None)
+                else:
+                    os.environ["BRAND_SKILL_PRIVACY_TERMS_REGEX"] = original
+
+            output = stdout.getvalue()
+            self.assertIn("Privacy term match in tracked file", output)
+            self.assertIn("README.md", output)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -62,6 +64,31 @@ def _check_repo_privacy(repo_dir: Path, issues: list[str]) -> None:
     for tracked_path in result.stdout.splitlines():
         if tracked_path.startswith("_private_test_runs/"):
             issues.append(f"Tracked private test file: {tracked_path}")
+    _check_privacy_terms(repo_dir, result.stdout.splitlines(), issues)
+
+
+def _check_privacy_terms(repo_dir: Path, tracked_paths: list[str], issues: list[str]) -> None:
+    pattern = os.environ.get("BRAND_SKILL_PRIVACY_TERMS_REGEX", "").strip()
+    if not pattern:
+        return
+    try:
+        regex = re.compile(pattern)
+    except re.error as exc:
+        issues.append(f"Invalid BRAND_SKILL_PRIVACY_TERMS_REGEX: {exc}")
+        return
+
+    for tracked_path in tracked_paths:
+        if tracked_path.startswith("_private_test_runs/"):
+            continue
+        path = repo_dir / tracked_path
+        if not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        if regex.search(text):
+            issues.append(f"Privacy term match in tracked file: {tracked_path}")
 
 
 def _check_outputs(project_dir: Path, issues: list[str]) -> None:
