@@ -7,6 +7,7 @@
 Codex 最终应把本项目推进为一个本地优先的 Brand / Business Context Compiler：
 
 - 能读取品牌、营销、产品、销售、渠道、会议、复盘等人类资料。
+- 能把本地文件夹、用户明确授权的私有知识库导出文件和 ima 等私有资料源作为输入，但真实资料只进入本地私有测试区。
 - 能把 PDF / PPT / 长图 / 文档尽量保真地转成 AI-readable Markdown。
 - 能生成文件画像、语义转述、关键事实、策略执行结构、风险与待确认项。
 - 能把可长期复用的信息沉淀为本地结构化知识库。
@@ -34,6 +35,7 @@ Codex 最终应把本项目推进为一个本地优先的 Brand / Business Conte
 
 - CLI 能从示例项目生成或更新真实文件，而不是只在对话中描述方案。
 - `converted_markdown/` 中有来源转写、页码 / 截图 / 低置信度说明、识别质量摘要和文件创建 / 修改时间。
+- 当资料来自 ima 或其他外部知识库时，`source/source_manifest.json` 能保留来源平台、知识库、路径、media id 等追溯线索，并写入 transcript / conversion report。
 - `outputs/` 中有文件画像、语义转述、关键事实、策略结构、风险项、Context Asset Index 和 Context Library Update Plan。
 - `brand_context_library/` 中实际生成 Markdown 条目。
 - `review_queue/conflicts.md` 能记录疑似重复或冲突条目。
@@ -72,6 +74,7 @@ Codex 允许使用：
 
 - 当前仓库内的代码、文档、prompts、schemas、examples 和 tests。
 - `_private_test_runs/` 中的私有测试资料，仅用于本地验证；该目录不得提交。
+- ima 等私有知识库中的资料，仅在用户明确要求时读取，并只能下载或缓存到 `_private_test_runs/` 这类私有测试目录。
 - 本地 Python CLI、单元测试、编译检查、文本搜索和 Git。
 - 本地生成的临时目录，例如 `/tmp/...`，用于 demo 验证。
 - 用户明确提供的本地文件路径。
@@ -81,6 +84,7 @@ Codex 不允许默认使用：
 
 - 上传真实品牌资料到外部服务。
 - 默认联网处理私有文件。
+- 把 ima 等私有知识库中的真实文件、真实标题、真实内容复制进正式 examples、docs、prompts、schemas 或 README。
 - 写入用户 Obsidian、NAS、云盘或其他非项目目录，除非用户明确要求。
 - 修改与当前目标无关的文件。
 - 删除、移动或覆盖用户未要求处理的资料。

@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 import warnings
+import json
 import os
 import subprocess
 import zipfile
@@ -356,6 +357,44 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("| SF001-001 | S001#page=1 | 本月重点是渠道复盘。 | 已从来源资料提取 | 无明显低置信度 |", facts_text)
             self.assertIn("| SF001-002 | S001#page=1 | 下月需要补充投放数据。 | 已从来源资料提取 | 无明显低置信度 |", facts_text)
             self.assertIn("不做品牌确认判断", facts_text)
+
+    def test_convert_source_preserves_external_source_manifest_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            source_dir = project_dir / "source" / "brand_content"
+            source_dir.mkdir(parents=True)
+            (source_dir / "sample.md").write_text("# 品牌资料\n\n品牌历史内容。", encoding="utf-8")
+            (project_dir / "source" / "source_manifest.json").write_text(
+                json.dumps(
+                    {
+                        "sources": [
+                            {
+                                "path": "brand_content/sample.md",
+                                "source_platform": "ima",
+                                "knowledge_base": "示例品牌知识库",
+                                "knowledge_path": "品牌内容 / sample.md",
+                                "media_id": "media_sample_001",
+                            }
+                        ]
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                convert_source(project_dir, engine="pymupdf4llm")
+
+            transcript = project_dir / "converted_markdown" / "source_transcripts" / "S001_brand_content.md"
+            report = project_dir / "converted_markdown" / "conversion_report.md"
+            transcript_text = transcript.read_text(encoding="utf-8")
+            report_text = report.read_text(encoding="utf-8")
+            self.assertIn("外部来源平台：ima", transcript_text)
+            self.assertIn("外部知识库：示例品牌知识库", transcript_text)
+            self.assertIn("外部来源路径：品牌内容 / sample.md", transcript_text)
+            self.assertIn("media_sample_001", transcript_text)
+            self.assertIn("外部来源", report_text)
+            self.assertIn("ima / 示例品牌知识库 / 品牌内容 / sample.md / media_sample_001", report_text)
 
     def test_cli_exposes_brand_lock_check(self) -> None:
         import sys

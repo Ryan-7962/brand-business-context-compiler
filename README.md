@@ -166,6 +166,25 @@ brand-skill check-claim-matrix <project_dir>
 
 `convert-source` 会记录原始文件创建时间和修改时间。若多份品牌资料内容冲突，默认把修改时间更新的文件作为版本判断线索，但不会自动覆盖关键品牌口径；相关内容应进入冲突队列或旧知识更新队列。
 
+如果资料来自 ima 或其他私有知识库，可在 `source/source_manifest.json` 中记录外部来源。该文件只保存追溯线索，不参与转写：
+
+```json
+{
+  "sources": [
+    {
+      "path": "brand_content/sample.pdf",
+      "source_platform": "ima",
+      "knowledge_base": "示例品牌知识库",
+      "knowledge_path": "品牌内容 / sample.pdf",
+      "media_id": "media_sample_001",
+      "imported_at": "2026-06-11T00:00:00Z"
+    }
+  ]
+}
+```
+
+这些字段会写入 source transcript 和 conversion report，方便后续追溯到私有资料源。真实 ima 文件仍只能放在 `_private_test_runs/` 做本地测试，不进入正式 demo 或 Skill 发布包。
+
 `build-source-facts` 会读取 `converted_markdown/source_transcripts/`，生成 `converted_markdown/source_facts/`。这一步只抽取来源中已经出现的文字证据，保留 Source Anchor 和低置信度说明；它不做品牌确认、不做外发安全判断，也不补写资料中没有的信息。
 
 ## 目录说明

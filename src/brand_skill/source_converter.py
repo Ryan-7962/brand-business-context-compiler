@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import zipfile
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from xml.etree import ElementTree
@@ -11,7 +12,7 @@ from xml.etree import ElementTree
 
 SUPPORTED_LIGHTWEIGHT_ENGINE = "pymupdf4llm"
 SUPPORTED_SOURCE_SUFFIXES = {".pdf", ".md", ".txt", ".docx", ".pptx"}
-IGNORED_SOURCE_FILENAMES = {"README.md", ".DS_Store"}
+IGNORED_SOURCE_FILENAMES = {"README.md", ".DS_Store", "source_manifest.json"}
 
 
 def _safe_stem(path: Path) -> str:
@@ -32,6 +33,74 @@ def _source_sort_key(project_dir: Path, source_file: Path) -> str:
         return source_file.relative_to(source_dir).as_posix().lower()
     except ValueError:
         return source_file.as_posix().lower()
+
+
+def _source_relative_path(project_dir: Path, source_file: Path) -> str:
+    source_dir = project_dir / "source"
+    try:
+        return source_file.relative_to(source_dir).as_posix()
+    except ValueError:
+        return source_file.name
+
+
+def _load_source_manifest(project_dir: Path) -> dict[str, dict[str, str]]:
+    manifest_path = project_dir / "source" / "source_manifest.json"
+    if not manifest_path.exists():
+        return {}
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        print(f"Invalid source manifest JSON: {manifest_path}")
+        raise SystemExit(1) from exc
+
+    sources = manifest.get("sources", [])
+    if not isinstance(sources, list):
+        print("Invalid source manifest: `sources` must be a list.")
+        raise SystemExit(1)
+
+    by_path: dict[str, dict[str, str]] = {}
+    for item in sources:
+        if not isinstance(item, dict):
+            continue
+        raw_path = str(item.get("path", "")).strip()
+        if not raw_path:
+            continue
+        by_path[raw_path] = {str(key): str(value) for key, value in item.items() if value is not None}
+    return by_path
+
+
+def _external_source_metadata(project_dir: Path, manifest: dict[str, dict[str, str]], source_file: Path) -> dict[str, str]:
+    return manifest.get(_source_relative_path(project_dir, source_file), {})
+
+
+def _external_source_lines(metadata: dict[str, str]) -> list[str]:
+    if not metadata:
+        return ["- 外部来源：本地 source/"]
+    lines = []
+    field_labels = [
+        ("source_platform", "外部来源平台"),
+        ("knowledge_base", "外部知识库"),
+        ("knowledge_path", "外部来源路径"),
+        ("media_id", "外部媒体 ID"),
+        ("imported_at", "导入时间"),
+    ]
+    for key, label in field_labels:
+        value = metadata.get(key, "").strip()
+        if value:
+            lines.append(f"- {label}：{value}")
+    return lines or ["- 外部来源：本地 source/"]
+
+
+def _external_source_summary(metadata: dict[str, str]) -> str:
+    if not metadata:
+        return "本地 source/"
+    parts = [
+        metadata.get("source_platform", "").strip(),
+        metadata.get("knowledge_base", "").strip(),
+        metadata.get("knowledge_path", "").strip(),
+        metadata.get("media_id", "").strip(),
+    ]
+    return " / ".join(part for part in parts if part) or "本地 source/"
 
 
 def _iter_unsupported_sources(project_dir: Path) -> list[Path]:
@@ -188,6 +257,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         print("No supported source files found under source/.")
         raise SystemExit(1)
     source_ids = {source: f"S{index:03d}" for index, source in enumerate(supported_sources, start=1)}
+    source_manifest = _load_source_manifest(project_dir)
 
     converted_dir = project_dir / "converted_markdown"
     transcripts_dir = converted_dir / "source_transcripts"
@@ -203,6 +273,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         created_at, modified_at = _file_timestamps(text_source)
         file_type, text, conversion_method = _text_source_kind(text_source)
         low_confidence_text = "无明显低置信度" if text.strip() else "源稿为空"
+        external_metadata = _external_source_metadata(project_dir, source_manifest, text_source)
 
         lines = [
             f"# Source Transcript｜{text_source.name}",
@@ -210,6 +281,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
             "## Source Metadata",
             f"- Source ID：{source_id}",
             f"- 原始文件：{text_source.name}",
+            *_external_source_lines(external_metadata),
             f"- 文件类型：{file_type}",
             f"- 文件创建时间：{created_at}",
             f"- 文件修改时间：{modified_at}",
@@ -260,6 +332,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
                 "不适用",
                 low_confidence_text,
                 "检查 Markdown 源稿是否遗漏原始视觉信息",
+                _external_source_summary(external_metadata),
             ]
         )
 
@@ -269,6 +342,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         transcript_name = f"{source_id}_{safe_name}.md"
         created_at, modified_at = _file_timestamps(pptx)
         slides = _extract_pptx_slides(pptx)
+        external_metadata = _external_source_metadata(project_dir, source_manifest, pptx)
         low_confidence_text = (
             "PowerPoint 轻量转写未保留真实版式、图片、图表、动画和备注"
             if any(slide.strip() for slide in slides)
@@ -281,6 +355,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
             "## Source Metadata",
             f"- Source ID：{source_id}",
             f"- 原始文件：{pptx.name}",
+            *_external_source_lines(external_metadata),
             "- 文件类型：PowerPoint",
             f"- 文件创建时间：{created_at}",
             f"- 文件修改时间：{modified_at}",
@@ -340,6 +415,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
                     "待复核",
                     page_low_confidence,
                     "检查原 PPT 版式、图片、图表、备注和小字信息",
+                    _external_source_summary(external_metadata),
                 ]
             )
 
@@ -361,6 +437,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         asset_dir = assets_root / asset_dir_name
         asset_dir.mkdir(parents=True, exist_ok=True)
         created_at, modified_at = _file_timestamps(pdf)
+        external_metadata = _external_source_metadata(project_dir, source_manifest, pdf)
 
         doc = fitz.open(pdf)
         chunks = pymupdf4llm.to_markdown(
@@ -378,6 +455,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
             "## Source Metadata",
             f"- Source ID：{source_id}",
             f"- 原始文件：{pdf.name}",
+            *_external_source_lines(external_metadata),
             "- 文件类型：PDF",
             f"- 文件创建时间：{created_at}",
             f"- 文件修改时间：{modified_at}",
@@ -455,6 +533,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
                     "待复核",
                     low_confidence_text,
                     "检查页面截图与抽取文本是否一致",
+                    _external_source_summary(external_metadata),
                 ]
             )
 
@@ -481,8 +560,8 @@ def _write_conversion_report(path: Path, rows: list[list[str]]) -> None:
         "",
         "## Source Files",
         "",
-        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 | 外部来源 |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for row in rows:
         report.append("| " + " | ".join(cell.replace("|", "/") for cell in row) + " |")
