@@ -10,6 +10,8 @@ from xml.etree import ElementTree
 
 
 SUPPORTED_LIGHTWEIGHT_ENGINE = "pymupdf4llm"
+SUPPORTED_SOURCE_SUFFIXES = {".pdf", ".md", ".txt", ".docx", ".pptx"}
+IGNORED_SOURCE_FILENAMES = {"README.md", ".DS_Store"}
 
 
 def _safe_stem(path: Path) -> str:
@@ -24,6 +26,17 @@ def _iter_source_pdfs(project_dir: Path) -> list[Path]:
     return sorted(source_dir.rglob("*.pdf"))
 
 
+def _iter_unsupported_sources(project_dir: Path) -> list[Path]:
+    source_dir = project_dir / "source"
+    if not source_dir.exists():
+        return []
+    return sorted(
+        path
+        for path in source_dir.rglob("*")
+        if path.is_file() and path.name not in IGNORED_SOURCE_FILENAMES and path.suffix.lower() not in SUPPORTED_SOURCE_SUFFIXES
+    )
+
+
 def _iter_source_text_documents(project_dir: Path) -> list[Path]:
     source_dir = project_dir / "source"
     if not source_dir.exists():
@@ -32,7 +45,7 @@ def _iter_source_text_documents(project_dir: Path) -> list[Path]:
     return sorted(
         path
         for path in source_dir.rglob("*")
-        if path.is_file() and path.suffix.lower() in supported_suffixes and path.name != "README.md"
+        if path.is_file() and path.suffix.lower() in supported_suffixes and path.name not in IGNORED_SOURCE_FILENAMES
     )
 
 
@@ -141,6 +154,18 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         raise SystemExit(1)
     if engine != SUPPORTED_LIGHTWEIGHT_ENGINE:
         print(f"Unsupported source conversion engine: {engine}")
+        raise SystemExit(1)
+
+    unsupported_sources = _iter_unsupported_sources(project_dir)
+    if unsupported_sources:
+        print("Unsupported source file(s) found under source/:")
+        source_dir = project_dir / "source"
+        for source_file in unsupported_sources:
+            try:
+                label = source_file.relative_to(source_dir)
+            except ValueError:
+                label = source_file
+            print(f"- {label}")
         raise SystemExit(1)
 
     pdfs = _iter_source_pdfs(project_dir)

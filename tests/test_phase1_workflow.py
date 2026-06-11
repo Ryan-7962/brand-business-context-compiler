@@ -280,6 +280,23 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("PowerPoint 源稿转写", report_text)
             self.assertIn("2", report_text)
 
+    def test_convert_source_fails_when_unsupported_source_files_are_present(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            source_dir = project_dir / "source" / "campaign"
+            source_dir.mkdir(parents=True)
+            (source_dir / "brief.md").write_text("# Brief\n\n活动重点。\n", encoding="utf-8")
+            (source_dir / "long_image.png").write_bytes(b"not-a-real-image")
+
+            with redirect_stdout(StringIO()) as stdout:
+                with self.assertRaises(SystemExit):
+                    convert_source(project_dir, engine="pymupdf4llm")
+
+            output = stdout.getvalue()
+            self.assertIn("Unsupported source file", output)
+            self.assertIn("campaign/long_image.png", output)
+            self.assertFalse((project_dir / "converted_markdown" / "conversion_report.md").exists())
+
     def test_convert_source_marks_mineru_as_optional(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             with redirect_stdout(StringIO()):
