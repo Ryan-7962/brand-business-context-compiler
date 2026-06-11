@@ -33,7 +33,7 @@ Codex 最终应把本项目推进为一个本地优先的 Brand / Business Conte
 只有出现以下证据时，才认为一轮迭代有效：
 
 - CLI 能从示例项目生成或更新真实文件，而不是只在对话中描述方案。
-- `converted_markdown/` 中有来源转写、页码 / 截图 / 低置信度说明和文件创建 / 修改时间。
+- `converted_markdown/` 中有来源转写、页码 / 截图 / 低置信度说明、识别质量摘要和文件创建 / 修改时间。
 - `outputs/` 中有文件画像、语义转述、关键事实、策略结构、风险项、Context Asset Index 和 Context Library Update Plan。
 - `brand_context_library/` 中实际生成 Markdown 条目。
 - `review_queue/conflicts.md` 能记录疑似重复或冲突条目。

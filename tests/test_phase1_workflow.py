@@ -158,6 +158,10 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("文件修改时间：", transcript_text)
             self.assertIn("原始文件创建时间", report_text)
             self.assertIn("原始文件修改时间", report_text)
+            self.assertIn("识别质量摘要", report_text)
+            self.assertIn("总页数", report_text)
+            self.assertIn("视觉/表格/小字限制", report_text)
+            self.assertIn("人工复核建议", report_text)
             self.assertIn("pymupdf4llm", report_text)
 
     def test_convert_source_marks_mineru_as_optional(self) -> None:
@@ -606,7 +610,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             for filename in required_outputs:
                 (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
             (converted / "conversion_report.md").write_text(
-                "| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
             (transcripts / "S001_demo.md").write_text(
@@ -656,7 +660,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             ]:
                 (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
             (converted / "conversion_report.md").write_text(
-                "| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
             (transcripts / "S001_demo.md").write_text(
@@ -866,6 +870,39 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Contract verification failed", output)
             self.assertIn("Missing required output", output)
             self.assertIn("Missing context library", output)
+
+    def test_verify_project_contract_fails_without_source_quality_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            converted = project_dir / "converted_markdown"
+            transcripts = converted / "source_transcripts"
+            outputs = project_dir / "outputs"
+            transcripts.mkdir(parents=True)
+            outputs.mkdir(parents=True)
+            for filename in [
+                "02_document_profile.md",
+                "03_marketing_semantic_transcript.md",
+                "04_key_facts_and_claims.md",
+                "05_strategy_and_execution_map.md",
+                "06_risk_and_review_items.md",
+                "10_context_asset_index.md",
+                "11_context_library_update_plan.md",
+            ]:
+                (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
+            (converted / "conversion_report.md").write_text(
+                "| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                encoding="utf-8",
+            )
+            (transcripts / "S001_demo.md").write_text(
+                "Source Anchor：S001#page=1\nPage Screenshot：../assets/S001/page_01.png\n低置信度\n",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()) as stdout:
+                with self.assertRaises(SystemExit):
+                    verify_project_contract(project_dir, library_dir=Path(temp_dir) / "missing_library")
+
+            self.assertIn("Source conversion report missing quality marker", stdout.getvalue())
 
     def test_cli_verify_contract_command_reports_missing_evidence(self) -> None:
         import sys

@@ -69,7 +69,7 @@ def _write_verification_report(
         "## Checked Evidence",
         "",
         "- Required structured outputs",
-        "- Source conversion report and source transcripts",
+        "- Source conversion report, quality summary, and source transcripts",
         "- Exception review page",
         "- Context library entries and review queues",
         "- Brand Context Map report",
@@ -194,6 +194,9 @@ def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
         for marker in ["原始文件创建时间", "原始文件修改时间", "低置信度"]:
             if marker not in report_text:
                 issues.append(f"Source conversion report missing marker: {marker}")
+        for marker in ["识别质量摘要", "总页数", "视觉/表格/小字限制", "人工复核建议"]:
+            if marker not in report_text:
+                issues.append(f"Source conversion report missing quality marker: {marker}")
 
     transcripts = list(transcripts_dir.glob("*.md")) if transcripts_dir.exists() else []
     if not transcripts:

@@ -190,8 +190,19 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
 
 
 def _write_conversion_report(path: Path, rows: list[list[str]]) -> None:
+    total_pages = sum(_page_count_from_range(row[8]) for row in rows)
+    low_confidence_rows = [row for row in rows if row[12] != "无明显低置信度"]
     report = [
         "# Source Conversion Report",
+        "",
+        "## 识别质量摘要",
+        "",
+        f"- 总页数：{total_pages}",
+        f"- 低置信度页数：{len(low_confidence_rows)}",
+        "- 视觉/表格/小字限制：复杂版式、图片中文字、表格结构、角标、脚注和极小字号默认需要结合页面截图复核。",
+        "- 人工复核建议：优先检查低置信度区域、含图片/图表页面、表格页、关键数字和品牌口径页。",
+        "",
+        "## Source Files",
         "",
         "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 |",
         "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
@@ -199,3 +210,12 @@ def _write_conversion_report(path: Path, rows: list[list[str]]) -> None:
     for row in rows:
         report.append("| " + " | ".join(cell.replace("|", "/") for cell in row) + " |")
     path.write_text("\n".join(report), encoding="utf-8")
+
+
+def _page_count_from_range(page_range: str) -> int:
+    match = re.search(r"(\d+)\s*-\s*(\d+)", page_range)
+    if match:
+        start, end = int(match.group(1)), int(match.group(2))
+        return max(0, end - start + 1)
+    numbers = re.findall(r"\d+", page_range)
+    return len(numbers) if numbers else 1
