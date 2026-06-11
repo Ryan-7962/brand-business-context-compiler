@@ -17,6 +17,7 @@ from brand_skill.ima_importer import import_ima_media
 from brand_skill.review_pack import build_review_pack
 from brand_skill.source_quality import build_source_quality_report
 from brand_skill.source_facts import build_source_facts
+from brand_skill.source_versions import build_source_version_report
 from brand_skill.source_converter import convert_source
 from brand_skill.validators import (
     check_brand_lock_sheet_draft,
@@ -514,6 +515,68 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("| S001#page=2 | sample.pdf | 8 | 3 | 2 | 可抽取文字较少；含图片/视觉信息 | OCR / MinerU / 人工复核 |", report_text)
             self.assertIn("优先处理含图片、低文字量、表格或小字页面", report_text)
 
+    def test_build_source_version_report_groups_likely_versions_by_modified_time(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir(parents=True)
+            (converted / "conversion_report.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Conversion Report",
+                        "",
+                        "## Source Files",
+                        "",
+                        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 | 外部来源 |",
+                        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+                        "| S001 | brand_strategy_v1.pdf | 2026-01-01T09:00:00+08:00 | 2026-01-02T09:00:00+08:00 | source_transcripts/S001_brand_strategy_v1.md | pymupdf4llm | PDF | no | pages 1-10 | 待复核 | 截图 | 待复核 | 无明显低置信度 | 否 | ima / 示例库 |",
+                        "| S002 | brand_strategy_v2.pdf | 2026-01-01T09:00:00+08:00 | 2026-03-08T18:30:00+08:00 | source_transcripts/S002_brand_strategy_v2.md | pymupdf4llm | PDF | no | pages 1-12 | 待复核 | 截图 | 待复核 | 无明显低置信度 | 否 | ima / 示例库 |",
+                        "| S003 | trade_recap.pdf | 2026-02-01T09:00:00+08:00 | 2026-02-02T09:00:00+08:00 | source_transcripts/S003_trade_recap.md | pymupdf4llm | PDF | no | pages 1-3 | 待复核 | 截图 | 待复核 | 无明显低置信度 | 否 | ima / 示例库 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_source_version_report(project_dir)
+
+            report_text = (converted / "source_version_report.md").read_text(encoding="utf-8")
+            self.assertIn("# Source Version Report", report_text)
+            self.assertIn("疑似多版本组数：1", report_text)
+            self.assertIn("brand_strategy", report_text)
+            self.assertIn("S002", report_text)
+            self.assertIn("最新修改时间线索", report_text)
+            self.assertIn("不自动覆盖", report_text)
+            self.assertIn("进入更新/冲突复核队列", report_text)
+
+    def test_cli_build_source_version_report_command(self) -> None:
+        import sys
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir(parents=True)
+            (converted / "conversion_report.md").write_text(
+                "\n".join(
+                    [
+                        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 | 外部来源 |",
+                        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+                        "| S001 | campaign_plan_2025.pdf | 2025-05-01T09:00:00+08:00 | 2025-05-02T09:00:00+08:00 | source_transcripts/S001.md | pymupdf4llm | PDF | no | pages 1-2 | 待复核 | 截图 | 待复核 | 无明显低置信度 | 否 | - |",
+                        "| S002 | campaign_plan_2026.pdf | 2026-05-01T09:00:00+08:00 | 2026-05-02T09:00:00+08:00 | source_transcripts/S002.md | pymupdf4llm | PDF | no | pages 1-2 | 待复核 | 截图 | 待复核 | 无明显低置信度 | 否 | - |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            argv = sys.argv
+            sys.argv = ["brand-skill", "build-source-version-report", str(project_dir)]
+            try:
+                with redirect_stdout(StringIO()):
+                    cli_main()
+            finally:
+                sys.argv = argv
+
+            self.assertTrue((converted / "source_version_report.md").exists())
+
     def test_cli_exposes_brand_lock_check(self) -> None:
         import sys
 
@@ -961,6 +1024,10 @@ class Phase1WorkflowTests(unittest.TestCase):
                 "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| 建议动作 |\n|---|\n| 继续后续语义编译 |\n",
                 encoding="utf-8",
             )
+            (converted / "source_version_report.md").write_text(
+                "# Source Version Report\n\n## 版本线索总览\n\n- 疑似多版本组数：0\n- 最新修改时间线索：不自动覆盖已有品牌知识。\n",
+                encoding="utf-8",
+            )
             (transcripts / "S001_demo.md").write_text(
                 "Source Anchor：S001#page=1\nPage Screenshot：../assets/S001/page_01.png\n低置信度\n",
                 encoding="utf-8",
@@ -1013,6 +1080,10 @@ class Phase1WorkflowTests(unittest.TestCase):
             )
             (converted / "source_quality_report.md").write_text(
                 "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| 建议动作 |\n|---|\n| 继续后续语义编译 |\n",
+                encoding="utf-8",
+            )
+            (converted / "source_version_report.md").write_text(
+                "# Source Version Report\n\n## 版本线索总览\n\n- 疑似多版本组数：0\n- 最新修改时间线索：不自动覆盖已有品牌知识。\n",
                 encoding="utf-8",
             )
             (transcripts / "S001_demo.md").write_text(

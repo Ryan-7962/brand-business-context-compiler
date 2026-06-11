@@ -105,6 +105,7 @@ brand-skill validate-input <project_dir>
 brand-skill import-ima-media _private_test_runs/<run_name> --media-id <ima_media_id> --title <file_name>
 brand-skill convert-source <project_dir> --engine pymupdf4llm
 brand-skill build-source-quality-report <project_dir>
+brand-skill build-source-version-report <project_dir>
 brand-skill build-source-facts <project_dir>
 brand-skill scaffold-output <project_dir>
 brand-skill build-prompt-pack <project_dir>
@@ -121,13 +122,14 @@ brand-skill demo-contract <project_dir> --library-dir <brand_context_library_dir
 1. 把 PDF / PPTX / Markdown / TXT / DOCX 源稿放入 source/；PPT 旧格式 / 长图可先转成 PDF 或后续接入高保真转换器
 2. 运行 source conversion，生成带页码和低置信度标记的 Markdown
 3. 运行 build-source-quality-report，生成识别质量报告，定位需要 OCR / MinerU / 人工复核的页面
-4. 运行 build-source-facts，生成只基于来源原文的事实候选层
-5. 用 Prompt Bundle 生成 00-11 输出
-6. 查看 review/brand_review.html，只处理识别异常
-7. 运行 apply-library-update，把可沉淀内容写入 brand_context_library/
-8. 运行 build-library-report，生成一页中文知识库概览
-9. 运行 verify-contract --write-report，检查当前产物是否满足项目执行准则里的核心证据，并留下本地验证报告
-10. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
+4. 运行 build-source-version-report，生成版本线索报告，定位同主题多版本资料
+5. 运行 build-source-facts，生成只基于来源原文的事实候选层
+6. 用 Prompt Bundle 生成 00-11 输出
+7. 查看 review/brand_review.html，只处理识别异常
+8. 运行 apply-library-update，把可沉淀内容写入 brand_context_library/
+9. 运行 build-library-report，生成一页中文知识库概览
+10. 运行 verify-contract --write-report，检查当前产物是否满足项目执行准则里的核心证据，并留下本地验证报告
+11. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
 ```
 
 本地验收 demo 可用一条命令跑完入库、知识库报告页和 contract 验证：
@@ -148,9 +150,9 @@ brand-skill demo-contract examples/anonymous_marketing_campaign --library-dir /t
 
 `build-library-report` 会生成 `library_report.html`，作为 Brand Context Map 使用：上方展示知识地图，下方提供搜索、筛选和条目详情。分类默认参考内置 Brand Marketing 分类；如果长期库中存在 `taxonomy.md`，则优先使用用户或 AI 确认过的动态分类。
 
-`verify-contract` 会检查 `docs/project_success_contract.md` 中定义的核心证据，例如 source conversion 识别质量摘要、关键 outputs、异常复核页、长期库条目、review queue、retrieval map、Brand Context Map、私有测试目录未被追踪、报告页离线静态约束，以及生成产物不得冒充 `已品牌确认`。异常复核页只应提示识别问题和文件大纲，不应退回到后台 Context Asset 全量审核页；知识库报告页也不应把 Source Anchor、Risk Level 等后台质量标记铺到用户界面。加上 `--write-report` 后会在项目根目录生成 `contract_verification_report.md`，用于保留本轮通过 / 失败证据。它用于每轮开发后的本地门禁，不替代人工业务判断。
+`verify-contract` 会检查 `docs/project_success_contract.md` 中定义的核心证据，例如 source conversion 识别质量摘要、source quality report、source version report、关键 outputs、异常复核页、长期库条目、review queue、retrieval map、Brand Context Map、私有测试目录未被追踪、报告页离线静态约束，以及生成产物不得冒充 `已品牌确认`。异常复核页只应提示识别问题和文件大纲，不应退回到后台 Context Asset 全量审核页；知识库报告页也不应把 Source Anchor、Risk Level 等后台质量标记铺到用户界面。加上 `--write-report` 后会在项目根目录生成 `contract_verification_report.md`，用于保留本轮通过 / 失败证据。它用于每轮开发后的本地门禁，不替代人工业务判断。
 
-`demo-contract` 是给本地开发和匿名 demo 验收用的便捷命令，会依次执行 `apply-library-update`、`build-library-report` 和 `verify-contract --write-report`。
+`demo-contract` 是给本地开发和匿名 demo 验收用的便捷命令，会依次执行 `build-source-quality-report`、`build-source-version-report`、`apply-library-update`、`build-library-report` 和 `verify-contract --write-report`。
 
 如果需要在本机扫描私有测试关键词，可临时设置 `BRAND_SKILL_PRIVACY_TERMS_REGEX` 后再运行 `verify-contract`。不要把真实关键词写入仓库文件。
 
@@ -168,6 +170,8 @@ brand-skill check-claim-matrix <project_dir>
 如果 `source/` 中存在当前不支持的文件类型，`convert-source` 会停止并列出文件路径，不会静默跳过。这是为了避免品牌资料漏转后仍被误认为已经完整入库。
 
 `convert-source` 会记录原始文件创建时间和修改时间。若多份品牌资料内容冲突，默认把修改时间更新的文件作为版本判断线索，但不会自动覆盖关键品牌口径；相关内容应进入冲突队列或旧知识更新队列。
+
+`build-source-version-report` 会读取 `converted_markdown/conversion_report.md`，生成 `converted_markdown/source_version_report.md`。它会基于文件名和原始文件修改时间归并疑似同主题多版本资料，提示最新修改时间线索，并明确这些线索只用于复核，不自动覆盖长期知识。
 
 如果资料来自 ima 或其他私有知识库，可在 `source/source_manifest.json` 中记录外部来源。该文件只保存追溯线索，不参与转写：
 

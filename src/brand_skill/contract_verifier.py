@@ -69,7 +69,7 @@ def _write_verification_report(
         "## Checked Evidence",
         "",
         "- Required structured outputs",
-        "- Source conversion report, quality summary, and source transcripts",
+        "- Source conversion report, quality/version summaries, and source transcripts",
         "- Exception review page",
         "- Context library entries and review queues",
         "- Brand Context Map report",
@@ -187,6 +187,7 @@ def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
     converted_dir = project_dir / "converted_markdown"
     report = converted_dir / "conversion_report.md"
     quality_report = converted_dir / "source_quality_report.md"
+    version_report = converted_dir / "source_version_report.md"
     transcripts_dir = converted_dir / "source_transcripts"
     if not report.exists():
         issues.append("Missing source conversion report: converted_markdown/conversion_report.md")
@@ -216,6 +217,14 @@ def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
         for marker in ["识别质量总览", "需要复核页数", "建议动作"]:
             if marker not in quality_text:
                 issues.append(f"Source quality report missing marker: {marker}")
+
+    if not version_report.exists():
+        issues.append("Missing source version report: converted_markdown/source_version_report.md")
+    else:
+        version_text = version_report.read_text(encoding="utf-8")
+        for marker in ["版本线索总览", "疑似多版本组数", "不自动覆盖"]:
+            if marker not in version_text:
+                issues.append(f"Source version report missing marker: {marker}")
 
 
 def _check_review_pack(project_dir: Path, issues: list[str]) -> None:

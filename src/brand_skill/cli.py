@@ -17,6 +17,7 @@ from .review_pack import build_review_pack
 from .source_facts import build_source_facts
 from .source_converter import convert_source
 from .source_quality import build_source_quality_report
+from .source_versions import build_source_version_report
 from .workflow import init_project, scaffold_output, validate_input, build_prompt_pack
 from .validators import check_brand_lock_sheet_draft, check_claim_matrix
 
@@ -55,6 +56,9 @@ def main() -> None:
 
     p_source_quality = sub.add_parser("build-source-quality-report")
     p_source_quality.add_argument("project_dir")
+
+    p_source_versions = sub.add_parser("build-source-version-report")
+    p_source_versions.add_argument("project_dir")
 
     p_ima_import = sub.add_parser("import-ima-media")
     p_ima_import.add_argument("project_dir")
@@ -103,6 +107,8 @@ def main() -> None:
         build_source_facts(project_dir)
     elif args.command == "build-source-quality-report":
         build_source_quality_report(project_dir)
+    elif args.command == "build-source-version-report":
+        build_source_version_report(project_dir)
     elif args.command == "import-ima-media":
         api_script = Path(args.api_script) if args.api_script else None
         kwargs = {"api_script": api_script} if api_script else {}
