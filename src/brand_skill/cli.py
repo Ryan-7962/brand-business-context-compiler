@@ -10,6 +10,7 @@ from pathlib import Path
 
 from .contract_verifier import verify_project_contract
 from .demo_contract import run_demo_contract
+from .ima_importer import import_ima_media
 from .library_report import build_library_report
 from .library_writer import apply_context_library_update
 from .review_pack import build_review_pack
@@ -51,6 +52,14 @@ def main() -> None:
     p_source_facts = sub.add_parser("build-source-facts")
     p_source_facts.add_argument("project_dir")
 
+    p_ima_import = sub.add_parser("import-ima-media")
+    p_ima_import.add_argument("project_dir")
+    p_ima_import.add_argument("--media-id", required=True)
+    p_ima_import.add_argument("--title", required=True)
+    p_ima_import.add_argument("--knowledge-base", default="")
+    p_ima_import.add_argument("--knowledge-path", default="")
+    p_ima_import.add_argument("--api-script")
+
     p_library = sub.add_parser("apply-library-update")
     p_library.add_argument("project_dir")
     p_library.add_argument("--library-dir")
@@ -88,6 +97,17 @@ def main() -> None:
         convert_source(project_dir, engine=args.engine)
     elif args.command == "build-source-facts":
         build_source_facts(project_dir)
+    elif args.command == "import-ima-media":
+        api_script = Path(args.api_script) if args.api_script else None
+        kwargs = {"api_script": api_script} if api_script else {}
+        import_ima_media(
+            project_dir,
+            media_id=args.media_id,
+            title=args.title,
+            knowledge_base=args.knowledge_base,
+            knowledge_path=args.knowledge_path,
+            **kwargs,
+        )
     elif args.command == "apply-library-update":
         library_dir = Path(args.library_dir) if args.library_dir else None
         apply_context_library_update(project_dir, library_dir=library_dir)

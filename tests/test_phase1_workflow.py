@@ -13,6 +13,7 @@ from brand_skill.cli import main as cli_main
 from brand_skill.contract_verifier import verify_project_contract
 from brand_skill.library_report import build_library_report
 from brand_skill.library_writer import apply_context_library_update
+from brand_skill.ima_importer import import_ima_media
 from brand_skill.review_pack import build_review_pack
 from brand_skill.source_facts import build_source_facts
 from brand_skill.source_converter import convert_source
@@ -395,6 +396,65 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("media_sample_001", transcript_text)
             self.assertIn("外部来源", report_text)
             self.assertIn("ima / 示例品牌知识库 / 品牌内容 / sample.md / media_sample_001", report_text)
+
+    def test_import_ima_media_refuses_public_examples_target(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            target_dir = Path(temp_dir) / "examples" / "bad_public_target"
+
+            with redirect_stdout(StringIO()):
+                with self.assertRaises(SystemExit):
+                    import_ima_media(
+                        target_dir,
+                        media_id="media_sample_001",
+                        title="sample.pdf",
+                        knowledge_base="示例品牌知识库",
+                        knowledge_path="品牌内容 / sample.pdf",
+                        api_script=Path(temp_dir) / "fake_ima_api.cjs",
+                    )
+
+    def test_import_ima_media_downloads_to_private_source_and_writes_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            sample_file = temp_path / "remote_sample.pdf"
+            sample_file.write_bytes(b"%PDF-1.4\n% sample\n")
+            api_script = temp_path / "fake_ima_api.cjs"
+            api_script.write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env node",
+                        "const path = require('path');",
+                        "const sample = process.env.FAKE_IMA_SAMPLE_PATH;",
+                        "process.stdout.write(JSON.stringify({",
+                        "  code: 0,",
+                        "  msg: 'success',",
+                        "  data: { media_type: 1, url_info: { url: 'file://' + path.resolve(sample), headers: {} } }",
+                        "}));",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            api_script.chmod(0o755)
+            target_dir = temp_path / "_private_test_runs" / "ima_import_probe"
+
+            with redirect_stdout(StringIO()):
+                import_ima_media(
+                    target_dir,
+                    media_id="media_sample_001",
+                    title="sample.pdf",
+                    knowledge_base="示例品牌知识库",
+                    knowledge_path="品牌内容 / sample.pdf",
+                    api_script=api_script,
+                    env={"FAKE_IMA_SAMPLE_PATH": str(sample_file)},
+                )
+
+            downloaded = target_dir / "source" / "ima_imports" / "sample.pdf"
+            manifest = json.loads((target_dir / "source" / "source_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(downloaded.read_bytes(), sample_file.read_bytes())
+            self.assertEqual(manifest["sources"][0]["path"], "ima_imports/sample.pdf")
+            self.assertEqual(manifest["sources"][0]["source_platform"], "ima")
+            self.assertEqual(manifest["sources"][0]["knowledge_base"], "示例品牌知识库")
+            self.assertEqual(manifest["sources"][0]["knowledge_path"], "品牌内容 / sample.pdf")
+            self.assertEqual(manifest["sources"][0]["media_id"], "media_sample_001")
 
     def test_cli_exposes_brand_lock_check(self) -> None:
         import sys

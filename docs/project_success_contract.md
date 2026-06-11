@@ -36,6 +36,7 @@ Codex 最终应把本项目推进为一个本地优先的 Brand / Business Conte
 - CLI 能从示例项目生成或更新真实文件，而不是只在对话中描述方案。
 - `converted_markdown/` 中有来源转写、页码 / 截图 / 低置信度说明、识别质量摘要和文件创建 / 修改时间。
 - 当资料来自 ima 或其他外部知识库时，`source/source_manifest.json` 能保留来源平台、知识库、路径、media id 等追溯线索，并写入 transcript / conversion report。
+- ima 私有资料导入必须通过 `_private_test_runs/` 私有目录验证，导入后能继续跑 `convert-source` 和 `build-source-facts`。
 - `outputs/` 中有文件画像、语义转述、关键事实、策略结构、风险项、Context Asset Index 和 Context Library Update Plan。
 - `brand_context_library/` 中实际生成 Markdown 条目。
 - `review_queue/conflicts.md` 能记录疑似重复或冲突条目。
@@ -56,6 +57,7 @@ Codex 最终应把本项目推进为一个本地优先的 Brand / Business Conte
 以下限制不能被破坏：
 
 - 不把真实测试 PDF / PPT / 图片 / 品牌资料提交进正式仓库。
+- `import-ima-media` 这类私有导入命令不得写入 `examples/`、`docs/`、`prompts/`、`schemas/` 或项目根正式 source 目录。
 - 不把真实测试品牌名、竞品名、价格、预算、销量、渠道政策、平台数据写入 README、PRD、prompt、schema、docs 或 examples。
 - 不伪造 `已品牌确认`。
 - 不把资料缺失内容编造成事实。

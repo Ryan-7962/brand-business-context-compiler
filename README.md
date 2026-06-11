@@ -102,6 +102,7 @@ outputs/<project_slug>/derived_briefs/
 ```bash
 brand-skill init <project_name>
 brand-skill validate-input <project_dir>
+brand-skill import-ima-media _private_test_runs/<run_name> --media-id <ima_media_id> --title <file_name>
 brand-skill convert-source <project_dir> --engine pymupdf4llm
 brand-skill build-source-facts <project_dir>
 brand-skill scaffold-output <project_dir>
@@ -184,6 +185,18 @@ brand-skill check-claim-matrix <project_dir>
 ```
 
 这些字段会写入 source transcript 和 conversion report，方便后续追溯到私有资料源。真实 ima 文件仍只能放在 `_private_test_runs/` 做本地测试，不进入正式 demo 或 Skill 发布包。
+
+也可以用私有导入命令自动完成下载和 manifest 生成：
+
+```bash
+brand-skill import-ima-media _private_test_runs/<run_name> \
+  --media-id <ima_media_id> \
+  --title <file_name.pdf> \
+  --knowledge-base <private_kb_name> \
+  --knowledge-path <private_kb_path>
+```
+
+该命令只允许写入 `_private_test_runs/`，会把文件保存到 `source/ima_imports/`，并生成 `source/source_manifest.json`。之后可继续运行 `convert-source` 和 `build-source-facts`。
 
 `build-source-facts` 会读取 `converted_markdown/source_transcripts/`，生成 `converted_markdown/source_facts/`。这一步只抽取来源中已经出现的文字证据，保留 Source Anchor 和低置信度说明；它不做品牌确认、不做外发安全判断，也不补写资料中没有的信息。
 
