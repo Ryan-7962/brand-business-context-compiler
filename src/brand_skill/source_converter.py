@@ -269,7 +269,11 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         transcript_name = f"{source_id}_{safe_name}.md"
         created_at, modified_at = _file_timestamps(pptx)
         slides = _extract_pptx_slides(pptx)
-        low_confidence_text = "无明显低置信度" if any(slide.strip() for slide in slides) else "未抽取到 slide 文本"
+        low_confidence_text = (
+            "PowerPoint 轻量转写未保留真实版式、图片、图表、动画和备注"
+            if any(slide.strip() for slide in slides)
+            else "未抽取到 slide 文本；PowerPoint 轻量转写未保留真实版式、图片、图表、动画和备注"
+        )
 
         lines = [
             f"# Source Transcript｜{pptx.name}",
@@ -289,7 +293,11 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         ]
 
         for slide_index, slide_text in enumerate(slides, start=1):
-            page_low_confidence = "无明显低置信度" if slide_text.strip() else "未抽取到 slide 文本"
+            page_low_confidence = (
+                "PowerPoint 轻量转写未保留真实版式、图片、图表、动画和备注"
+                if slide_text.strip()
+                else "未抽取到 slide 文本；PowerPoint 轻量转写未保留真实版式、图片、图表、动画和备注"
+            )
             lines.extend(
                 [
                     f"## Page {slide_index}",
