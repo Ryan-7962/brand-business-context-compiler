@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import re
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
+from xml.etree import ElementTree
 
 
 SUPPORTED_LIGHTWEIGHT_ENGINE = "pymupdf4llm"
@@ -34,6 +36,13 @@ def _iter_source_text_documents(project_dir: Path) -> list[Path]:
     )
 
 
+def _iter_source_docx(project_dir: Path) -> list[Path]:
+    source_dir = project_dir / "source"
+    if not source_dir.exists():
+        return []
+    return sorted(source_dir.rglob("*.docx"))
+
+
 def _source_label(project_dir: Path, source_file: Path) -> str:
     """Use the source category folder as the stable transcript label when present."""
     source_dir = project_dir / "source"
@@ -57,6 +66,36 @@ def _format_timestamp(timestamp: float) -> str:
     return datetime.fromtimestamp(timestamp, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _extract_docx_text(path: Path) -> str:
+    try:
+        with zipfile.ZipFile(path) as docx:
+            document_xml = docx.read("word/document.xml")
+    except (KeyError, zipfile.BadZipFile) as exc:
+        print(f"Unable to read DOCX source: {path.name}")
+        raise SystemExit(1) from exc
+
+    root = ElementTree.fromstring(document_xml)
+    namespace = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+    paragraphs: list[str] = []
+    for paragraph in root.iter(f"{namespace}p"):
+        texts = [node.text or "" for node in paragraph.iter(f"{namespace}t")]
+        paragraph_text = "".join(texts).strip()
+        if paragraph_text:
+            paragraphs.append(paragraph_text)
+    return "\n\n".join(paragraphs)
+
+
+def _text_source_kind(path: Path) -> tuple[str, str, str]:
+    suffix = path.suffix.lower()
+    if suffix == ".md":
+        return "Markdown", path.read_text(encoding="utf-8"), "Markdown 源稿转写"
+    if suffix == ".txt":
+        return "Plain Text", path.read_text(encoding="utf-8"), "Plain Text 源稿转写"
+    if suffix == ".docx":
+        return "Word Document", _extract_docx_text(path), "Word Document 源稿转写"
+    raise ValueError(f"Unsupported text source: {path}")
+
+
 def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE) -> None:
     """Convert source documents into Markdown transcripts.
 
@@ -71,7 +110,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         raise SystemExit(1)
 
     pdfs = _iter_source_pdfs(project_dir)
-    text_sources = _iter_source_text_documents(project_dir)
+    text_sources = [*_iter_source_text_documents(project_dir), *_iter_source_docx(project_dir)]
     if not pdfs and not text_sources:
         print("No supported source files found under source/.")
         raise SystemExit(1)
@@ -90,9 +129,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         safe_name = _source_label(project_dir, text_source)
         transcript_name = f"{source_id}_{safe_name}.md"
         created_at, modified_at = _file_timestamps(text_source)
-        text = text_source.read_text(encoding="utf-8")
-        file_type = "Markdown" if text_source.suffix.lower() == ".md" else "Plain Text"
-        conversion_method = f"{file_type} 源稿转写"
+        file_type, text, conversion_method = _text_source_kind(text_source)
         low_confidence_text = "无明显低置信度" if text.strip() else "源稿为空"
 
         lines = [
