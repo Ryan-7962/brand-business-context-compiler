@@ -115,7 +115,7 @@ brand-skill demo-contract <project_dir> --library-dir <brand_context_library_dir
 ## 最小使用路径
 
 ```text
-1. 把 PDF / Markdown 源稿放入 source/；PPT / 长图可先转成 PDF 或后续接入高保真转换器
+1. 把 PDF / Markdown / TXT 源稿放入 source/；PPT / 长图可先转成 PDF 或后续接入高保真转换器
 2. 运行 source conversion，生成带页码和低置信度标记的 Markdown
 3. 用 Prompt Bundle 生成 00-11 输出
 4. 查看 review/brand_review.html，只处理识别异常
@@ -156,7 +156,7 @@ brand-skill check-brand-lock <project_dir>
 brand-skill check-claim-matrix <project_dir>
 ```
 
-`convert-source` 当前支持默认轻量引擎 `pymupdf4llm`：PDF 会生成逐页转写和页面截图；Markdown 源稿会作为文档类资料进入同一套 source transcript / conversion report 流程。`mineru` 作为高保真 optional engine 已预留架构，但第一版不强制安装。
+`convert-source` 当前支持默认轻量引擎 `pymupdf4llm`：PDF 会生成逐页转写和页面截图；Markdown / TXT 源稿会作为文档类资料进入同一套 source transcript / conversion report 流程。`mineru` 作为高保真 optional engine 已预留架构，但第一版不强制安装。
 
 `convert-source` 会记录原始文件创建时间和修改时间。若多份品牌资料内容冲突，默认把修改时间更新的文件作为版本判断线索，但不会自动覆盖关键品牌口径；相关内容应进入冲突队列或旧知识更新队列。
 

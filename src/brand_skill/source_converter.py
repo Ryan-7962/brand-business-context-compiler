@@ -22,11 +22,16 @@ def _iter_source_pdfs(project_dir: Path) -> list[Path]:
     return sorted(source_dir.rglob("*.pdf"))
 
 
-def _iter_source_markdown(project_dir: Path) -> list[Path]:
+def _iter_source_text_documents(project_dir: Path) -> list[Path]:
     source_dir = project_dir / "source"
     if not source_dir.exists():
         return []
-    return sorted(path for path in source_dir.rglob("*.md") if path.name != "README.md")
+    supported_suffixes = {".md", ".txt"}
+    return sorted(
+        path
+        for path in source_dir.rglob("*")
+        if path.is_file() and path.suffix.lower() in supported_suffixes and path.name != "README.md"
+    )
 
 
 def _source_label(project_dir: Path, source_file: Path) -> str:
@@ -66,8 +71,8 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         raise SystemExit(1)
 
     pdfs = _iter_source_pdfs(project_dir)
-    markdown_sources = _iter_source_markdown(project_dir)
-    if not pdfs and not markdown_sources:
+    text_sources = _iter_source_text_documents(project_dir)
+    if not pdfs and not text_sources:
         print("No supported source files found under source/.")
         raise SystemExit(1)
 
@@ -79,33 +84,35 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
 
     report_rows: list[list[str]] = []
     source_index = 1
-    for markdown in markdown_sources:
+    for text_source in text_sources:
         source_id = f"S{source_index:03d}"
         source_index += 1
-        safe_name = _source_label(project_dir, markdown)
+        safe_name = _source_label(project_dir, text_source)
         transcript_name = f"{source_id}_{safe_name}.md"
-        created_at, modified_at = _file_timestamps(markdown)
-        text = markdown.read_text(encoding="utf-8")
+        created_at, modified_at = _file_timestamps(text_source)
+        text = text_source.read_text(encoding="utf-8")
+        file_type = "Markdown" if text_source.suffix.lower() == ".md" else "Plain Text"
+        conversion_method = f"{file_type} 源稿转写"
         low_confidence_text = "无明显低置信度" if text.strip() else "源稿为空"
 
         lines = [
-            f"# Source Transcript｜{markdown.name}",
+            f"# Source Transcript｜{text_source.name}",
             "",
             "## Source Metadata",
             f"- Source ID：{source_id}",
-            f"- 原始文件：{markdown.name}",
-            "- 文件类型：Markdown",
+            f"- 原始文件：{text_source.name}",
+            f"- 文件类型：{file_type}",
             f"- 文件创建时间：{created_at}",
             f"- 文件修改时间：{modified_at}",
             "- 版本判断说明：若多份资料内容冲突，优先参考修改时间更新的文件；但关键品牌口径仍需进入冲突队列或人工复核，不自动覆盖。",
             "- 页数：1",
             f"- 转写引擎：{engine}",
-            "- 转写方式：Markdown 源稿转写",
-            "- 低置信度说明：Markdown 源稿不包含真实 PDF / PPT 版式截图；若原始资料来自图片、表格或小字，请补充对应截图复核。",
+            f"- 转写方式：{conversion_method}",
+            f"- 低置信度说明：{file_type} 源稿不包含真实 PDF / PPT 版式截图；若原始资料来自图片、表格或小字，请补充对应截图复核。",
             "",
             "## Page 1",
             f"- Source Anchor：{source_id}#page=1",
-            "- Page Screenshot：不适用（Markdown source）",
+            f"- Page Screenshot：不适用（{file_type} source）",
             f"- Extracted text chars：{len(text.strip())}",
             "- Embedded images detected：0",
             "- Vector drawings detected：0",
@@ -114,13 +121,13 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
             text.strip() if text.strip() else "> 低置信度，源稿为空。",
             "",
             "### Images / Charts",
-            "Markdown 源稿未生成页面截图；若来源包含图片、图表或长图，请补充原始视觉文件。",
+            f"{file_type} 源稿未生成页面截图；若来源包含图片、图表或长图，请补充原始视觉文件。",
             "",
             "### Tables",
-            "Markdown 表格按文本保留，复杂表格仍需人工复核。",
+            f"{file_type} 表格按文本保留，复杂表格仍需人工复核。",
             "",
             "### Notes / Footnotes / Small Print",
-            "Markdown 源稿不保留原始版式小字信息；如来自 PDF / PPT，请以原始页面为准复核。",
+            f"{file_type} 源稿不保留原始版式小字信息；如来自 PDF / PPT，请以原始页面为准复核。",
             "",
             "### Low Confidence / Need Review",
             f"- {low_confidence_text}",
@@ -131,12 +138,12 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         report_rows.append(
             [
                 source_id,
-                markdown.name,
+                text_source.name,
                 created_at,
                 modified_at,
                 f"converted_markdown/source_transcripts/{transcript_name}",
                 engine,
-                "Markdown 源稿转写",
+                conversion_method,
                 "不适用",
                 "1",
                 "按文本保留",
@@ -266,7 +273,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         doc.close()
 
     _write_conversion_report(converted_dir / "conversion_report.md", report_rows)
-    print(f"Converted {len(pdfs) + len(markdown_sources)} source file(s) into {converted_dir}")
+    print(f"Converted {len(pdfs) + len(text_sources)} source file(s) into {converted_dir}")
 
 
 def _write_conversion_report(path: Path, rows: list[list[str]]) -> None:
