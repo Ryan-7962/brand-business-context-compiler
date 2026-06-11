@@ -22,16 +22,23 @@ def _iter_source_pdfs(project_dir: Path) -> list[Path]:
     return sorted(source_dir.rglob("*.pdf"))
 
 
-def _source_label(project_dir: Path, pdf: Path) -> str:
+def _iter_source_markdown(project_dir: Path) -> list[Path]:
+    source_dir = project_dir / "source"
+    if not source_dir.exists():
+        return []
+    return sorted(path for path in source_dir.rglob("*.md") if path.name != "README.md")
+
+
+def _source_label(project_dir: Path, source_file: Path) -> str:
     """Use the source category folder as the stable transcript label when present."""
     source_dir = project_dir / "source"
     try:
-        relative = pdf.relative_to(source_dir)
+        relative = source_file.relative_to(source_dir)
     except ValueError:
-        return _safe_stem(pdf)
+        return _safe_stem(source_file)
     if len(relative.parts) > 1:
         return _safe_stem(Path(relative.parts[0]))
-    return _safe_stem(pdf)
+    return _safe_stem(source_file)
 
 
 def _file_timestamps(path: Path) -> tuple[str, str]:
@@ -58,16 +65,10 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         print(f"Unsupported source conversion engine: {engine}")
         raise SystemExit(1)
 
-    try:
-        import fitz
-        import pymupdf4llm
-    except ImportError as exc:
-        print(f"Missing conversion dependency: {exc.name}")
-        raise SystemExit(1) from exc
-
     pdfs = _iter_source_pdfs(project_dir)
-    if not pdfs:
-        print("No PDF source files found under source/.")
+    markdown_sources = _iter_source_markdown(project_dir)
+    if not pdfs and not markdown_sources:
+        print("No supported source files found under source/.")
         raise SystemExit(1)
 
     converted_dir = project_dir / "converted_markdown"
@@ -77,7 +78,86 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
     assets_root.mkdir(parents=True, exist_ok=True)
 
     report_rows: list[list[str]] = []
-    for index, pdf in enumerate(pdfs, start=1):
+    source_index = 1
+    for markdown in markdown_sources:
+        source_id = f"S{source_index:03d}"
+        source_index += 1
+        safe_name = _source_label(project_dir, markdown)
+        transcript_name = f"{source_id}_{safe_name}.md"
+        created_at, modified_at = _file_timestamps(markdown)
+        text = markdown.read_text(encoding="utf-8")
+        low_confidence_text = "无明显低置信度" if text.strip() else "源稿为空"
+
+        lines = [
+            f"# Source Transcript｜{markdown.name}",
+            "",
+            "## Source Metadata",
+            f"- Source ID：{source_id}",
+            f"- 原始文件：{markdown.name}",
+            "- 文件类型：Markdown",
+            f"- 文件创建时间：{created_at}",
+            f"- 文件修改时间：{modified_at}",
+            "- 版本判断说明：若多份资料内容冲突，优先参考修改时间更新的文件；但关键品牌口径仍需进入冲突队列或人工复核，不自动覆盖。",
+            "- 页数：1",
+            f"- 转写引擎：{engine}",
+            "- 转写方式：Markdown 源稿转写",
+            "- 低置信度说明：Markdown 源稿不包含真实 PDF / PPT 版式截图；若原始资料来自图片、表格或小字，请补充对应截图复核。",
+            "",
+            "## Page 1",
+            f"- Source Anchor：{source_id}#page=1",
+            "- Page Screenshot：不适用（Markdown source）",
+            f"- Extracted text chars：{len(text.strip())}",
+            "- Embedded images detected：0",
+            "- Vector drawings detected：0",
+            "",
+            "### Text",
+            text.strip() if text.strip() else "> 低置信度，源稿为空。",
+            "",
+            "### Images / Charts",
+            "Markdown 源稿未生成页面截图；若来源包含图片、图表或长图，请补充原始视觉文件。",
+            "",
+            "### Tables",
+            "Markdown 表格按文本保留，复杂表格仍需人工复核。",
+            "",
+            "### Notes / Footnotes / Small Print",
+            "Markdown 源稿不保留原始版式小字信息；如来自 PDF / PPT，请以原始页面为准复核。",
+            "",
+            "### Low Confidence / Need Review",
+            f"- {low_confidence_text}",
+            "",
+        ]
+        (transcripts_dir / transcript_name).write_text("\n".join(lines), encoding="utf-8")
+
+        report_rows.append(
+            [
+                source_id,
+                markdown.name,
+                created_at,
+                modified_at,
+                f"converted_markdown/source_transcripts/{transcript_name}",
+                engine,
+                "Markdown 源稿转写",
+                "不适用",
+                "1",
+                "按文本保留",
+                "不适用",
+                "不适用",
+                low_confidence_text,
+                "检查 Markdown 源稿是否遗漏原始视觉信息",
+            ]
+        )
+
+    if pdfs:
+        try:
+            import fitz
+            import pymupdf4llm
+        except ImportError as exc:
+            print(f"Missing conversion dependency: {exc.name}")
+            raise SystemExit(1) from exc
+
+    for pdf in pdfs:
+        index = source_index
+        source_index += 1
         source_id = f"S{index:03d}"
         safe_name = _source_label(project_dir, pdf)
         transcript_name = f"{source_id}_{safe_name}.md"
@@ -186,7 +266,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         doc.close()
 
     _write_conversion_report(converted_dir / "conversion_report.md", report_rows)
-    print(f"Converted {len(pdfs)} source file(s) into {converted_dir}")
+    print(f"Converted {len(pdfs) + len(markdown_sources)} source file(s) into {converted_dir}")
 
 
 def _write_conversion_report(path: Path, rows: list[list[str]]) -> None:
