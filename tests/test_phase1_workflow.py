@@ -15,6 +15,7 @@ from brand_skill.library_report import build_library_report
 from brand_skill.library_writer import apply_context_library_update
 from brand_skill.ima_importer import import_ima_media
 from brand_skill.review_pack import build_review_pack
+from brand_skill.source_quality import build_source_quality_report
 from brand_skill.source_facts import build_source_facts
 from brand_skill.source_converter import convert_source
 from brand_skill.validators import (
@@ -455,6 +456,63 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertEqual(manifest["sources"][0]["knowledge_base"], "示例品牌知识库")
             self.assertEqual(manifest["sources"][0]["knowledge_path"], "品牌内容 / sample.pdf")
             self.assertEqual(manifest["sources"][0]["media_id"], "media_sample_001")
+
+    def test_build_source_quality_report_summarizes_low_confidence_pages(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            transcripts_dir = project_dir / "converted_markdown" / "source_transcripts"
+            transcripts_dir.mkdir(parents=True)
+            (transcripts_dir / "S001_brand_content.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Transcript｜sample.pdf",
+                        "",
+                        "## Source Metadata",
+                        "- Source ID：S001",
+                        "- 原始文件：sample.pdf",
+                        "- 文件类型：PDF",
+                        "",
+                        "## Page 1",
+                        "- Source Anchor：S001#page=1",
+                        "- Page Screenshot：../assets/S001/page_01.png",
+                        "- Extracted text chars：120",
+                        "- Embedded images detected：0",
+                        "- Vector drawings detected：0",
+                        "",
+                        "### Text",
+                        "品牌资料第一页文字完整。",
+                        "",
+                        "### Low Confidence / Need Review",
+                        "- 无明显低置信度。",
+                        "",
+                        "## Page 2",
+                        "- Source Anchor：S001#page=2",
+                        "- Page Screenshot：../assets/S001/page_02.png",
+                        "- Extracted text chars：8",
+                        "- Embedded images detected：3",
+                        "- Vector drawings detected：2",
+                        "",
+                        "### Text",
+                        "> 低置信度，未抽取到可用文本。请查看页面截图。",
+                        "",
+                        "### Low Confidence / Need Review",
+                        "- 可抽取文字较少；含图片/视觉信息",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_source_quality_report(project_dir)
+
+            report = project_dir / "converted_markdown" / "source_quality_report.md"
+            report_text = report.read_text(encoding="utf-8")
+            self.assertIn("# Source Quality Report", report_text)
+            self.assertIn("- 总页数：2", report_text)
+            self.assertIn("- 需要复核页数：1", report_text)
+            self.assertIn("| S001#page=2 | sample.pdf | 8 | 3 | 2 | 可抽取文字较少；含图片/视觉信息 | OCR / MinerU / 人工复核 |", report_text)
+            self.assertIn("优先处理含图片、低文字量、表格或小字页面", report_text)
 
     def test_cli_exposes_brand_lock_check(self) -> None:
         import sys
@@ -899,6 +957,10 @@ class Phase1WorkflowTests(unittest.TestCase):
                 "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
+            (converted / "source_quality_report.md").write_text(
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| 建议动作 |\n|---|\n| 继续后续语义编译 |\n",
+                encoding="utf-8",
+            )
             (transcripts / "S001_demo.md").write_text(
                 "Source Anchor：S001#page=1\nPage Screenshot：../assets/S001/page_01.png\n低置信度\n",
                 encoding="utf-8",
@@ -947,6 +1009,10 @@ class Phase1WorkflowTests(unittest.TestCase):
                 (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
             (converted / "conversion_report.md").write_text(
                 "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                encoding="utf-8",
+            )
+            (converted / "source_quality_report.md").write_text(
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| 建议动作 |\n|---|\n| 继续后续语义编译 |\n",
                 encoding="utf-8",
             )
             (transcripts / "S001_demo.md").write_text(

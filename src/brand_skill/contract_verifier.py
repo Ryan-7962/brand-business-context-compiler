@@ -186,6 +186,7 @@ def _display_path(path: Path, project_dir: Path, library_dir: Path) -> str:
 def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
     converted_dir = project_dir / "converted_markdown"
     report = converted_dir / "conversion_report.md"
+    quality_report = converted_dir / "source_quality_report.md"
     transcripts_dir = converted_dir / "source_transcripts"
     if not report.exists():
         issues.append("Missing source conversion report: converted_markdown/conversion_report.md")
@@ -207,6 +208,14 @@ def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
     for marker in ["Source Anchor", "Page Screenshot", "低置信度"]:
         if marker not in transcript_text:
             issues.append(f"Source transcripts missing marker: {marker}")
+
+    if not quality_report.exists():
+        issues.append("Missing source quality report: converted_markdown/source_quality_report.md")
+    else:
+        quality_text = quality_report.read_text(encoding="utf-8")
+        for marker in ["识别质量总览", "需要复核页数", "建议动作"]:
+            if marker not in quality_text:
+                issues.append(f"Source quality report missing marker: {marker}")
 
 
 def _check_review_pack(project_dir: Path, issues: list[str]) -> None:
