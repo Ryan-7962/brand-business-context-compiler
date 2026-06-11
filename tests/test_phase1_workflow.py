@@ -243,6 +243,43 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Word Document 源稿转写", report_text)
             self.assertIn("识别质量摘要", report_text)
 
+    def test_convert_source_accepts_pptx_source_documents(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            source_dir = project_dir / "source" / "launch_plan"
+            source_dir.mkdir(parents=True)
+            pptx_path = source_dir / "sample.pptx"
+            slide_1 = (
+                '<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+                'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
+                "<p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>上市节奏</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld>"
+                "</p:sld>"
+            )
+            slide_2 = (
+                '<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+                'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
+                "<p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>渠道动作复盘</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld>"
+                "</p:sld>"
+            )
+            with zipfile.ZipFile(pptx_path, "w") as pptx:
+                pptx.writestr("ppt/slides/slide1.xml", slide_1)
+                pptx.writestr("ppt/slides/slide2.xml", slide_2)
+
+            with redirect_stdout(StringIO()):
+                convert_source(project_dir, engine="pymupdf4llm")
+
+            transcript = project_dir / "converted_markdown" / "source_transcripts" / "S001_launch_plan.md"
+            report = project_dir / "converted_markdown" / "conversion_report.md"
+            transcript_text = transcript.read_text(encoding="utf-8")
+            report_text = report.read_text(encoding="utf-8")
+            self.assertIn("文件类型：PowerPoint", transcript_text)
+            self.assertIn("Source Anchor：S001#page=1", transcript_text)
+            self.assertIn("Source Anchor：S001#page=2", transcript_text)
+            self.assertIn("上市节奏", transcript_text)
+            self.assertIn("渠道动作复盘", transcript_text)
+            self.assertIn("PowerPoint 源稿转写", report_text)
+            self.assertIn("2", report_text)
+
     def test_convert_source_marks_mineru_as_optional(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             with redirect_stdout(StringIO()):

@@ -43,6 +43,13 @@ def _iter_source_docx(project_dir: Path) -> list[Path]:
     return sorted(source_dir.rglob("*.docx"))
 
 
+def _iter_source_pptx(project_dir: Path) -> list[Path]:
+    source_dir = project_dir / "source"
+    if not source_dir.exists():
+        return []
+    return sorted(source_dir.rglob("*.pptx"))
+
+
 def _source_label(project_dir: Path, source_file: Path) -> str:
     """Use the source category folder as the stable transcript label when present."""
     source_dir = project_dir / "source"
@@ -85,6 +92,33 @@ def _extract_docx_text(path: Path) -> str:
     return "\n\n".join(paragraphs)
 
 
+def _extract_pptx_slides(path: Path) -> list[str]:
+    try:
+        with zipfile.ZipFile(path) as pptx:
+            slide_names = sorted(
+                (name for name in pptx.namelist() if re.fullmatch(r"ppt/slides/slide\d+\.xml", name)),
+                key=_slide_number,
+            )
+            slide_xmls = [pptx.read(name) for name in slide_names]
+    except zipfile.BadZipFile as exc:
+        print(f"Unable to read PPTX source: {path.name}")
+        raise SystemExit(1) from exc
+
+    namespace = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
+    slides: list[str] = []
+    for slide_xml in slide_xmls:
+        root = ElementTree.fromstring(slide_xml)
+        texts = [node.text or "" for node in root.iter(f"{namespace}t")]
+        slide_text = "\n".join(text.strip() for text in texts if text and text.strip())
+        slides.append(slide_text)
+    return slides
+
+
+def _slide_number(path: str) -> int:
+    match = re.search(r"slide(\d+)\.xml$", path)
+    return int(match.group(1)) if match else 0
+
+
 def _text_source_kind(path: Path) -> tuple[str, str, str]:
     suffix = path.suffix.lower()
     if suffix == ".md":
@@ -111,7 +145,8 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
 
     pdfs = _iter_source_pdfs(project_dir)
     text_sources = [*_iter_source_text_documents(project_dir), *_iter_source_docx(project_dir)]
-    if not pdfs and not text_sources:
+    pptx_sources = _iter_source_pptx(project_dir)
+    if not pdfs and not text_sources and not pptx_sources:
         print("No supported source files found under source/.")
         raise SystemExit(1)
 
@@ -190,6 +225,81 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
                 "检查 Markdown 源稿是否遗漏原始视觉信息",
             ]
         )
+
+    for pptx in pptx_sources:
+        source_id = f"S{source_index:03d}"
+        source_index += 1
+        safe_name = _source_label(project_dir, pptx)
+        transcript_name = f"{source_id}_{safe_name}.md"
+        created_at, modified_at = _file_timestamps(pptx)
+        slides = _extract_pptx_slides(pptx)
+        low_confidence_text = "无明显低置信度" if any(slide.strip() for slide in slides) else "未抽取到 slide 文本"
+
+        lines = [
+            f"# Source Transcript｜{pptx.name}",
+            "",
+            "## Source Metadata",
+            f"- Source ID：{source_id}",
+            f"- 原始文件：{pptx.name}",
+            "- 文件类型：PowerPoint",
+            f"- 文件创建时间：{created_at}",
+            f"- 文件修改时间：{modified_at}",
+            "- 版本判断说明：若多份资料内容冲突，优先参考修改时间更新的文件；但关键品牌口径仍需进入冲突队列或人工复核，不自动覆盖。",
+            f"- 页数：{len(slides)}",
+            f"- 转写引擎：{engine}",
+            "- 转写方式：PowerPoint 源稿转写",
+            "- 低置信度说明：轻量路径只抽取 slide 文本，不保留真实版式、图片、图表、动画和备注；关键页面需结合原 PPT 复核。",
+            "",
+        ]
+
+        for slide_index, slide_text in enumerate(slides, start=1):
+            page_low_confidence = "无明显低置信度" if slide_text.strip() else "未抽取到 slide 文本"
+            lines.extend(
+                [
+                    f"## Page {slide_index}",
+                    f"- Source Anchor：{source_id}#page={slide_index}",
+                    "- Page Screenshot：不适用（PowerPoint source）",
+                    f"- Extracted text chars：{len(slide_text.strip())}",
+                    "- Embedded images detected：待复核",
+                    "- Vector drawings detected：待复核",
+                    "",
+                    "### Text",
+                    slide_text.strip() if slide_text.strip() else "> 低置信度，未抽取到 slide 文本。",
+                    "",
+                    "### Images / Charts",
+                    "PowerPoint 轻量转写未提取图片、图表和版式，请结合原 PPT 复核。",
+                    "",
+                    "### Tables",
+                    "PowerPoint 表格按可见文本抽取，结构需人工复核。",
+                    "",
+                    "### Notes / Footnotes / Small Print",
+                    "PowerPoint 备注、角标、小字和动画信息未完整保留，需人工复核。",
+                    "",
+                    "### Low Confidence / Need Review",
+                    f"- {page_low_confidence}",
+                    "",
+                ]
+            )
+            report_rows.append(
+                [
+                    source_id,
+                    pptx.name,
+                    created_at,
+                    modified_at,
+                    f"converted_markdown/source_transcripts/{transcript_name}",
+                    engine,
+                    "PowerPoint 源稿转写",
+                    "不适用",
+                    str(slide_index),
+                    "按文本保留",
+                    "待复核",
+                    "待复核",
+                    page_low_confidence,
+                    "检查原 PPT 版式、图片、图表、备注和小字信息",
+                ]
+            )
+
+        (transcripts_dir / transcript_name).write_text("\n".join(lines), encoding="utf-8")
 
     if pdfs:
         try:
@@ -310,7 +420,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         doc.close()
 
     _write_conversion_report(converted_dir / "conversion_report.md", report_rows)
-    print(f"Converted {len(pdfs) + len(text_sources)} source file(s) into {converted_dir}")
+    print(f"Converted {len(pdfs) + len(text_sources) + len(pptx_sources)} source file(s) into {converted_dir}")
 
 
 def _write_conversion_report(path: Path, rows: list[list[str]]) -> None:
