@@ -186,6 +186,14 @@ converted_markdown/source_facts/S001_source_facts.md
 - 不能确认的写 `待确认`。
 - 资料缺失的写 `待补充`。
 
+当前轻量 CLI 已提供：
+
+```bash
+brand-skill build-source-facts <project_dir>
+```
+
+它会从 `converted_markdown/source_transcripts/` 生成 `converted_markdown/source_facts/`，作为后续 Marketing Semantic Compiler 的事实候选输入。该步骤只做确定性文本拆分和 Source Anchor 继承，不替代模型语义抽取，也不代表品牌方确认。
+
 ## 4. MinerU 在本项目中的建议接入方式
 
 ### 4.1 第一版
@@ -246,7 +254,7 @@ brand-skill convert-source <project_dir> --engine pymupdf4llm
 
 1. 先把当前 PyMuPDF/pymupdf4llm baseline 做成可复用 CLI。
 2. 保证混合文件导入时 Source ID 按 `source/` 相对路径稳定分配，避免因文件类型导致引用漂移。
-3. 把 `S001_source_facts.md` 的抽取规则模板化。
+3. 继续增强 `source_facts/`：识别标题上下文、表格行、图片说明和低置信度页面。
 4. 给 Source Conversion Report 增加 engine/OCR/table/image quality 字段。
 5. 小规模评估 MinerU。
 6. 再决定是否把 MinerU 做成 optional adapter。

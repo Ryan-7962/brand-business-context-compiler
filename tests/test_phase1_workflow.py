@@ -13,6 +13,7 @@ from brand_skill.contract_verifier import verify_project_contract
 from brand_skill.library_report import build_library_report
 from brand_skill.library_writer import apply_context_library_update
 from brand_skill.review_pack import build_review_pack
+from brand_skill.source_facts import build_source_facts
 from brand_skill.source_converter import convert_source
 from brand_skill.validators import (
     check_brand_lock_sheet_draft,
@@ -332,6 +333,27 @@ class Phase1WorkflowTests(unittest.TestCase):
             output = stdout.getvalue()
             self.assertIn("MinerU CLI", output)
             self.assertIn("mineru -p <input_path> -o <output_path>", output)
+
+    def test_build_source_facts_creates_traceable_fact_candidates(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            source_dir = project_dir / "source" / "meeting_notes"
+            source_dir.mkdir(parents=True)
+            (source_dir / "sample.md").write_text(
+                "# 品牌月会\n\n- 本月重点是渠道复盘。\n- 下月需要补充投放数据。\n",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                convert_source(project_dir, engine="pymupdf4llm")
+                build_source_facts(project_dir)
+
+            facts_path = project_dir / "converted_markdown" / "source_facts" / "S001_meeting_notes_source_facts.md"
+            facts_text = facts_path.read_text(encoding="utf-8")
+            self.assertIn("# Source Facts｜sample.md", facts_text)
+            self.assertIn("| SF001-001 | S001#page=1 | 本月重点是渠道复盘。 | 已从来源资料提取 | 无明显低置信度 |", facts_text)
+            self.assertIn("| SF001-002 | S001#page=1 | 下月需要补充投放数据。 | 已从来源资料提取 | 无明显低置信度 |", facts_text)
+            self.assertIn("不做品牌确认判断", facts_text)
 
     def test_cli_exposes_brand_lock_check(self) -> None:
         import sys

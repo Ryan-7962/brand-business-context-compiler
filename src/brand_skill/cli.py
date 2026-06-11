@@ -13,6 +13,7 @@ from .demo_contract import run_demo_contract
 from .library_report import build_library_report
 from .library_writer import apply_context_library_update
 from .review_pack import build_review_pack
+from .source_facts import build_source_facts
 from .source_converter import convert_source
 from .workflow import init_project, scaffold_output, validate_input, build_prompt_pack
 from .validators import check_brand_lock_sheet_draft, check_claim_matrix
@@ -46,6 +47,9 @@ def main() -> None:
     p_convert = sub.add_parser("convert-source")
     p_convert.add_argument("project_dir")
     p_convert.add_argument("--engine", default="pymupdf4llm", choices=["pymupdf4llm", "mineru"])
+
+    p_source_facts = sub.add_parser("build-source-facts")
+    p_source_facts.add_argument("project_dir")
 
     p_library = sub.add_parser("apply-library-update")
     p_library.add_argument("project_dir")
@@ -82,6 +86,8 @@ def main() -> None:
         build_review_pack(project_dir)
     elif args.command == "convert-source":
         convert_source(project_dir, engine=args.engine)
+    elif args.command == "build-source-facts":
+        build_source_facts(project_dir)
     elif args.command == "apply-library-update":
         library_dir = Path(args.library_dir) if args.library_dir else None
         apply_context_library_update(project_dir, library_dir=library_dir)

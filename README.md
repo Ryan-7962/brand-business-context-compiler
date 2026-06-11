@@ -103,6 +103,7 @@ outputs/<project_slug>/derived_briefs/
 brand-skill init <project_name>
 brand-skill validate-input <project_dir>
 brand-skill convert-source <project_dir> --engine pymupdf4llm
+brand-skill build-source-facts <project_dir>
 brand-skill scaffold-output <project_dir>
 brand-skill build-prompt-pack <project_dir>
 brand-skill build-review-pack <project_dir>
@@ -117,12 +118,13 @@ brand-skill demo-contract <project_dir> --library-dir <brand_context_library_dir
 ```text
 1. 把 PDF / PPTX / Markdown / TXT / DOCX 源稿放入 source/；PPT 旧格式 / 长图可先转成 PDF 或后续接入高保真转换器
 2. 运行 source conversion，生成带页码和低置信度标记的 Markdown
-3. 用 Prompt Bundle 生成 00-11 输出
-4. 查看 review/brand_review.html，只处理识别异常
-5. 运行 apply-library-update，把可沉淀内容写入 brand_context_library/
-6. 运行 build-library-report，生成一页中文知识库概览
-7. 运行 verify-contract --write-report，检查当前产物是否满足项目执行准则里的核心证据，并留下本地验证报告
-8. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
+3. 运行 build-source-facts，生成只基于来源原文的事实候选层
+4. 用 Prompt Bundle 生成 00-11 输出
+5. 查看 review/brand_review.html，只处理识别异常
+6. 运行 apply-library-update，把可沉淀内容写入 brand_context_library/
+7. 运行 build-library-report，生成一页中文知识库概览
+8. 运行 verify-contract --write-report，检查当前产物是否满足项目执行准则里的核心证据，并留下本地验证报告
+9. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
 ```
 
 本地验收 demo 可用一条命令跑完入库、知识库报告页和 contract 验证：
@@ -163,6 +165,8 @@ brand-skill check-claim-matrix <project_dir>
 如果 `source/` 中存在当前不支持的文件类型，`convert-source` 会停止并列出文件路径，不会静默跳过。这是为了避免品牌资料漏转后仍被误认为已经完整入库。
 
 `convert-source` 会记录原始文件创建时间和修改时间。若多份品牌资料内容冲突，默认把修改时间更新的文件作为版本判断线索，但不会自动覆盖关键品牌口径；相关内容应进入冲突队列或旧知识更新队列。
+
+`build-source-facts` 会读取 `converted_markdown/source_transcripts/`，生成 `converted_markdown/source_facts/`。这一步只抽取来源中已经出现的文字证据，保留 Source Anchor 和低置信度说明；它不做品牌确认、不做外发安全判断，也不补写资料中没有的信息。
 
 ## 目录说明
 
