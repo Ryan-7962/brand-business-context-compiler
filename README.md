@@ -173,6 +173,8 @@ brand-skill check-claim-matrix <project_dir>
 
 `build-source-version-report` 会读取 `converted_markdown/conversion_report.md`，生成 `converted_markdown/source_version_report.md`。它会基于文件名和原始文件修改时间归并疑似同主题多版本资料，提示最新修改时间线索，并明确这些线索只用于复核，不自动覆盖长期知识。
 
+`apply-library-update` 会读取 `source_version_report.md` 中的疑似多版本组，并追加到 `brand_context_library/review_queue/updates.md`，方便后续人工判断是补充、修正、替换还是暂不处理。
+
 如果资料来自 ima 或其他私有知识库，可在 `source/source_manifest.json` 中记录外部来源。该文件只保存追溯线索，不参与转写：
 
 ```json

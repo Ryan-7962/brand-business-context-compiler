@@ -34,6 +34,7 @@ def apply_context_library_update(project_dir: Path, library_dir: Path | None = N
     text = update_plan.read_text(encoding="utf-8")
     entries = _parse_new_context_entries(text)
     existing_updates = _parse_existing_context_updates(text)
+    source_version_updates = _parse_source_version_updates(project_dir)
     do_not_promote = _extract_section(text, "4. Do Not Promote")
     retrieval_notes = _extract_section(text, "6. Retrieval Notes")
     applied = []
@@ -52,8 +53,9 @@ def apply_context_library_update(project_dir: Path, library_dir: Path | None = N
 
     if conflicts:
         _append_conflict_queue(target_dir, project_dir.name, conflicts)
-    if existing_updates:
-        _append_update_queue(target_dir, project_dir.name, existing_updates)
+    all_updates = existing_updates + source_version_updates
+    if all_updates:
+        _append_update_queue(target_dir, project_dir.name, all_updates)
     if do_not_promote:
         _append_do_not_promote_queue(target_dir, project_dir.name, do_not_promote)
     if retrieval_notes:
@@ -102,6 +104,33 @@ def _parse_existing_context_updates(markdown: str) -> list[dict[str, str]]:
     return _parse_table(table_lines)
 
 
+def _parse_source_version_updates(project_dir: Path) -> list[dict[str, str]]:
+    report_path = project_dir / "converted_markdown" / "source_version_report.md"
+    if not report_path.exists():
+        return []
+
+    section = _extract_section(report_path.read_text(encoding="utf-8"), "疑似多版本资料")
+    if not section or "暂未发现" in section:
+        return []
+
+    updates = []
+    for group_name, block in _extract_h3_blocks(section):
+        latest_line = _first_bullet_value(block, "最新修改时间线索")
+        table_lines = [line.strip() for line in block.splitlines() if line.strip().startswith("|")]
+        table_rows = _parse_table(table_lines)
+        source_summary = _render_version_source_summary(table_rows)
+        updates.append(
+            {
+                "可能影响的已有条目": f"疑似多版本资料：{group_name}",
+                "更新方式": "版本复核",
+                "新信息": "\n".join(part for part in [latest_line, source_summary] if part).strip(),
+                "冲突或风险": "同主题多版本资料并存；不自动覆盖旧知识。",
+                "版本判断依据": "source_version_report.md / 最新修改时间线索",
+            }
+        )
+    return updates
+
+
 def _extract_section(markdown: str, heading: str) -> str:
     pattern = re.compile(rf"^##\s+{re.escape(heading)}\s*$", re.MULTILINE)
     match = pattern.search(markdown)
@@ -110,6 +139,42 @@ def _extract_section(markdown: str, heading: str) -> str:
     next_heading = re.search(r"^##\s+", markdown[match.end() :], re.MULTILINE)
     end = match.end() + next_heading.start() if next_heading else len(markdown)
     return markdown[match.end() : end].strip()
+
+
+def _extract_h3_blocks(markdown: str) -> list[tuple[str, str]]:
+    matches = list(re.finditer(r"^###\s+(.+?)\s*$", markdown, flags=re.MULTILINE))
+    blocks = []
+    for index, match in enumerate(matches):
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(markdown)
+        blocks.append((match.group(1).strip(), markdown[start:end].strip()))
+    return blocks
+
+
+def _first_bullet_value(markdown: str, label: str) -> str:
+    pattern = re.compile(rf"^-\s*{re.escape(label)}：(.+)$", re.MULTILINE)
+    match = pattern.search(markdown)
+    return f"{label}：{match.group(1).strip()}" if match else ""
+
+
+def _render_version_source_summary(rows: list[dict[str, str]]) -> str:
+    if not rows:
+        return ""
+    lines = ["版本候选来源："]
+    for row in rows:
+        lines.append(
+            "- "
+            + " / ".join(
+                part
+                for part in [
+                    row.get("来源编号", "").strip(),
+                    row.get("原始文件", "").strip(),
+                    row.get("修改时间", "").strip(),
+                ]
+                if part
+            )
+        )
+    return "\n".join(lines)
 
 
 def _parse_table(lines: list[str]) -> list[dict[str, str]]:

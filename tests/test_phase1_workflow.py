@@ -755,6 +755,67 @@ class Phase1WorkflowTests(unittest.TestCase):
             index_text = (library_dir / "00_library_index.md").read_text(encoding="utf-8")
             self.assertIn("Conflicts: 1", index_text)
 
+    def test_apply_context_library_update_queues_source_version_groups_as_updates(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            outputs = project_dir / "outputs"
+            converted = project_dir / "converted_markdown"
+            outputs.mkdir(parents=True)
+            converted.mkdir()
+            (outputs / "11_context_library_update_plan.md").write_text(
+                "\n".join(
+                    [
+                        "# Context Library Update Plan",
+                        "",
+                        "## 2. New Context Entries",
+                        "",
+                        "| Entry ID | 建议归档位置 | 标题 | 内容摘要 | 来源资产 | 稳定性 | 写入建议 |",
+                        "|---|---|---|---|---|---|---|",
+                        "| LCE010 | project | 夏季策略复盘 | 资料存在多个版本，需要先复核。 | CA010 | 待验证 | 暂存 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (converted / "source_version_report.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Version Report",
+                        "",
+                        "## 版本线索总览",
+                        "",
+                        "- 来源文件数：2",
+                        "- 疑似多版本组数：1",
+                        "- 最新修改时间线索：优先作为版本判断依据，但不自动覆盖已有品牌知识。",
+                        "",
+                        "## 疑似多版本资料",
+                        "",
+                        "### summer_strategy",
+                        "",
+                        "- 最新修改时间线索：S002 / summer_strategy_v2.pdf / 2026-03-08T18:30:00+08:00",
+                        "- 建议动作：进入更新/冲突复核队列；不自动覆盖旧知识。",
+                        "",
+                        "| 来源编号 | 原始文件 | 创建时间 | 修改时间 | 转写稿 | 外部来源 |",
+                        "|---|---|---|---|---|---|",
+                        "| S001 | summer_strategy_v1.pdf | 2026-01-01T09:00:00+08:00 | 2026-01-02T09:00:00+08:00 | source_transcripts/S001.md | ima / 示例库 |",
+                        "| S002 | summer_strategy_v2.pdf | 2026-01-01T09:00:00+08:00 | 2026-03-08T18:30:00+08:00 | source_transcripts/S002.md | ima / 示例库 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            library_dir = Path(temp_dir) / "brand_context_library"
+
+            with redirect_stdout(StringIO()):
+                apply_context_library_update(project_dir, library_dir=library_dir)
+
+            updates = (library_dir / "review_queue" / "updates.md").read_text(encoding="utf-8")
+            self.assertIn("疑似多版本资料：summer_strategy", updates)
+            self.assertIn("summer_strategy_v2.pdf", updates)
+            self.assertIn("不自动覆盖旧知识", updates)
+            self.assertIn("S001", updates)
+            self.assertIn("S002", updates)
+            index_text = (library_dir / "00_library_index.md").read_text(encoding="utf-8")
+            self.assertIn("Existing Updates: 1", index_text)
+
     def test_cli_apply_library_update_command(self) -> None:
         import sys
 
