@@ -13,6 +13,8 @@ MinerU 这类成熟项目的价值主要在第一层：把 PDF、PPTX、长图�
 
 ## 2. 从 MinerU 吸收的关键经验
 
+MinerU 官方定位是面向 LLM / RAG / Agent 工作流的高精度文档解析引擎，输入覆盖 PDF、图片、DOCX、PPTX、XLSX，输出覆盖 Markdown、JSON 和中间结构。它的经验对本项目最有价值的部分，不是“总结能力”，而是“尽量保真地把人看的资料变成机器可读资料”。
+
 ### 2.1 多格式输入不是附加能力，而是核心入口
 
 品牌资料不会只是一种格式。实际输入包括：
@@ -36,6 +38,8 @@ SourceConverter
 └── manual_review_adapter    # 人工补录/复核
 ```
 
+当前轻量实现已经支持 PDF / PPTX / Markdown / TXT / DOCX；长图、截图、XLSX 和扫描件应作为下一阶段高保真适配对象，而不是在轻量路径里假装已经完整识别。
+
 ### 2.2 输出不应只有 Markdown，还要有结构化元数据
 
 MinerU 类项目的经验是：复杂资料只输出一份正文 Markdown 不够。我们需要同时保留：
@@ -57,6 +61,8 @@ converted_markdown/
 ├── source_facts/
 └── conversion_report.md
 ```
+
+MinerU 支持 Markdown、按阅读顺序排序的 JSON、可视化版面结果和 span 级结果。对应到本项目，后续不应只接收最终 Markdown，还应优先接收或映射这些中间结构，用来标记阅读顺序、版面块、表格、图片、公式、OCR 区域和低置信度区域。
 
 ### 2.3 阅读顺序和来源锚点必须保留
 
@@ -85,6 +91,8 @@ S003#image=long_pdp_01#region=claims
 
 只有这样才能避免把视觉页中的卖点、包装信息、图表数据和角标说明丢掉。
 
+这也是 MinerU 对本项目最关键的启发：OCR、版面识别、图片/图表提取和阅读顺序恢复应属于资料转写质量问题，而不是让后面的营销语义编译 prompt 去猜。
+
 ### 2.5 表格和图片要单独评估质量
 
 表格、商品详情页长图、检测报告截图最容易出错。Source Conversion Report 应记录：
@@ -104,6 +112,15 @@ MinerU 的能力强，但部署可能比轻量 CLI 更重。第一版应采用�
 | lightweight | PyMuPDF / pymupdf4llm 默认解析 PDF | 是 |
 | high_fidelity | MinerU 高保真解析 PDF/PPTX/图片/表格/OCR | 否，作为 optional |
 | manual_review | 人工查看截图并补录关键事实 | 是 |
+
+MinerU CLI 的典型调用方式是：
+
+```bash
+mineru -p <input_path> -o <output_path>
+mineru -p <input_path> -o <output_path> -b pipeline
+```
+
+其中 `pipeline` 后端可作为 CPU 友好的本地评估路径。正式接入前，本项目只做 optional adapter，不把安装 MinerU 作为默认门槛。
 
 ## 3. 本项目的 Source Converter 输出规范
 
@@ -203,6 +220,17 @@ converted_markdown/source_facts/S001_source_facts.md
 | 输出 Markdown 可读性 | | | |
 | 部署复杂度 | | | |
 
+额外评估：
+
+| 维度 | 当前 pymupdf4llm | MinerU | 是否值得接入 |
+|---|---|---|---|
+| 阅读顺序是否稳定 | | | |
+| header/footer/page number 清理 | | | |
+| 图片中文字 OCR | | | |
+| 图表标题和脚注保留 | | | |
+| 低置信度区域是否可定位 | | | |
+| 输出 JSON 是否能映射到 Source Anchor | | | |
+
 ### 4.3 正式接入
 
 如果 MinerU 在关键页明显优于 baseline，则增加：
@@ -217,7 +245,8 @@ brand-skill convert-source <project_dir> --engine pymupdf4llm
 ## 5. 当前开发 next step
 
 1. 先把当前 PyMuPDF/pymupdf4llm baseline 做成可复用 CLI。
-2. 把 `S001_source_facts.md` 的抽取规则模板化。
-3. 给 Source Conversion Report 增加 engine/OCR/table/image quality 字段。
-4. 小规模评估 MinerU。
-5. 再决定是否把 MinerU 做成 optional adapter。
+2. 保证混合文件导入时 Source ID 按 `source/` 相对路径稳定分配，避免因文件类型导致引用漂移。
+3. 把 `S001_source_facts.md` 的抽取规则模板化。
+4. 给 Source Conversion Report 增加 engine/OCR/table/image quality 字段。
+5. 小规模评估 MinerU。
+6. 再决定是否把 MinerU 做成 optional adapter。

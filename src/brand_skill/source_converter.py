@@ -26,6 +26,14 @@ def _iter_source_pdfs(project_dir: Path) -> list[Path]:
     return sorted(source_dir.rglob("*.pdf"))
 
 
+def _source_sort_key(project_dir: Path, source_file: Path) -> str:
+    source_dir = project_dir / "source"
+    try:
+        return source_file.relative_to(source_dir).as_posix().lower()
+    except ValueError:
+        return source_file.as_posix().lower()
+
+
 def _iter_unsupported_sources(project_dir: Path) -> list[Path]:
     source_dir = project_dir / "source"
     if not source_dir.exists():
@@ -150,7 +158,11 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
     placeholder. The default lightweight path uses PyMuPDF and pymupdf4llm.
     """
     if engine == "mineru":
-        print("MinerU adapter is optional and not installed/configured in this lightweight build.")
+        print(
+            "MinerU CLI is an optional high-fidelity converter and is not configured in this lightweight build. "
+            "Install/configure MinerU, then run it with a command such as: "
+            "mineru -p <input_path> -o <output_path> -b pipeline"
+        )
         raise SystemExit(1)
     if engine != SUPPORTED_LIGHTWEIGHT_ENGINE:
         print(f"Unsupported source conversion engine: {engine}")
@@ -171,9 +183,11 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
     pdfs = _iter_source_pdfs(project_dir)
     text_sources = [*_iter_source_text_documents(project_dir), *_iter_source_docx(project_dir)]
     pptx_sources = _iter_source_pptx(project_dir)
-    if not pdfs and not text_sources and not pptx_sources:
+    supported_sources = sorted([*pdfs, *text_sources, *pptx_sources], key=lambda path: _source_sort_key(project_dir, path))
+    if not supported_sources:
         print("No supported source files found under source/.")
         raise SystemExit(1)
+    source_ids = {source: f"S{index:03d}" for index, source in enumerate(supported_sources, start=1)}
 
     converted_dir = project_dir / "converted_markdown"
     transcripts_dir = converted_dir / "source_transcripts"
@@ -182,10 +196,8 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
     assets_root.mkdir(parents=True, exist_ok=True)
 
     report_rows: list[list[str]] = []
-    source_index = 1
     for text_source in text_sources:
-        source_id = f"S{source_index:03d}"
-        source_index += 1
+        source_id = source_ids[text_source]
         safe_name = _source_label(project_dir, text_source)
         transcript_name = f"{source_id}_{safe_name}.md"
         created_at, modified_at = _file_timestamps(text_source)
@@ -252,8 +264,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         )
 
     for pptx in pptx_sources:
-        source_id = f"S{source_index:03d}"
-        source_index += 1
+        source_id = source_ids[pptx]
         safe_name = _source_label(project_dir, pptx)
         transcript_name = f"{source_id}_{safe_name}.md"
         created_at, modified_at = _file_timestamps(pptx)
@@ -335,9 +346,7 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
             raise SystemExit(1) from exc
 
     for pdf in pdfs:
-        index = source_index
-        source_index += 1
-        source_id = f"S{index:03d}"
+        source_id = source_ids[pdf]
         safe_name = _source_label(project_dir, pdf)
         transcript_name = f"{source_id}_{safe_name}.md"
         asset_dir_name = f"{source_id}_{safe_name}"
@@ -444,8 +453,9 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
         (transcripts_dir / transcript_name).write_text("\n".join(lines), encoding="utf-8")
         doc.close()
 
+    report_rows.sort(key=lambda row: row[0])
     _write_conversion_report(converted_dir / "conversion_report.md", report_rows)
-    print(f"Converted {len(pdfs) + len(text_sources) + len(pptx_sources)} source file(s) into {converted_dir}")
+    print(f"Converted {len(supported_sources)} source file(s) into {converted_dir}")
 
 
 def _write_conversion_report(path: Path, rows: list[list[str]]) -> None:

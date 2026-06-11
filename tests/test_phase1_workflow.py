@@ -280,6 +280,33 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("PowerPoint 源稿转写", report_text)
             self.assertIn("2", report_text)
 
+    def test_convert_source_assigns_ids_by_source_path_across_file_types(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            deck_dir = project_dir / "source" / "01_deck"
+            notes_dir = project_dir / "source" / "02_notes"
+            deck_dir.mkdir(parents=True)
+            notes_dir.mkdir(parents=True)
+            pptx_path = deck_dir / "sample.pptx"
+            slide_1 = (
+                '<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+                'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
+                "<p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>新品节奏</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld>"
+                "</p:sld>"
+            )
+            with zipfile.ZipFile(pptx_path, "w") as pptx:
+                pptx.writestr("ppt/slides/slide1.xml", slide_1)
+            (notes_dir / "sample.md").write_text("# 会议纪要\n\n补充渠道复盘。", encoding="utf-8")
+
+            with redirect_stdout(StringIO()):
+                convert_source(project_dir, engine="pymupdf4llm")
+
+            transcripts_dir = project_dir / "converted_markdown" / "source_transcripts"
+            self.assertTrue((transcripts_dir / "S001_01_deck.md").exists())
+            self.assertTrue((transcripts_dir / "S002_02_notes.md").exists())
+            report_text = (project_dir / "converted_markdown" / "conversion_report.md").read_text(encoding="utf-8")
+            self.assertLess(report_text.index("| S001 | sample.pptx |"), report_text.index("| S002 | sample.md |"))
+
     def test_convert_source_fails_when_unsupported_source_files_are_present(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir)
@@ -299,9 +326,12 @@ class Phase1WorkflowTests(unittest.TestCase):
 
     def test_convert_source_marks_mineru_as_optional(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            with redirect_stdout(StringIO()):
+            with redirect_stdout(StringIO()) as stdout:
                 with self.assertRaises(SystemExit):
                     convert_source(Path(temp_dir), engine="mineru")
+            output = stdout.getvalue()
+            self.assertIn("MinerU CLI", output)
+            self.assertIn("mineru -p <input_path> -o <output_path>", output)
 
     def test_cli_exposes_brand_lock_check(self) -> None:
         import sys

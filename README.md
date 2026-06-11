@@ -156,7 +156,9 @@ brand-skill check-brand-lock <project_dir>
 brand-skill check-claim-matrix <project_dir>
 ```
 
-`convert-source` 当前支持默认轻量引擎 `pymupdf4llm`：PDF 会生成逐页转写和页面截图；PPTX / Markdown / TXT / DOCX 源稿会作为文档类资料进入同一套 source transcript / conversion report 流程。PPTX 轻量路径只抽取 slide 文本，不保留完整版式、图片、图表、动画和备注。`mineru` 作为高保真 optional engine 已预留架构，但第一版不强制安装。
+`convert-source` 当前支持默认轻量引擎 `pymupdf4llm`：PDF 会生成逐页转写和页面截图；PPTX / Markdown / TXT / DOCX 源稿会作为文档类资料进入同一套 source transcript / conversion report 流程。PPTX 轻量路径只抽取 slide 文本，不保留完整版式、图片、图表、动画和备注。多个源文件一起导入时，Source ID 会按 `source/` 下的相对路径稳定分配，避免因为文件类型不同导致引用编号漂移。
+
+`mineru` 作为高保真 optional engine 已预留架构，但第一版不强制安装。MinerU 适合后续增强 PDF / PPTX / DOCX / XLSX / 图片 / 扫描件的版面、表格、图片、OCR 和阅读顺序识别；当前本项目只在本地提示官方 CLI 入口，例如 `mineru -p <input_path> -o <output_path> -b pipeline`，不会默认上传真实品牌资料或把 MinerU 设为必需依赖。
 
 如果 `source/` 中存在当前不支持的文件类型，`convert-source` 会停止并列出文件路径，不会静默跳过。这是为了避免品牌资料漏转后仍被误认为已经完整入库。
 
