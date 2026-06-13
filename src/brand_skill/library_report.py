@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 import json
+import re
 from pathlib import Path
 
 from .library_writer import VALID_LIBRARY_DIRS
@@ -40,6 +41,7 @@ def build_library_report(library_dir: Path) -> Path:
     pending_count = queue_counts["冲突待判断"] + queue_counts["旧知识待更新"]
     recent_updates = _recent_evolution(library_dir / "evolution_log.md")
     reusable_notes = _retrieval_notes(library_dir / "retrieval_maps" / "source_packages.md")
+    review_items = _review_queue_items(library_dir)
 
     report_path = library_dir / "library_report.html"
     report_path.write_text(
@@ -50,6 +52,7 @@ def build_library_report(library_dir: Path) -> Path:
             queue_counts,
             recent_updates,
             reusable_notes,
+            review_items,
             taxonomy,
             entries,
         ),
@@ -230,6 +233,51 @@ def _retrieval_notes(path: Path) -> list[str]:
     return notes[-6:]
 
 
+def _review_queue_items(library_dir: Path) -> list[dict[str, str]]:
+    return (
+        _parse_review_queue(library_dir / "review_queue" / "updates.md", "旧知识待更新")
+        + _parse_review_queue(library_dir / "review_queue" / "conflicts.md", "冲突待判断")
+        + _parse_review_queue(library_dir / "review_queue" / "do_not_promote.md", "不进入长期库")
+    )
+
+
+def _parse_review_queue(path: Path, kind: str) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    text = path.read_text(encoding="utf-8")
+    matches = list(re.finditer(r"^###\s+(.+?)\s*$", text, flags=re.MULTILINE))
+    if matches:
+        return [
+            {
+                "kind": kind,
+                "title": match.group(1).strip(),
+                "summary": _queue_block_summary(
+                    text[match.end() : matches[index + 1].start() if index + 1 < len(matches) else len(text)]
+                ),
+            }
+            for index, match in enumerate(matches)
+        ]
+
+    fallback = _queue_block_summary(text)
+    return [{"kind": kind, "title": kind, "summary": fallback}] if fallback else []
+
+
+def _queue_block_summary(block: str) -> str:
+    lines = []
+    for raw_line in block.splitlines():
+        line = raw_line.strip().strip("`")
+        if not line or line.startswith("#"):
+            continue
+        if any(marker in line for marker in ["Source Anchor", "Risk Level", "来源锚点", "风险等级"]):
+            continue
+        line = line.lstrip("-").strip()
+        if line:
+            lines.append(line)
+        if len(lines) >= 4:
+            break
+    return "；".join(lines)
+
+
 def _render_report(
     total_entries: int,
     pending_count: int,
@@ -237,6 +285,7 @@ def _render_report(
     queue_counts: dict[str, int],
     recent_updates: list[str],
     reusable_notes: list[str],
+    review_items: list[dict[str, str]],
     taxonomy: dict[str, dict[str, str]],
     entries: list[dict[str, str]],
 ) -> str:
@@ -245,6 +294,7 @@ def _render_report(
         "categories": categories,
         "entries": entries,
         "queueCounts": queue_counts,
+        "reviewItems": review_items,
         "recentUpdates": recent_updates,
         "reusableNotes": reusable_notes,
     }
@@ -265,6 +315,7 @@ def _render_report(
     )
     recent = _render_list(recent_updates, "还没有入库记录。")
     reusable = _render_list(reusable_notes, "还没有可复用场景说明。")
+    review_detail = _render_review_items(review_items)
     context_map = _render_context_map(categories, entries)
     category_options = "\n".join(
         f'<option value="{html.escape(category["id"])}">{html.escape(category["label"])}</option>'
@@ -514,6 +565,10 @@ def _render_report(
       </section>
     </div>
     <section>
+      <h2>待处理事项</h2>
+      {review_detail}
+    </section>
+    <section>
       <h2>后续可直接复用的场景</h2>
       {reusable}
     </section>
@@ -543,6 +598,24 @@ def _report_categories(section_counts: dict[str, int], taxonomy: dict[str, dict[
         }
         for category_id, count in section_counts.items()
     ]
+
+
+def _render_review_items(items: list[dict[str, str]]) -> str:
+    if not items:
+        return '<p class="muted">当前没有需要人工处理的更新、冲突或不入库事项。</p>'
+    return (
+        '<ul class="review-items">'
+        + "".join(
+            f"""
+            <li>
+              <strong>{html.escape(item["kind"])}｜{html.escape(item["title"])}</strong>
+              <p>{html.escape(item["summary"])}</p>
+            </li>
+            """.strip()
+            for item in items
+        )
+        + "</ul>"
+    )
 
 
 def _render_context_map(categories: list[dict[str, str | int]], entries: list[dict[str, str]]) -> str:

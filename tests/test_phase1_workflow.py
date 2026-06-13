@@ -1039,6 +1039,68 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn('"status": "待更新"', text)
             self.assertIn('"reviewNote": "旧知识可能需要更新"', text)
 
+    def test_build_library_report_shows_review_queue_details(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            library_dir = Path(temp_dir) / "brand_context_library"
+            (library_dir / "brand").mkdir(parents=True)
+            (library_dir / "review_queue").mkdir()
+            (library_dir / "retrieval_maps").mkdir()
+            (library_dir / "brand" / "brand-tone.md").write_text("# 品牌语气\n", encoding="utf-8")
+            (library_dir / "review_queue" / "updates.md").write_text(
+                "\n".join(
+                    [
+                        "# 旧知识更新队列",
+                        "",
+                        "## 2026-06-10T00:00:00Z｜demo",
+                        "",
+                        "### 疑似多版本资料：summer_strategy",
+                        "",
+                        "- 更新方式：版本复核",
+                        "- 冲突或风险：同主题多版本资料并存；不自动覆盖旧知识。",
+                        "- 版本判断依据：source_version_report.md / 最新修改时间线索",
+                        "",
+                        "#### 新信息",
+                        "",
+                        "最新修改时间线索：S002 / summer_strategy_v2.pdf / 2026-03-08T18:30:00+08:00",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (library_dir / "review_queue" / "conflicts.md").write_text(
+                "\n".join(
+                    [
+                        "# Context Library Conflict Queue",
+                        "",
+                        "## 2026-06-10T00:00:00Z｜demo",
+                        "",
+                        "### LCE009｜夏季关键词",
+                        "",
+                        "- Existing Entry: `brand/summer-keywords.md`",
+                        "- Write Recommendation: 写入",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (library_dir / "review_queue" / "do_not_promote.md").write_text(
+                "# Do Not Promote Queue\n\n## 2026-06-10T00:00:00Z｜demo\n\n- 临时预算不进入长期库。\n",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_library_report(library_dir)
+
+            text = (library_dir / "library_report.html").read_text(encoding="utf-8")
+            self.assertIn("待处理事项", text)
+            self.assertIn("旧知识待更新", text)
+            self.assertIn("疑似多版本资料：summer_strategy", text)
+            self.assertIn("summer_strategy_v2.pdf", text)
+            self.assertIn("不自动覆盖旧知识", text)
+            self.assertIn("冲突待判断", text)
+            self.assertIn("LCE009｜夏季关键词", text)
+            self.assertIn("brand/summer-keywords.md", text)
+            self.assertIn("不进入长期库", text)
+            self.assertIn("临时预算不进入长期库", text)
+
     def test_cli_build_library_report_command(self) -> None:
         import sys
 
