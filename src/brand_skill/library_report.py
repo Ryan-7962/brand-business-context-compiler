@@ -271,11 +271,20 @@ def _queue_block_summary(block: str) -> str:
         if any(marker in line for marker in ["Source Anchor", "Risk Level", "来源锚点", "风险等级"]):
             continue
         line = line.lstrip("-").strip()
+        line = _friendly_queue_line(line)
         if line:
             lines.append(line)
         if len(lines) >= 4:
             break
     return "；".join(lines)
+
+
+def _friendly_queue_line(line: str) -> str:
+    if line.startswith("更新方式："):
+        return "建议动作：" + line.split("：", 1)[1].strip()
+    if line.startswith("版本判断依据："):
+        return ""
+    return line.replace("source_version_report.md / ", "").replace("source_version_report.md", "")
 
 
 def _render_report(

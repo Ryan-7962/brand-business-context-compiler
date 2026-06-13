@@ -82,4 +82,4 @@ brand-skill build-library-report <brand_context_library_dir>
 - `review_queue/updates.md`：记录可能需要补充、修正、替换旧知识的更新请求。
 - `retrieval_maps/source_packages.md`：记录本次资料未来适合在哪些任务中被调用，以及不应在哪些场景误用。
 
-`build-library-report` 会生成 `library_report.html`，用于给使用者快速查看知识库规模、待处理事项、最近入库内容和后续可复用场景。当前版本同时包含 Brand Context Map、Knowledge Explorer、分类筛选、状态筛选和条目详情。
+`build-library-report` 会生成 `library_report.html`，用于给使用者快速查看知识库规模、待处理事项、最近入库内容和后续可复用场景。当前版本同时包含 Brand Context Map、Knowledge Explorer、分类筛选、状态筛选和条目详情。版本复核类待处理事项会显示建议动作和最新修改时间线索，避免使用者必须打开 `review_queue/updates.md` 或理解后台报告文件名。
