@@ -654,6 +654,36 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("不自动覆盖", report_text)
             self.assertIn("进入更新/冲突复核队列", report_text)
 
+    def test_build_source_version_report_groups_noisy_final_date_hash_suffixes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir(parents=True)
+            (converted / "conversion_report.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Conversion Report",
+                        "",
+                        "## Source Files",
+                        "",
+                        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 | 外部来源 |",
+                        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+                        "| S001 | brand_BPM-FINAL0729-FFFFFFFF.pdf | 2026-07-29T09:00:00+08:00 | 2026-07-29T18:00:00+08:00 | source_transcripts/S001.md | pymupdf4llm | PDF | no | pages 1-20 | 待复核 | 截图 | 待复核 | 无明显低置信度 | 否 | ima / 示例库 |",
+                        "| S002 | brand BPM final 0801 copy.pdf | 2026-08-01T09:00:00+08:00 | 2026-08-01T18:00:00+08:00 | source_transcripts/S002.md | pymupdf4llm | PDF | no | pages 1-22 | 待复核 | 截图 | 待复核 | 无明显低置信度 | 否 | ima / 示例库 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_source_version_report(project_dir)
+
+            report_text = (converted / "source_version_report.md").read_text(encoding="utf-8")
+            self.assertIn("疑似多版本组数：1", report_text)
+            self.assertIn("### brand_bpm", report_text)
+            self.assertIn("S002 / brand BPM final 0801 copy.pdf / 2026-08-01T18:00:00+08:00", report_text)
+            self.assertIn("brand_BPM-FINAL0729-FFFFFFFF.pdf", report_text)
+
     def test_cli_build_source_version_report_command(self) -> None:
         import sys
 

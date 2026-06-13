@@ -181,7 +181,7 @@ brand-skill check-mineru <project_dir>
 
 `convert-source` 会记录原始文件创建时间和修改时间。若多份品牌资料内容冲突，默认把修改时间更新的文件作为版本判断线索，但不会自动覆盖关键品牌口径；相关内容应进入冲突队列或旧知识更新队列。
 
-`build-source-version-report` 会读取 `converted_markdown/conversion_report.md`，生成 `converted_markdown/source_version_report.md`。它会基于文件名和原始文件修改时间归并疑似同主题多版本资料，提示最新修改时间线索，并明确这些线索只用于复核，不自动覆盖长期知识。
+`build-source-version-report` 会读取 `converted_markdown/conversion_report.md`，生成 `converted_markdown/source_version_report.md`。它会基于文件名和原始文件修改时间归并疑似同主题多版本资料，能处理 `v2`、`final`、`final0729`、`copy`、日期和 hash 类常见后缀，提示最新修改时间线索，并明确这些线索只用于复核，不自动覆盖长期知识。
 
 `apply-library-update` 会读取 `source_version_report.md` 中的疑似多版本组，并追加到 `brand_context_library/review_queue/updates.md`，方便后续人工判断是补充、修正、替换还是暂不处理。
 

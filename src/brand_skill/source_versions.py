@@ -75,9 +75,12 @@ def _likely_version_groups(rows: list[dict[str, str]]) -> dict[str, list[dict[st
 def _normalize_version_key(file_name: str) -> str:
     stem = Path(file_name).stem.lower()
     stem = re.sub(r"[\s\-]+", "_", stem)
-    stem = re.sub(r"(?i)(?:^|_)(?:final|draft|revised|修订版|终版|定稿)(?=_|$)", "_", stem)
+    stem = re.sub(r"(?i)(?:^|_)(?:final|draft|revised|修订版|终版|定稿)\d{0,8}(?=_|$)", "_", stem)
     stem = re.sub(r"(?i)(?:^|_)(?:v|ver|version)[_ ]?\d+(?:\.\d+)?(?=_|$)", "_", stem)
     stem = re.sub(r"(?:^|_)(?:20\d{2}|19\d{2})(?:[._-]?\d{1,2}){0,2}(?=_|$)", "_", stem)
+    stem = re.sub(r"(?:^|_)(?:\d{4}|\d{6}|\d{8})(?=_|$)", "_", stem)
+    stem = re.sub(r"(?i)(?:^|_)(?:copy|副本|备份|最新版|更新版)(?:_\d+)?(?=_|$)", "_", stem)
+    stem = re.sub(r"(?i)(?:^|_)[a-f0-9]{8,}(?=_|$)", "_", stem)
     stem = re.sub(r"_{2,}", "_", stem).strip("_")
     return stem or Path(file_name).stem.lower()
 
