@@ -169,6 +169,14 @@ brand-skill check-claim-matrix <project_dir>
 
 `mineru` 作为高保真 optional engine 已预留架构，但第一版不强制安装。MinerU 适合后续增强 PDF / PPTX / DOCX / XLSX / 图片 / 扫描件的版面、表格、图片、OCR 和阅读顺序识别；当前本项目只在本地提示官方 CLI 入口，例如 `mineru -p <input_path> -o <output_path> -b pipeline`，不会默认上传真实品牌资料或把 MinerU 设为必需依赖。
 
+如需判断本机是否具备 MinerU 小样评估条件，可先运行：
+
+```bash
+brand-skill check-mineru <project_dir>
+```
+
+该命令会生成 `converted_markdown/mineru_readiness_report.md`，记录是否检测到 MinerU CLI、CLI 路径、版本输出和下一步建议。它只做本地 readiness 检查，不会读取或上传品牌资料，也不代表 `convert-source --engine mineru` 已经完成真实高保真转写接入。
+
 如果 `source/` 中存在当前不支持的文件类型，`convert-source` 会停止并列出文件路径，不会静默跳过。这是为了避免品牌资料漏转后仍被误认为已经完整入库。
 
 `convert-source` 会记录原始文件创建时间和修改时间。若多份品牌资料内容冲突，默认把修改时间更新的文件作为版本判断线索，但不会自动覆盖关键品牌口径；相关内容应进入冲突队列或旧知识更新队列。

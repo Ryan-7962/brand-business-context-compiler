@@ -16,6 +16,7 @@ from brand_skill.library_writer import apply_context_library_update
 from brand_skill.ima_importer import import_ima_media
 from brand_skill.output_compiler import compile_structured_outputs
 from brand_skill.review_pack import build_review_pack
+from brand_skill.mineru_adapter import check_mineru_readiness
 from brand_skill.source_quality import build_source_quality_report
 from brand_skill.source_facts import build_source_facts
 from brand_skill.source_versions import build_source_version_report
@@ -340,6 +341,65 @@ class Phase1WorkflowTests(unittest.TestCase):
             output = stdout.getvalue()
             self.assertIn("MinerU CLI", output)
             self.assertIn("mineru -p <input_path> -o <output_path>", output)
+
+    def test_check_mineru_readiness_reports_missing_optional_cli(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+
+            with redirect_stdout(StringIO()):
+                report_path = check_mineru_readiness(project_dir, which=lambda _: None)
+
+            report_text = report_path.read_text(encoding="utf-8")
+            self.assertIn("# MinerU Readiness Report", report_text)
+            self.assertIn("未检测到 MinerU CLI", report_text)
+            self.assertIn("不影响第一阶段闭环", report_text)
+            self.assertIn("真实品牌资料只能放在 `_private_test_runs/`", report_text)
+
+    def test_check_mineru_readiness_records_cli_path_and_version_output(self) -> None:
+        class FakeResult:
+            returncode = 0
+            stdout = "MinerU 1.2.3\n"
+            stderr = ""
+
+        calls = []
+
+        def fake_runner(command, **_kwargs):
+            calls.append(command)
+            return FakeResult()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+
+            with redirect_stdout(StringIO()):
+                report_path = check_mineru_readiness(
+                    project_dir,
+                    which=lambda _: "/usr/local/bin/mineru",
+                    runner=fake_runner,
+                )
+
+            report_text = report_path.read_text(encoding="utf-8")
+            self.assertEqual(calls, [["/usr/local/bin/mineru", "--version"]])
+            self.assertIn("已检测到 MinerU CLI", report_text)
+            self.assertIn("/usr/local/bin/mineru", report_text)
+            self.assertIn("MinerU 1.2.3", report_text)
+            self.assertIn("后续可在私有测试目录做 5 页以内小样对比", report_text)
+
+    def test_cli_check_mineru_command_writes_readiness_report(self) -> None:
+        import sys
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            argv = sys.argv
+            sys.argv = ["brand-skill", "check-mineru", str(project_dir)]
+            try:
+                with redirect_stdout(StringIO()):
+                    cli_main()
+            finally:
+                sys.argv = argv
+
+            report_path = project_dir / "converted_markdown" / "mineru_readiness_report.md"
+            self.assertTrue(report_path.exists())
+            self.assertIn("MinerU Readiness Report", report_path.read_text(encoding="utf-8"))
 
     def test_build_source_facts_creates_traceable_fact_candidates(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -206,8 +206,15 @@ brand-skill build-source-facts <project_dir>
 - 每页截图保真。
 - 人工复核视觉页。
 - Source Conversion Report。
+- `brand-skill check-mineru <project_dir>` 本地 readiness 检查，只判断 MinerU CLI 是否存在、版本是否可读取，并生成 `converted_markdown/mineru_readiness_report.md`。
 
 ### 4.2 第二步评估
+
+先运行 readiness 检查，确认本机可以评估 MinerU：
+
+```bash
+brand-skill check-mineru <project_dir>
+```
 
 用示例品牌产品培训资料抽 5 页做 MinerU 对比：
 

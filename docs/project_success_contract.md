@@ -37,6 +37,7 @@ Codex 最终应把本项目推进为一个本地优先的 Brand / Business Conte
 - `converted_markdown/` 中有来源转写、页码 / 截图 / 低置信度说明、识别质量摘要和文件创建 / 修改时间。
 - `converted_markdown/source_quality_report.md` 能告诉使用者哪些页面需要 OCR、MinerU 或人工复核。
 - `converted_markdown/source_version_report.md` 能告诉使用者哪些资料疑似同主题多版本、最新修改时间线索是什么，并明确不自动覆盖旧知识。
+- 如需评估 MinerU，`converted_markdown/mineru_readiness_report.md` 能先证明本机是否具备可选 CLI 评估条件；该证据不等于 MinerU 已被设为默认转写引擎。
 - 当资料来自 ima 或其他外部知识库时，`source/source_manifest.json` 能保留来源平台、知识库、路径、media id 等追溯线索，并写入 transcript / conversion report。
 - ima 私有资料导入必须通过 `_private_test_runs/` 私有目录验证，导入后能继续跑 `convert-source` 和 `build-source-facts`。
 - `outputs/` 中有文件画像、语义转述、关键事实、策略结构、风险项、Context Asset Index 和 Context Library Update Plan。
