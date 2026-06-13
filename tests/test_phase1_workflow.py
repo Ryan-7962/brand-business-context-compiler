@@ -677,6 +677,53 @@ class Phase1WorkflowTests(unittest.TestCase):
 
             self.assertTrue((project_dir / "outputs" / "11_context_library_update_plan.md").exists())
 
+    def test_compile_structured_outputs_detects_document_type_and_business_stage(self) -> None:
+        cases = [
+            (
+                "brand_meeting",
+                "本次 BPM 会议纪要明确下周动作、决策事项和负责人。",
+                "会议纪要",
+                "会议对齐 / 决策同步",
+                "decision",
+            ),
+            (
+                "media_recap",
+                "本次抖音投放复盘总结了素材表现、转化数据、经验教训和后续优化动作。",
+                "投放复盘",
+                "复盘 / 优化",
+                "case",
+            ),
+        ]
+        for project_name, evidence, expected_type, expected_stage, expected_location in cases:
+            with self.subTest(project_name=project_name):
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    project_dir = Path(temp_dir) / project_name
+                    facts = project_dir / "converted_markdown" / "source_facts"
+                    facts.mkdir(parents=True)
+                    (facts / "S001_source_facts.md").write_text(
+                        "\n".join(
+                            [
+                                "# Source Facts",
+                                "",
+                                "| Fact ID | Source Anchor | Evidence Text | 信息状态 | 低置信度说明 |",
+                                "|---|---|---|---|---|",
+                                f"| SF001-001 | S001#page=1 | {evidence} | 已从来源资料提取 | 无明显低置信度。 |",
+                            ]
+                        ),
+                        encoding="utf-8",
+                    )
+
+                    with redirect_stdout(StringIO()):
+                        compile_structured_outputs(project_dir)
+
+                    profile = (project_dir / "outputs" / "02_document_profile.md").read_text(encoding="utf-8")
+                    strategy = (project_dir / "outputs" / "05_strategy_and_execution_map.md").read_text(encoding="utf-8")
+                    plan = (project_dir / "outputs" / "11_context_library_update_plan.md").read_text(encoding="utf-8")
+                    self.assertIn(f"| 文件类型 | {expected_type} |", profile)
+                    self.assertIn(f"| 业务阶段 | {expected_stage} |", profile)
+                    self.assertIn(f"## {expected_type} 结构化转述重点", strategy)
+                    self.assertIn(f"| LCE001 | {expected_location} |", plan)
+
     def test_cli_exposes_brand_lock_check(self) -> None:
         import sys
 

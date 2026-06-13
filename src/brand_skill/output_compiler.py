@@ -149,6 +149,7 @@ def _build_documents(
     ]
     first_fact = fact_rows[0]
     title = project_name
+    profile = _infer_document_profile(fact_rows)
     facts_table = "\n".join(
         f"| {row.get('Fact ID', '')} | {_cell(row.get('Evidence Text', ''))} | {row.get('Source Anchor', '')} | {row.get('信息状态', '已从来源资料提取')} | {'是' if _needs_review(row.get('低置信度说明', '')) else '否'} |"
         for row in fact_rows
@@ -177,11 +178,11 @@ def _build_documents(
         for index, row in enumerate(review_items, start=1)
     )
     asset_rows = "\n".join(
-        f"| CA{index:03d} | project | {_cell(row.get('Evidence Text', ''))} | 后续 brief / 知识库检索 | {row.get('Source Anchor', '')} | {row.get('信息状态', '已从来源资料提取')} | {'高' if _needs_review(row.get('低置信度说明', '')) else '中'} |"
+        f"| CA{index:03d} | {profile['asset_type']} | {_cell(row.get('Evidence Text', ''))} | {profile['reuse_scene']} | {row.get('Source Anchor', '')} | {row.get('信息状态', '已从来源资料提取')} | {'高' if _needs_review(row.get('低置信度说明', '')) else '中'} |"
         for index, row in enumerate(fact_rows[:10], start=1)
     )
     library_rows = "\n".join(
-        f"| LCE{index:03d} | project | {_short_title(row.get('Evidence Text', ''), index)} | {_cell(row.get('Evidence Text', ''))} | CA{index:03d} | 待验证 | 暂存 |"
+        f"| LCE{index:03d} | {profile['library_location']} | {_short_title(row.get('Evidence Text', ''), index)} | {_cell(row.get('Evidence Text', ''))} | CA{index:03d} | 待验证 | 暂存 |"
         for index, row in enumerate(fact_rows[:5], start=1)
     )
     missing_lines = "\n".join(
@@ -192,10 +193,10 @@ def _build_documents(
     return {
         "00_source_index.md": f"# Source Index｜{title}\n\n| Source ID | 文件名 | 创建时间 | 修改时间 | 页/Slide 范围 |\n|---|---|---|---|---|\n{source_table}\n",
         "01_source_conversion_report.md": f"# Source Conversion Report｜{title}\n\n## 转换证据\n\n请参见 `converted_markdown/conversion_report.md`、`source_quality_report.md` 和 `source_version_report.md`。\n\n## 版本线索\n\n{_version_excerpt(version_summary)}\n",
-        "02_document_profile.md": f"# Document Profile｜{title}\n\n## 0. 基础信息\n\n| 字段 | 内容 | 信息状态 | 来源/依据 | 待确认 |\n|---|---|---|---|---|\n| 文件类型 | 待分类营销资料 | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 核心内容 | {_cell(first_fact.get('Evidence Text', '待补充'))} | 已从来源资料提取 | {first_fact.get('Source Anchor', '待补充')} | 否 |\n\n## 待人工确认问题\n\n{missing_lines}\n",
+        "02_document_profile.md": f"# Document Profile｜{title}\n\n## 0. 基础信息\n\n| 字段 | 内容 | 信息状态 | 来源/依据 | 待确认 |\n|---|---|---|---|---|\n| 文件类型 | {profile['document_type']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 文件目的 | {profile['document_purpose']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 目标读者 | {profile['audience']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 业务阶段 | {profile['business_stage']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 核心内容 | {_cell(first_fact.get('Evidence Text', '待补充'))} | 已从来源资料提取 | {first_fact.get('Source Anchor', '待补充')} | 否 |\n\n## 1. 类型识别依据\n\n{profile['rationale']}\n\n## 待人工确认问题\n\n{missing_lines}\n",
         "03_marketing_semantic_transcript.md": f"# Marketing Semantic Transcript｜{title}\n\n{page_sections}\n",
         "04_key_facts_and_claims.md": f"# Key Facts and Claims｜{title}\n\n## Key Facts\n\n| Fact ID | 事实 | 来源锚点 | 信息状态 | 待确认 |\n|---|---|---|---|---|\n{facts_table}\n",
-        "05_strategy_and_execution_map.md": f"# Strategy and Execution Map｜{title}\n\n## 来源事实驱动结构\n\n{_bullet_facts(fact_rows)}\n\n## 待补充\n\n{missing_lines}\n",
+        "05_strategy_and_execution_map.md": f"# Strategy and Execution Map｜{title}\n\n## {profile['document_type']} 结构化转述重点\n\n{profile['focus_points']}\n\n## 来源事实驱动结构\n\n{_bullet_facts(fact_rows)}\n\n## 待补充\n\n{missing_lines}\n",
         "06_risk_and_review_items.md": f"# Risk and Review Items｜{title}\n\n| Review ID | 审核项 | 风险等级 | 来源锚点 | 建议 |\n|---|---|---|---|---|\n{review_table or '| R000 | 暂无明显风险 | 低 | 待补充 | 继续后续编译 |'}\n",
         "07_ai_ready_marketing_brief_base.md": f"# AI Ready Marketing Brief Base｜{title}\n\n## Source-backed Context\n\n{_bullet_facts(fact_rows[:8])}\n\n## 使用限制\n\n- 不把待确认内容写成已品牌确认。\n- 不补写来源资料中没有的信息。\n",
         "08_review_pack.md": f"# Review Pack｜{title}\n\n## 需要人工处理\n\n{missing_lines}\n",
@@ -208,6 +209,96 @@ def _build_documents(
 def _needs_review(text: str) -> bool:
     normalized = text.strip().rstrip("。.!！")
     return bool(normalized and normalized != "无明显低置信度")
+
+
+def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:
+    text = " ".join(row.get("Evidence Text", "") for row in facts).lower()
+    rules = [
+        (
+            ["复盘", "总结", "表现", "转化", "经验教训", "投放"],
+            {
+                "document_type": "投放复盘",
+                "document_purpose": "总结表现、提炼经验和指导后续优化",
+                "audience": "品牌团队、投放团队、内容团队、管理层",
+                "business_stage": "复盘 / 优化",
+                "library_location": "case",
+                "asset_type": "case",
+                "reuse_scene": "复盘 / 投放优化 / 案例复用",
+                "focus_points": "- 先提炼表现结论和有效做法。\n- 标出失败点、风险和后续优化动作。\n- 不把阶段性表现直接升级为长期品牌口径。",
+                "rationale": "- 命中“复盘 / 表现 / 转化 / 经验教训 / 投放”等来源词，因此暂判为投放复盘。",
+            },
+        ),
+        (
+            ["会议", "纪要", "决策", "负责人", "下周动作", "对齐"],
+            {
+                "document_type": "会议纪要",
+                "document_purpose": "记录决策、待办、责任人和后续动作",
+                "audience": "品牌团队、项目负责人、协作团队、管理层",
+                "business_stage": "会议对齐 / 决策同步",
+                "library_location": "decision",
+                "asset_type": "decision",
+                "reuse_scene": "决策追踪 / 项目推进 / 会议复盘",
+                "focus_points": "- 优先抽取决策、被否方向、责任人和下一步动作。\n- 区分已决定事项、待确认事项和讨论信息。\n- 不把会议讨论直接写成已品牌确认。",
+                "rationale": "- 命中“会议 / 纪要 / 决策 / 负责人 / 下周动作”等来源词，因此暂判为会议纪要。",
+            },
+        ),
+        (
+            ["销售", "经销商", "渠道", "门店", "终端", "ka"],
+            {
+                "document_type": "销售 / 渠道策略",
+                "document_purpose": "推进渠道执行、销售协同或终端落地",
+                "audience": "销售团队、渠道团队、经销商、品牌团队",
+                "business_stage": "渠道推进 / 销售执行",
+                "library_location": "project",
+                "asset_type": "project",
+                "reuse_scene": "销售 brief / 渠道沟通 / 终端执行",
+                "focus_points": "- 抽取渠道动作、销售话术、资源配置和执行约束。\n- 临时政策、激励和敏感执行信息不得直接入长期库。",
+                "rationale": "- 命中“销售 / 经销商 / 渠道 / 门店 / 终端”等来源词，因此暂判为销售 / 渠道策略。",
+            },
+        ),
+        (
+            ["产品", "培训", "sku", "卖点", "功效", "包装"],
+            {
+                "document_type": "产品培训 / 产品资料",
+                "document_purpose": "解释产品信息、卖点、证据和使用边界",
+                "audience": "品牌团队、销售团队、客服团队、内容团队",
+                "business_stage": "培训 / 产品知识沉淀",
+                "library_location": "product",
+                "asset_type": "product",
+                "reuse_scene": "PDP / 销售 / 客服 / 种草",
+                "focus_points": "- 抽取产品事实、卖点、证据和适用边界。\n- 没有证据的功效表达必须进入待确认。",
+                "rationale": "- 命中“产品 / 培训 / SKU / 卖点 / 功效 / 包装”等来源词，因此暂判为产品培训 / 产品资料。",
+            },
+        ),
+        (
+            ["活动", "campaign", "提案", "上市", "big idea", "传播", "社媒"],
+            {
+                "document_type": "活动方案 / 广告提案",
+                "document_purpose": "组织传播策略、创意主线、触点和内容资产",
+                "audience": "品牌团队、代理商、内容团队、渠道团队",
+                "business_stage": "提案 / 立项 / 执行准备",
+                "library_location": "project",
+                "asset_type": "project",
+                "reuse_scene": "GEO / 种草 / 拍摄 / 活动执行",
+                "focus_points": "- 抽取目标、洞察、创意主线、渠道触点和内容资产。\n- 标出预算、排期、资源和审核边界缺口。",
+                "rationale": "- 命中“活动 / campaign / 提案 / 上市 / 传播 / 社媒”等来源词，因此暂判为活动方案 / 广告提案。",
+            },
+        ),
+    ]
+    for keywords, profile in rules:
+        if any(keyword in text for keyword in keywords):
+            return profile
+    return {
+        "document_type": "综合营销资料",
+        "document_purpose": "沉淀可复用品牌和业务上下文",
+        "audience": "品牌团队、营销团队、相关业务团队",
+        "business_stage": "资料沉淀 / 上下文编译",
+        "library_location": "project",
+        "asset_type": "project",
+        "reuse_scene": "后续 brief / 知识库检索",
+        "focus_points": "- 先保留来源事实和页面锚点。\n- 再由人工或模型进一步判断资料类型、业务阶段和长期复用价值。",
+        "rationale": "- 未命中明确资料类型关键词，因此暂判为综合营销资料。",
+    }
 
 
 def _cell(text: str) -> str:
