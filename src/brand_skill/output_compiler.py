@@ -150,6 +150,7 @@ def _build_documents(
     first_fact = fact_rows[0]
     title = project_name
     profile = _infer_document_profile(fact_rows)
+    outline = _build_marketing_outline(fact_rows)
     facts_table = "\n".join(
         f"| {row.get('Fact ID', '')} | {_cell(row.get('Evidence Text', ''))} | {row.get('Source Anchor', '')} | {row.get('信息状态', '已从来源资料提取')} | {'是' if _needs_review(row.get('低置信度说明', '')) else '否'} |"
         for row in fact_rows
@@ -196,11 +197,11 @@ def _build_documents(
         "02_document_profile.md": f"# Document Profile｜{title}\n\n## 0. 基础信息\n\n| 字段 | 内容 | 信息状态 | 来源/依据 | 待确认 |\n|---|---|---|---|---|\n| 文件类型 | {profile['document_type']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 文件目的 | {profile['document_purpose']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 目标读者 | {profile['audience']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 业务阶段 | {profile['business_stage']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 核心内容 | {_cell(first_fact.get('Evidence Text', '待补充'))} | 已从来源资料提取 | {first_fact.get('Source Anchor', '待补充')} | 否 |\n\n## 1. 类型识别依据\n\n{profile['rationale']}\n\n## 待人工确认问题\n\n{missing_lines}\n",
         "03_marketing_semantic_transcript.md": f"# Marketing Semantic Transcript｜{title}\n\n{page_sections}\n",
         "04_key_facts_and_claims.md": f"# Key Facts and Claims｜{title}\n\n## Key Facts\n\n| Fact ID | 事实 | 来源锚点 | 信息状态 | 待确认 |\n|---|---|---|---|---|\n{facts_table}\n",
-        "05_strategy_and_execution_map.md": f"# Strategy and Execution Map｜{title}\n\n## {profile['document_type']} 结构化转述重点\n\n{profile['focus_points']}\n\n## 来源事实驱动结构\n\n{_bullet_facts(fact_rows)}\n\n## 待补充\n\n{missing_lines}\n",
+        "05_strategy_and_execution_map.md": f"# Strategy and Execution Map｜{title}\n\n## {profile['document_type']} 结构化转述重点\n\n{profile['focus_points']}\n\n## 自动识别的大纲\n\n{_render_outline(outline)}\n\n## 来源事实驱动结构\n\n{_bullet_facts(fact_rows)}\n\n## 待补充\n\n{missing_lines}\n",
         "06_risk_and_review_items.md": f"# Risk and Review Items｜{title}\n\n| Review ID | 审核项 | 风险等级 | 来源锚点 | 建议 |\n|---|---|---|---|---|\n{review_table or '| R000 | 暂无明显风险 | 低 | 待补充 | 继续后续编译 |'}\n",
-        "07_ai_ready_marketing_brief_base.md": f"# AI Ready Marketing Brief Base｜{title}\n\n## Source-backed Context\n\n{_bullet_facts(fact_rows[:8])}\n\n## 使用限制\n\n- 不把待确认内容写成已品牌确认。\n- 不补写来源资料中没有的信息。\n",
+        "07_ai_ready_marketing_brief_base.md": f"# AI Ready Marketing Brief Base｜{title}\n\n## Source-backed Context\n\n{_bullet_facts(fact_rows[:8])}\n\n## 自动识别的大纲\n\n{_render_outline(outline)}\n\n## 使用限制\n\n- 不把待确认内容写成已品牌确认。\n- 不补写来源资料中没有的信息。\n",
         "08_review_pack.md": f"# Review Pack｜{title}\n\n## 需要人工处理\n\n{missing_lines}\n",
-        "09_quality_check_report.md": f"# Quality Check Report｜{title}\n\n## 自动检查\n\n- Source facts：{len(facts)} 条。\n- Source pages：{len(pages)} 页/段。\n- 待复核事项：{len(review_items)} 项。\n\n## 结论\n\n这是确定性初稿，可进入人工复核或模型精修。\n",
+        "09_quality_check_report.md": f"# Quality Check Report｜{title}\n\n## 自动检查\n\n- Source facts：{len(facts)} 条。\n- Source pages：{len(pages)} 页/段。\n- 待复核事项：{len(review_items)} 项。\n- 大纲分类：{_outline_category_count(outline)} 类。\n\n## 结论\n\n这是确定性初稿，可进入人工复核或模型精修。\n",
         "10_context_asset_index.md": f"# Context Asset Index｜{title}\n\n| Asset ID | 上下文类型 | 可复用资产 | 适用场景 | 来源锚点 | 信息状态 | Review Priority |\n|---|---|---|---|---|---|---|\n{asset_rows}\n",
         "11_context_library_update_plan.md": f"# Context Library Update Plan｜{title}\n\n## 1. Library Update Summary\n\n| Source Package | Update Type | Recommended Action | Reason |\n|---|---|---|---|\n| {title} | 新增 | 暂存待复核 | 由 source facts 确定性生成，需人工确认后长期沉淀 |\n\n## 2. New Context Entries\n\n| Entry ID | 建议归档位置 | 标题 | 内容摘要 | 来源资产 | 稳定性 | 写入建议 |\n|---|---|---|---|---|---|---|\n{library_rows}\n\n## 3. Existing Context Updates\n\n| 可能影响的已有条目 | 更新方式 | 新信息 | 冲突或风险 | 版本判断依据 |\n|---|---|---|---|---|\n| 待检索 | 补充 | 来源事实可补充长期库 | 需人工判断是否与旧知识冲突 | source_version_report.md |\n\n## 4. Do Not Promote\n\n- 不把待确认、低置信度或临时执行信息直接提升为长期知识。\n\n## 6. Retrieval Notes\n\n后续 brief 可调用本资料中已保留来源锚点的事实，但必须回到 source facts 和 transcript 校验。\n",
     }
@@ -214,6 +215,20 @@ def _needs_review(text: str) -> bool:
 def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:
     text = " ".join(row.get("Evidence Text", "") for row in facts).lower()
     rules = [
+        (
+            ["活动", "活动目标", "campaign", "提案", "上市", "big idea", "传播", "社媒", "触点"],
+            {
+                "document_type": "活动方案 / 广告提案",
+                "document_purpose": "组织传播策略、创意主线、触点和内容资产",
+                "audience": "品牌团队、代理商、内容团队、渠道团队",
+                "business_stage": "提案 / 立项 / 执行准备",
+                "library_location": "project",
+                "asset_type": "project",
+                "reuse_scene": "GEO / 种草 / 拍摄 / 活动执行",
+                "focus_points": "- 抽取目标、洞察、创意主线、渠道触点和内容资产。\n- 标出预算、排期、资源和审核边界缺口。",
+                "rationale": "- 命中“活动 / campaign / 提案 / 上市 / 传播 / 社媒 / 触点”等来源词，因此暂判为活动方案 / 广告提案。",
+            },
+        ),
         (
             ["复盘", "总结", "表现", "转化", "经验教训", "投放"],
             {
@@ -270,20 +285,6 @@ def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:
                 "rationale": "- 命中“产品 / 培训 / SKU / 卖点 / 功效 / 包装”等来源词，因此暂判为产品培训 / 产品资料。",
             },
         ),
-        (
-            ["活动", "campaign", "提案", "上市", "big idea", "传播", "社媒"],
-            {
-                "document_type": "活动方案 / 广告提案",
-                "document_purpose": "组织传播策略、创意主线、触点和内容资产",
-                "audience": "品牌团队、代理商、内容团队、渠道团队",
-                "business_stage": "提案 / 立项 / 执行准备",
-                "library_location": "project",
-                "asset_type": "project",
-                "reuse_scene": "GEO / 种草 / 拍摄 / 活动执行",
-                "focus_points": "- 抽取目标、洞察、创意主线、渠道触点和内容资产。\n- 标出预算、排期、资源和审核边界缺口。",
-                "rationale": "- 命中“活动 / campaign / 提案 / 上市 / 传播 / 社媒”等来源词，因此暂判为活动方案 / 广告提案。",
-            },
-        ),
     ]
     for keywords, profile in rules:
         if any(keyword in text for keyword in keywords):
@@ -299,6 +300,47 @@ def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:
         "focus_points": "- 先保留来源事实和页面锚点。\n- 再由人工或模型进一步判断资料类型、业务阶段和长期复用价值。",
         "rationale": "- 未命中明确资料类型关键词，因此暂判为综合营销资料。",
     }
+
+
+def _build_marketing_outline(facts: list[dict[str, str]]) -> dict[str, list[dict[str, str]]]:
+    outline = {
+        "目标 / 要解决的问题": [],
+        "渠道 / 触点 / 场景": [],
+        "下一步动作 / 执行要求": [],
+        "缺口 / 待补充": [],
+        "其他来源事实": [],
+    }
+    rules = [
+        ("缺口 / 待补充", ["缺少", "缺失", "暂未提供", "待补充", "未提供", "没有"]),
+        ("下一步动作 / 执行要求", ["下一步", "动作", "负责人", "排期", "执行", "补充", "优化"]),
+        ("渠道 / 触点 / 场景", ["渠道", "触点", "线下", "社媒", "电商", "门店", "场景", "达人"]),
+        ("目标 / 要解决的问题", ["目标", "希望", "建立", "提升", "解决", "心智", "目的"]),
+    ]
+    for row in facts:
+        evidence = row.get("Evidence Text", "")
+        target = "其他来源事实"
+        for category, keywords in rules:
+            if any(keyword in evidence for keyword in keywords):
+                target = category
+                break
+        outline[target].append(row)
+    return outline
+
+
+def _render_outline(outline: dict[str, list[dict[str, str]]]) -> str:
+    sections = []
+    for category, rows in outline.items():
+        if not rows:
+            continue
+        sections.append(f"### {category}")
+        sections.append("")
+        sections.append(_bullet_facts(rows))
+        sections.append("")
+    return "\n".join(sections).strip() or "### 其他来源事实\n\n- 待补充。"
+
+
+def _outline_category_count(outline: dict[str, list[dict[str, str]]]) -> int:
+    return sum(1 for rows in outline.values() if rows)
 
 
 def _cell(text: str) -> str:

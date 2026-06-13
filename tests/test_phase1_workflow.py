@@ -724,6 +724,45 @@ class Phase1WorkflowTests(unittest.TestCase):
                     self.assertIn(f"## {expected_type} 结构化转述重点", strategy)
                     self.assertIn(f"| LCE001 | {expected_location} |", plan)
 
+    def test_compile_structured_outputs_groups_facts_into_marketing_outline(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            facts = project_dir / "converted_markdown" / "source_facts"
+            facts.mkdir(parents=True)
+            (facts / "S001_source_facts.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Facts",
+                        "",
+                        "| Fact ID | Source Anchor | Evidence Text | 信息状态 | 低置信度说明 |",
+                        "|---|---|---|---|---|",
+                        "| SF001-001 | S001#page=1 | 活动目标是建立城市清爽心智。 | 已从来源资料提取 | 无明显低置信度。 |",
+                        "| SF001-002 | S001#page=2 | 渠道触点包括线下快闪、社媒内容和电商承接。 | 已从来源资料提取 | 无明显低置信度。 |",
+                        "| SF001-003 | S001#page=3 | 下一步动作是补充预算、负责人和排期。 | 已从来源资料提取 | 无明显低置信度。 |",
+                        "| SF001-004 | S001#page=4 | 预算和渠道合作名单暂未提供。 | 已从来源资料提取 | 信息缺失。 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                compile_structured_outputs(project_dir)
+
+            strategy = (project_dir / "outputs" / "05_strategy_and_execution_map.md").read_text(encoding="utf-8")
+            brief = (project_dir / "outputs" / "07_ai_ready_marketing_brief_base.md").read_text(encoding="utf-8")
+            quality = (project_dir / "outputs" / "09_quality_check_report.md").read_text(encoding="utf-8")
+            self.assertIn("## 自动识别的大纲", strategy)
+            self.assertIn("### 目标 / 要解决的问题", strategy)
+            self.assertIn("活动目标是建立城市清爽心智", strategy)
+            self.assertIn("### 渠道 / 触点 / 场景", strategy)
+            self.assertIn("线下快闪、社媒内容和电商承接", strategy)
+            self.assertIn("### 下一步动作 / 执行要求", strategy)
+            self.assertIn("补充预算、负责人和排期", strategy)
+            self.assertIn("### 缺口 / 待补充", strategy)
+            self.assertIn("预算和渠道合作名单暂未提供", strategy)
+            self.assertIn("自动识别的大纲", brief)
+            self.assertIn("大纲分类：4 类", quality)
+
     def test_cli_exposes_brand_lock_check(self) -> None:
         import sys
 
