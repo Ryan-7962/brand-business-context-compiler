@@ -192,7 +192,7 @@ converted_markdown/source_facts/S001_source_facts.md
 brand-skill build-source-facts <project_dir>
 ```
 
-它会从 `converted_markdown/source_transcripts/` 生成 `converted_markdown/source_facts/`，作为后续 Marketing Semantic Compiler 的事实候选输入。该步骤只做确定性文本拆分和 Source Anchor 继承，不替代模型语义抽取，也不代表品牌方确认。
+它会从 `converted_markdown/source_transcripts/` 生成 `converted_markdown/source_facts/`，作为后续 Marketing Semantic Compiler 的事实候选输入。该步骤只做确定性文本拆分、章节上下文保留、表格行转写和 Source Anchor 继承，不替代模型语义抽取，也不代表品牌方确认。
 
 ## 4. MinerU 在本项目中的建议接入方式
 

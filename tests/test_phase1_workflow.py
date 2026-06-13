@@ -422,6 +422,50 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("| SF001-002 | S001#page=1 | 下月需要补充投放数据。 | 已从来源资料提取 | 无明显低置信度 |", facts_text)
             self.assertIn("不做品牌确认判断", facts_text)
 
+    def test_build_source_facts_preserves_headings_and_table_rows(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            transcripts_dir = project_dir / "converted_markdown" / "source_transcripts"
+            transcripts_dir.mkdir(parents=True)
+            (transcripts_dir / "S001_strategy.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Transcript｜strategy.pdf",
+                        "",
+                        "## Source Metadata",
+                        "- Source ID：S001",
+                        "- 原始文件：strategy.pdf",
+                        "",
+                        "## Page 1",
+                        "- Source Anchor：S001#page=1",
+                        "",
+                        "### Text",
+                        "#### 市场背景",
+                        "- 活动目标是建立夏季清爽心智。",
+                        "",
+                        "| 模块 | 信息 |",
+                        "|---|---|",
+                        "| 渠道 | 抖音内容和电商承接 |",
+                        "| 待补充 | 预算和负责人 |",
+                        "",
+                        "### Low Confidence / Need Review",
+                        "- 表格结构需复核",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_source_facts(project_dir)
+
+            facts_text = (
+                project_dir / "converted_markdown" / "source_facts" / "S001_strategy_source_facts.md"
+            ).read_text(encoding="utf-8")
+            self.assertIn("市场背景：活动目标是建立夏季清爽心智。", facts_text)
+            self.assertIn("表格行：模块=渠道；信息=抖音内容和电商承接", facts_text)
+            self.assertIn("表格行：模块=待补充；信息=预算和负责人", facts_text)
+            self.assertIn("表格结构需复核", facts_text)
+
     def test_convert_source_preserves_external_source_manifest_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir)

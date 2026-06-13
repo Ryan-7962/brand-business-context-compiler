@@ -40,6 +40,7 @@ Codex 最终应把本项目推进为一个本地优先的 Brand / Business Conte
 - 如需评估 MinerU，`converted_markdown/mineru_readiness_report.md` 能先证明本机是否具备可选 CLI 评估条件；该证据不等于 MinerU 已被设为默认转写引擎。
 - 当资料来自 ima 或其他外部知识库时，`source/source_manifest.json` 能保留来源平台、知识库、路径、media id 等追溯线索，并写入 transcript / conversion report。
 - ima 私有资料导入必须通过 `_private_test_runs/` 私有目录验证，导入后能继续跑 `convert-source` 和 `build-source-facts`。
+- `converted_markdown/source_facts/` 能继承 Source Anchor，并尽量保留章节上下文、表格行和低置信度说明；事实候选仍不得冒充品牌确认。
 - `outputs/` 中有文件画像、语义转述、关键事实、策略结构、风险项、Context Asset Index 和 Context Library Update Plan。
 - `compile-outputs` 能在不调用模型的情况下，从 source facts / transcripts / quality reports 生成 00-11 结构化输出初稿。
 - `brand_context_library/` 中实际生成 Markdown 条目。

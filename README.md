@@ -216,7 +216,7 @@ brand-skill import-ima-media _private_test_runs/<run_name> \
 
 该命令只允许写入 `_private_test_runs/`，会把文件保存到 `source/ima_imports/`，并生成 `source/source_manifest.json`。之后可继续运行 `convert-source` 和 `build-source-facts`。
 
-`build-source-facts` 会读取 `converted_markdown/source_transcripts/`，生成 `converted_markdown/source_facts/`。这一步只抽取来源中已经出现的文字证据，保留 Source Anchor 和低置信度说明；它不做品牌确认、不做外发安全判断，也不补写资料中没有的信息。
+`build-source-facts` 会读取 `converted_markdown/source_transcripts/`，生成 `converted_markdown/source_facts/`。这一步只抽取来源中已经出现的文字证据，保留 Source Anchor、章节上下文、表格行和低置信度说明；它不做品牌确认、不做外发安全判断，也不补写资料中没有的信息。
 
 `build-source-quality-report` 会读取 source transcripts，生成 `converted_markdown/source_quality_report.md`。它汇总总页数、需要复核页数、低文字量页面、含图片/图形页面和低置信度说明，并给出 OCR / MinerU / 人工复核等建议动作。
 

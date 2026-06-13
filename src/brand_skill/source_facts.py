@@ -144,12 +144,66 @@ def _low_confidence(markdown: str) -> str:
 
 def _fact_candidates(text: str) -> list[str]:
     candidates: list[str] = []
-    for line in text.splitlines():
+    lines = text.splitlines()
+    heading_context = ""
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        stripped = line.strip()
+        heading = _markdown_heading(stripped)
+        if heading:
+            heading_context = heading
+            index += 1
+            continue
+        if stripped.startswith("|"):
+            table_lines = []
+            while index < len(lines) and lines[index].strip().startswith("|"):
+                table_lines.append(lines[index].strip())
+                index += 1
+            candidates.extend(_table_fact_candidates(table_lines))
+            continue
         cleaned = _clean_evidence_line(line)
         if not cleaned:
+            index += 1
             continue
-        candidates.extend(_split_sentences(cleaned))
+        for sentence in _split_sentences(cleaned):
+            candidates.append(f"{heading_context}：{sentence}" if heading_context else sentence)
+        index += 1
     return [candidate for candidate in candidates if candidate]
+
+
+def _markdown_heading(line: str) -> str:
+    match = re.match(r"^#{2,6}\s+(.+)$", line)
+    return match.group(1).strip() if match else ""
+
+
+def _table_fact_candidates(lines: list[str]) -> list[str]:
+    if len(lines) < 3:
+        return []
+    headers = _split_markdown_table_row(lines[0])
+    separator = _split_markdown_table_row(lines[1])
+    if not headers or not _is_table_separator(separator):
+        return []
+
+    candidates = []
+    for row_line in lines[2:]:
+        values = _split_markdown_table_row(row_line)
+        pairs = [
+            f"{header}={value}"
+            for header, value in zip(headers, values)
+            if header.strip() and value.strip()
+        ]
+        if pairs:
+            candidates.append("表格行：" + "；".join(pairs))
+    return candidates
+
+
+def _split_markdown_table_row(line: str) -> list[str]:
+    return [cell.strip() for cell in line.strip().strip("|").split("|")]
+
+
+def _is_table_separator(cells: list[str]) -> bool:
+    return bool(cells) and all(cell and set(cell) <= {"-", ":"} for cell in cells)
 
 
 def _clean_evidence_line(line: str) -> str:
