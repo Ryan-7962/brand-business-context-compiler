@@ -14,6 +14,7 @@ from brand_skill.contract_verifier import verify_project_contract
 from brand_skill.library_report import build_library_report
 from brand_skill.library_writer import apply_context_library_update
 from brand_skill.ima_importer import import_ima_media
+from brand_skill.output_compiler import compile_structured_outputs
 from brand_skill.review_pack import build_review_pack
 from brand_skill.source_quality import build_source_quality_report
 from brand_skill.source_facts import build_source_facts
@@ -576,6 +577,105 @@ class Phase1WorkflowTests(unittest.TestCase):
                 sys.argv = argv
 
             self.assertTrue((converted / "source_version_report.md").exists())
+
+    def test_compile_structured_outputs_builds_phase1_markdown_from_source_facts(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            transcripts = converted / "source_transcripts"
+            facts = converted / "source_facts"
+            transcripts.mkdir(parents=True)
+            facts.mkdir()
+            (converted / "conversion_report.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Conversion Report",
+                        "",
+                        "## Source Files",
+                        "",
+                        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 | 外部来源 |",
+                        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+                        "| S001 | campaign.md | 2026-01-01T09:00:00+08:00 | 2026-01-02T09:00:00+08:00 | source_transcripts/S001.md | manual | Markdown | no | pages 1-3 | 不适用 | 不适用 | 不适用 | 目标人群缺少数据 | 是 | - |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (converted / "source_quality_report.md").write_text(
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 总页数：3\n- 需要复核页数：1\n\n## 需要复核的页面\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|\n| S001#page=2 | campaign.md | 80 | 0 | 0 | 目标人群缺少数据 | 人工复核 |\n",
+                encoding="utf-8",
+            )
+            (converted / "source_version_report.md").write_text(
+                "# Source Version Report\n\n## 版本线索总览\n\n- 疑似多版本组数：0\n- 最新修改时间线索：不自动覆盖旧知识。\n",
+                encoding="utf-8",
+            )
+            (transcripts / "S001.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Transcript｜campaign.md",
+                        "",
+                        "## Page 1",
+                        "- Source Anchor：S001#page=1",
+                        "",
+                        "### Text",
+                        "品牌希望建立城市清爽的活动联想。",
+                        "",
+                        "## Page 2",
+                        "- Source Anchor：S001#page=2",
+                        "",
+                        "### Text",
+                        "目标人群是城市通勤人群，但缺少调研数据。",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (facts / "S001_source_facts.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Facts｜campaign.md",
+                        "",
+                        "## Fact Candidates",
+                        "",
+                        "| Fact ID | Source Anchor | Evidence Text | 信息状态 | 低置信度说明 |",
+                        "|---|---|---|---|---|",
+                        "| SF001-001 | S001#page=1 | 品牌希望建立城市清爽的活动联想。 | 已从来源资料提取 | 无明显低置信度。 |",
+                        "| SF001-002 | S001#page=2 | 目标人群是城市通勤人群，但缺少调研数据。 | 已从来源资料提取 | 目标人群缺少数据。 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                compile_structured_outputs(project_dir)
+
+            outputs = project_dir / "outputs"
+            self.assertTrue((outputs / "02_document_profile.md").exists())
+            self.assertIn("campaign.md", (outputs / "00_source_index.md").read_text(encoding="utf-8"))
+            self.assertIn("品牌希望建立城市清爽", (outputs / "03_marketing_semantic_transcript.md").read_text(encoding="utf-8"))
+            self.assertIn("SF001-001", (outputs / "04_key_facts_and_claims.md").read_text(encoding="utf-8"))
+            self.assertIn("S001#page=2", (outputs / "06_risk_and_review_items.md").read_text(encoding="utf-8"))
+            self.assertIn("CA001", (outputs / "10_context_asset_index.md").read_text(encoding="utf-8"))
+            self.assertIn("LCE001", (outputs / "11_context_library_update_plan.md").read_text(encoding="utf-8"))
+
+    def test_cli_compile_outputs_command(self) -> None:
+        import sys
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            facts = project_dir / "converted_markdown" / "source_facts"
+            facts.mkdir(parents=True)
+            (facts / "S001_source_facts.md").write_text(
+                "# Source Facts\n\n| Fact ID | Source Anchor | Evidence Text | 信息状态 | 低置信度说明 |\n|---|---|---|---|---|\n| SF001-001 | S001#page=1 | 示例事实。 | 已从来源资料提取 | 无明显低置信度。 |\n",
+                encoding="utf-8",
+            )
+            argv = sys.argv
+            sys.argv = ["brand-skill", "compile-outputs", str(project_dir)]
+            try:
+                with redirect_stdout(StringIO()):
+                    cli_main()
+            finally:
+                sys.argv = argv
+
+            self.assertTrue((project_dir / "outputs" / "11_context_library_update_plan.md").exists())
 
     def test_cli_exposes_brand_lock_check(self) -> None:
         import sys

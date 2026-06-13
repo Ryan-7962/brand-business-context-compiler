@@ -13,6 +13,7 @@ from .demo_contract import run_demo_contract
 from .ima_importer import import_ima_media
 from .library_report import build_library_report
 from .library_writer import apply_context_library_update
+from .output_compiler import compile_structured_outputs
 from .review_pack import build_review_pack
 from .source_facts import build_source_facts
 from .source_converter import convert_source
@@ -59,6 +60,10 @@ def main() -> None:
 
     p_source_versions = sub.add_parser("build-source-version-report")
     p_source_versions.add_argument("project_dir")
+
+    p_compile_outputs = sub.add_parser("compile-outputs")
+    p_compile_outputs.add_argument("project_dir")
+    p_compile_outputs.add_argument("--keep-existing", action="store_true")
 
     p_ima_import = sub.add_parser("import-ima-media")
     p_ima_import.add_argument("project_dir")
@@ -109,6 +114,8 @@ def main() -> None:
         build_source_quality_report(project_dir)
     elif args.command == "build-source-version-report":
         build_source_version_report(project_dir)
+    elif args.command == "compile-outputs":
+        compile_structured_outputs(project_dir, keep_existing=args.keep_existing)
     elif args.command == "import-ima-media":
         api_script = Path(args.api_script) if args.api_script else None
         kwargs = {"api_script": api_script} if api_script else {}
