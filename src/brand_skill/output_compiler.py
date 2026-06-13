@@ -179,11 +179,11 @@ def _build_documents(
         for index, row in enumerate(review_items, start=1)
     )
     asset_rows = "\n".join(
-        f"| CA{index:03d} | {profile['asset_type']} | {_cell(row.get('Evidence Text', ''))} | {profile['reuse_scene']} | {row.get('Source Anchor', '')} | {row.get('信息状态', '已从来源资料提取')} | {'高' if _needs_review(row.get('低置信度说明', '')) else '中'} |"
+        f"| CA{index:03d} | {_asset_type_for_fact(row, profile['asset_type'])} | {_cell(row.get('Evidence Text', ''))} | {profile['reuse_scene']} | {row.get('Source Anchor', '')} | {row.get('信息状态', '已从来源资料提取')} | {'高' if _needs_review(row.get('低置信度说明', '')) else '中'} |"
         for index, row in enumerate(fact_rows[:10], start=1)
     )
     library_rows = "\n".join(
-        f"| LCE{index:03d} | {profile['library_location']} | {_short_title(row.get('Evidence Text', ''), index)} | {_cell(row.get('Evidence Text', ''))} | CA{index:03d} | 待验证 | 暂存 |"
+        f"| LCE{index:03d} | {_library_location_for_fact(row, profile['library_location'])} | {_short_title(row.get('Evidence Text', ''), index)} | {_cell(row.get('Evidence Text', ''))} | CA{index:03d} | 待验证 | 暂存 |"
         for index, row in enumerate(fact_rows[:5], start=1)
     )
     missing_lines = "\n".join(
@@ -305,6 +305,7 @@ def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:
 def _build_marketing_outline(facts: list[dict[str, str]]) -> dict[str, list[dict[str, str]]]:
     outline = {
         "目标 / 要解决的问题": [],
+        "表格结构信息": [],
         "渠道 / 触点 / 场景": [],
         "下一步动作 / 执行要求": [],
         "缺口 / 待补充": [],
@@ -318,11 +319,12 @@ def _build_marketing_outline(facts: list[dict[str, str]]) -> dict[str, list[dict
     ]
     for row in facts:
         evidence = row.get("Evidence Text", "")
-        target = "其他来源事实"
-        for category, keywords in rules:
-            if any(keyword in evidence for keyword in keywords):
-                target = category
-                break
+        target = "表格结构信息" if _is_table_fact(row) else "其他来源事实"
+        if target == "其他来源事实":
+            for category, keywords in rules:
+                if any(keyword in evidence for keyword in keywords):
+                    target = category
+                    break
         outline[target].append(row)
     return outline
 
@@ -358,6 +360,18 @@ def _short_title(text: str, index: int) -> str:
 
 def _bullet_facts(facts: list[dict[str, str]]) -> str:
     return "\n".join(f"- {row.get('Evidence Text', '待补充')}（来源：{row.get('Source Anchor', '待补充')}）" for row in facts) or "- 待补充。"
+
+
+def _asset_type_for_fact(row: dict[str, str], default: str) -> str:
+    return "structured_table" if _is_table_fact(row) else default
+
+
+def _library_location_for_fact(row: dict[str, str], default: str) -> str:
+    return "structured_table" if _is_table_fact(row) else default
+
+
+def _is_table_fact(row: dict[str, str]) -> bool:
+    return row.get("Evidence Text", "").strip().startswith("表格行：")
 
 
 def _version_excerpt(markdown: str) -> str:

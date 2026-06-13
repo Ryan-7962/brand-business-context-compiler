@@ -220,7 +220,7 @@ brand-skill import-ima-media _private_test_runs/<run_name> \
 
 `build-source-quality-report` 会读取 source transcripts，生成 `converted_markdown/source_quality_report.md`。它汇总总页数、需要复核页数、低文字量页面、含图片/图形页面和低置信度说明，并给出 OCR / MinerU / 人工复核等建议动作。
 
-`compile-outputs` 会读取 `source_facts/`、source transcripts、source quality report 和 source version report，生成 00-11 结构化 Markdown 初稿。它是本地确定性底稿编译器，不调用模型，不做品牌确认，不补写来源资料没有的信息；后续可以再用 Prompt Bundle 或模型精修表达。
+`compile-outputs` 会读取 `source_facts/`、source transcripts、source quality report 和 source version report，生成 00-11 结构化 Markdown 初稿。它会把表格行保留为“表格结构信息”和 `structured_table` 资产，避免表格资料被压平成普通摘要。它是本地确定性底稿编译器，不调用模型，不做品牌确认，不补写来源资料没有的信息；后续可以再用 Prompt Bundle 或模型精修表达。
 
 ## 目录说明
 

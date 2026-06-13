@@ -867,6 +867,37 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("自动识别的大纲", brief)
             self.assertIn("大纲分类：4 类", quality)
 
+    def test_compile_structured_outputs_keeps_table_facts_as_structured_assets(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            facts = project_dir / "converted_markdown" / "source_facts"
+            facts.mkdir(parents=True)
+            (facts / "S001_source_facts.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Facts",
+                        "",
+                        "| Fact ID | Source Anchor | Evidence Text | 信息状态 | 低置信度说明 |",
+                        "|---|---|---|---|---|",
+                        "| SF001-001 | S001#page=1 | 市场背景：活动目标是建立夏季清爽心智。 | 已从来源资料提取 | 无明显低置信度。 |",
+                        "| SF001-002 | S001#page=2 | 表格行：模块=渠道；信息=抖音内容和电商承接 | 已从来源资料提取 | 表格结构需复核。 |",
+                        "| SF001-003 | S001#page=2 | 表格行：模块=待补充；信息=预算和负责人 | 已从来源资料提取 | 表格结构需复核。 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                compile_structured_outputs(project_dir)
+
+            strategy = (project_dir / "outputs" / "05_strategy_and_execution_map.md").read_text(encoding="utf-8")
+            asset_index = (project_dir / "outputs" / "10_context_asset_index.md").read_text(encoding="utf-8")
+            plan = (project_dir / "outputs" / "11_context_library_update_plan.md").read_text(encoding="utf-8")
+            self.assertIn("### 表格结构信息", strategy)
+            self.assertIn("表格行：模块=渠道；信息=抖音内容和电商承接", strategy)
+            self.assertIn("| CA002 | structured_table |", asset_index)
+            self.assertIn("| LCE002 | structured_table |", plan)
+
     def test_cli_exposes_brand_lock_check(self) -> None:
         import sys
 
