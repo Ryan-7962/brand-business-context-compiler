@@ -229,7 +229,7 @@ def _retrieval_notes(path: Path) -> list[str]:
         stripped = line.strip()
         if not stripped or stripped.startswith("#") or stripped.startswith("##"):
             continue
-        notes.append(stripped.lstrip("- ").strip())
+        notes.append(_friendly_display_line(stripped.lstrip("- ").strip()))
     return notes[-6:]
 
 
@@ -284,7 +284,11 @@ def _friendly_queue_line(line: str) -> str:
         return "建议动作：" + line.split("：", 1)[1].strip()
     if line.startswith("版本判断依据："):
         return ""
-    return line.replace("source_version_report.md / ", "").replace("source_version_report.md", "")
+    return _friendly_display_line(line.replace("source_version_report.md / ", "").replace("source_version_report.md", ""))
+
+
+def _friendly_display_line(line: str) -> str:
+    return line.replace("Source Anchor", "原文定位").replace("来源锚点", "原文定位").replace("Risk Level", "复核优先级").replace("风险等级", "复核优先级")
 
 
 def _render_report(

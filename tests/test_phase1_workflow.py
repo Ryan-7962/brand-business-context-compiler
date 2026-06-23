@@ -662,6 +662,42 @@ class Phase1WorkflowTests(unittest.TestCase):
 
             self.assertTrue((project_dir / "evaluation" / "direct_vs_skill_benchmark.md").exists())
 
+    def test_cli_run_phase1_executes_full_local_loop_from_source(self) -> None:
+        import sys
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "phase1_project"
+            source_dir = project_dir / "source" / "meeting"
+            source_dir.mkdir(parents=True)
+            (source_dir / "sample.md").write_text(
+                "# 品牌月会\n\n- 本月重点是渠道复盘。\n- 下月需要补充投放数据。\n",
+                encoding="utf-8",
+            )
+            library_dir = Path(temp_dir) / "brand_context_library"
+            argv = sys.argv
+            sys.argv = [
+                "brand-skill",
+                "run-phase1",
+                str(project_dir),
+                "--library-dir",
+                str(library_dir),
+            ]
+            try:
+                with redirect_stdout(StringIO()) as stdout:
+                    cli_main()
+            finally:
+                sys.argv = argv
+
+            output = stdout.getvalue()
+            self.assertIn("Phase 1 workflow completed", output)
+            self.assertTrue((project_dir / "converted_markdown" / "source_transcripts").exists())
+            self.assertTrue((project_dir / "converted_markdown" / "source_facts").exists())
+            self.assertTrue((project_dir / "outputs" / "03_marketing_semantic_transcript.md").exists())
+            self.assertTrue((project_dir / "review" / "brand_review.html").exists())
+            self.assertTrue((library_dir / "library_report.html").exists())
+            self.assertTrue((project_dir / "evaluation" / "direct_vs_skill_benchmark.md").exists())
+            self.assertIn("Status: passed", (project_dir / "contract_verification_report.md").read_text(encoding="utf-8"))
+
     def test_convert_source_preserves_external_source_manifest_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir)

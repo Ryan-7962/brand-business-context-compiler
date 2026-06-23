@@ -15,6 +15,7 @@ from .library_report import build_library_report
 from .library_writer import apply_context_library_update
 from .mineru_adapter import check_mineru_readiness, plan_mineru_evaluation, scaffold_mineru_evaluation_results
 from .output_compiler import compile_structured_outputs
+from .phase1_runner import run_phase1_workflow
 from .review_pack import build_review_pack
 from .source_facts import build_source_facts
 from .source_converter import convert_source
@@ -105,6 +106,12 @@ def main() -> None:
     p_demo_contract.add_argument("project_dir")
     p_demo_contract.add_argument("--library-dir")
 
+    p_run_phase1 = sub.add_parser("run-phase1")
+    p_run_phase1.add_argument("project_dir")
+    p_run_phase1.add_argument("--library-dir")
+    p_run_phase1.add_argument("--engine", default="pymupdf4llm", choices=["pymupdf4llm", "mineru"])
+    p_run_phase1.add_argument("--keep-existing", action="store_true")
+
     args = parser.parse_args()
     project_dir = Path(getattr(args, "project_dir", getattr(args, "project_name", ".")))
 
@@ -164,6 +171,14 @@ def main() -> None:
     elif args.command == "demo-contract":
         library_dir = Path(args.library_dir) if args.library_dir else None
         run_demo_contract(project_dir, library_dir=library_dir)
+    elif args.command == "run-phase1":
+        library_dir = Path(args.library_dir) if args.library_dir else None
+        run_phase1_workflow(
+            project_dir,
+            library_dir=library_dir,
+            engine=args.engine,
+            keep_existing=args.keep_existing,
+        )
 
 
 if __name__ == "__main__":

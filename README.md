@@ -103,6 +103,7 @@ outputs/<project_slug>/derived_briefs/
 brand-skill init <project_name>
 brand-skill validate-input <project_dir>
 brand-skill import-ima-media _private_test_runs/<run_name> --media-id <ima_media_id> --title <file_name>
+brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 brand-skill convert-source <project_dir> --engine pymupdf4llm
 brand-skill build-source-quality-report <project_dir>
 brand-skill build-source-version-report <project_dir>
@@ -119,6 +120,16 @@ brand-skill demo-contract <project_dir> --library-dir <brand_context_library_dir
 ```
 
 ## 最小使用路径
+
+推荐先用一条命令跑完整第一阶段闭环：
+
+```bash
+brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
+```
+
+它会依次执行 source conversion、source facts、质量报告、版本报告、00-11 结构化输出、异常确认页、长期库更新、知识库报告页、value benchmark 和 contract verification。
+
+如果需要分步调试，可按下面的顺序拆开运行：
 
 ```text
 1. 把 PDF / PPTX / Markdown / TXT / DOCX 源稿放入 source/；PPT 旧格式 / 长图可先转成 PDF 或后续接入高保真转换器
