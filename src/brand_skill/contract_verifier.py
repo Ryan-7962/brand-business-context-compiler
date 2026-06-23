@@ -284,3 +284,19 @@ def _check_library(library_dir: Path, issues: list[str]) -> None:
         for backend_marker in ["Source Anchor", "Risk Level", "来源锚点", "风险等级"]:
             if backend_marker in report_text:
                 issues.append(f"Library report overexposes backend marker: {backend_marker}")
+        for backend_file in ["source_version_report.md", "source_quality_report.md"]:
+            if backend_file in report_text:
+                issues.append(f"Library report exposes backend report file: {backend_file}")
+        _check_library_report_version_review(library_dir, report_text, issues)
+
+
+def _check_library_report_version_review(library_dir: Path, report_text: str, issues: list[str]) -> None:
+    updates_path = library_dir / "review_queue" / "updates.md"
+    if not updates_path.exists():
+        return
+    updates_text = updates_path.read_text(encoding="utf-8")
+    if "疑似多版本资料" not in updates_text:
+        return
+    for marker in ["待处理事项", "建议动作", "最新修改时间线索"]:
+        if marker not in report_text:
+            issues.append(f"Library report missing version-review marker: {marker}")

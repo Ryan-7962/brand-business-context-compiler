@@ -1936,6 +1936,70 @@ class Phase1WorkflowTests(unittest.TestCase):
 
             self.assertIn("Library report overexposes backend marker", stdout.getvalue())
 
+    def test_verify_contract_fails_when_library_report_exposes_version_backend_file(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            outputs = project_dir / "outputs"
+            converted = project_dir / "converted_markdown"
+            transcripts = converted / "source_transcripts"
+            transcripts.mkdir(parents=True)
+            outputs.mkdir(parents=True)
+            for filename in [
+                "02_document_profile.md",
+                "03_marketing_semantic_transcript.md",
+                "04_key_facts_and_claims.md",
+                "05_strategy_and_execution_map.md",
+                "06_risk_and_review_items.md",
+                "10_context_asset_index.md",
+                "11_context_library_update_plan.md",
+            ]:
+                (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
+            (converted / "conversion_report.md").write_text(
+                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                encoding="utf-8",
+            )
+            (converted / "source_quality_report.md").write_text(
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| 建议动作 |\n|---|\n| 继续后续语义编译 |\n",
+                encoding="utf-8",
+            )
+            (converted / "source_version_report.md").write_text(
+                "# Source Version Report\n\n## 版本线索总览\n\n- 疑似多版本组数：1\n- 最新修改时间线索：不自动覆盖已有品牌知识。\n",
+                encoding="utf-8",
+            )
+            (transcripts / "S001_demo.md").write_text(
+                "Source Anchor：S001#page=1\nPage Screenshot：../assets/S001/page_01.png\n低置信度\n",
+                encoding="utf-8",
+            )
+            review_dir = project_dir / "review"
+            review_dir.mkdir()
+            (review_dir / "brand_review.html").write_text(
+                "识别问题待处理 需要处理的问题 文件大纲参考",
+                encoding="utf-8",
+            )
+            library_dir = Path(temp_dir) / "brand_context_library"
+            for dirname in ["brand", "review_queue", "retrieval_maps"]:
+                (library_dir / dirname).mkdir(parents=True, exist_ok=True)
+            (library_dir / "brand" / "brand-tone.md").write_text("# 品牌语气\n", encoding="utf-8")
+            (library_dir / "review_queue" / "conflicts.md").write_text("# Context Library Conflict Queue\n", encoding="utf-8")
+            (library_dir / "review_queue" / "updates.md").write_text(
+                "# 旧知识更新队列\n\n## 2026-06-10T00:00:00Z｜demo\n\n### 疑似多版本资料：summer_strategy\n\n- 更新方式：版本复核\n- 版本判断依据：source_version_report.md / 最新修改时间线索\n",
+                encoding="utf-8",
+            )
+            (library_dir / "review_queue" / "do_not_promote.md").write_text("# Do Not Promote Queue\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "library_report.html").write_text(
+                "Brand Context Map Knowledge Explorer categoryFilter statusFilter 条目详情 待处理事项 source_version_report.md",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()) as stdout:
+                with self.assertRaises(SystemExit):
+                    verify_project_contract(project_dir, library_dir=library_dir)
+
+            output = stdout.getvalue()
+            self.assertIn("Library report exposes backend report file", output)
+            self.assertIn("Library report missing version-review marker", output)
+
     def test_verify_contract_scans_tracked_files_with_privacy_terms_env(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             repo_dir = Path(temp_dir)
