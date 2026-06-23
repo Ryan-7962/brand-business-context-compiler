@@ -13,7 +13,7 @@ from .demo_contract import run_demo_contract
 from .ima_importer import import_ima_media
 from .library_report import build_library_report
 from .library_writer import apply_context_library_update
-from .mineru_adapter import check_mineru_readiness, plan_mineru_evaluation
+from .mineru_adapter import check_mineru_readiness, plan_mineru_evaluation, scaffold_mineru_evaluation_results
 from .output_compiler import compile_structured_outputs
 from .review_pack import build_review_pack
 from .source_facts import build_source_facts
@@ -68,6 +68,9 @@ def main() -> None:
     p_plan_mineru = sub.add_parser("plan-mineru-eval")
     p_plan_mineru.add_argument("project_dir")
     p_plan_mineru.add_argument("--max-pages", type=int, default=5)
+
+    p_scaffold_mineru_results = sub.add_parser("scaffold-mineru-eval-results")
+    p_scaffold_mineru_results.add_argument("project_dir")
 
     p_compile_outputs = sub.add_parser("compile-outputs")
     p_compile_outputs.add_argument("project_dir")
@@ -126,6 +129,8 @@ def main() -> None:
         check_mineru_readiness(project_dir)
     elif args.command == "plan-mineru-eval":
         plan_mineru_evaluation(project_dir, max_pages=args.max_pages)
+    elif args.command == "scaffold-mineru-eval-results":
+        scaffold_mineru_evaluation_results(project_dir)
     elif args.command == "compile-outputs":
         compile_structured_outputs(project_dir, keep_existing=args.keep_existing)
     elif args.command == "import-ima-media":

@@ -37,7 +37,8 @@ Codex 最终应把本项目推进为一个本地优先的 Brand / Business Conte
 - `converted_markdown/` 中有来源转写、页码 / 截图 / 低置信度说明、识别质量摘要和文件创建 / 修改时间。
 - `converted_markdown/source_quality_report.md` 能告诉使用者哪些页面需要 OCR、MinerU 或人工复核。
 - `converted_markdown/source_version_report.md` 能告诉使用者哪些资料疑似同主题多版本、最新修改时间线索是什么；常见 `v2` / `final` / 日期 / hash 后缀应被归一化为版本线索，但仍明确不自动覆盖旧知识。
-- 如需评估 MinerU，`converted_markdown/mineru_readiness_report.md` 能先证明本机是否具备可选 CLI 评估条件，`converted_markdown/mineru_eval_plan.md` 能列出最多 5 个高价值小样对比页面；这些证据不等于 MinerU 已被设为默认转写引擎。
+- 如需评估 MinerU，`converted_markdown/mineru_readiness_report.md` 能先证明本机是否具备可选 CLI 评估条件，`converted_markdown/mineru_eval_plan.md` 能列出最多 5 个高价值小样对比页面，`converted_markdown/mineru_eval_results.md` 能记录 baseline 与 MinerU 的 OCR、表格、图片/图表、阅读顺序、Markdown 可读性和部署复杂度对比；这些证据不等于 MinerU 已被设为默认转写引擎。
+- 项目价值不能只用“单次 PDF 总结是否顺口”判断。必须能用同一批资料对比“直接把 PDF/PPT 发给 AI”和“先经本 Skill 转写、抽 facts、编译、入库后再回答”的差异，并在覆盖率、来源追溯、多文件版本冲突、长期复用和人工修正成本上拿出证据。
 - 当资料来自 ima 或其他外部知识库时，`source/source_manifest.json` 能保留来源平台、知识库、路径、media id 等追溯线索，并写入 transcript / conversion report。
 - ima 私有资料导入必须通过 `_private_test_runs/` 私有目录验证，导入后能继续跑 `convert-source` 和 `build-source-facts`。
 - `converted_markdown/source_facts/` 能继承 Source Anchor，并尽量保留章节上下文、表格行和低置信度说明；事实候选仍不得冒充品牌确认。

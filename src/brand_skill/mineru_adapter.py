@@ -73,6 +73,21 @@ def plan_mineru_evaluation(project_dir: Path, *, max_pages: int = 5) -> Path:
     return report_path
 
 
+def scaffold_mineru_evaluation_results(project_dir: Path) -> Path:
+    """Write a local template for recording MinerU comparison evidence."""
+    converted_dir = project_dir / "converted_markdown"
+    plan_path = converted_dir / "mineru_eval_plan.md"
+    if not plan_path.exists():
+        print("Missing MinerU evaluation plan: converted_markdown/mineru_eval_plan.md")
+        raise SystemExit(1)
+
+    rows = _parse_eval_plan_rows(plan_path.read_text(encoding="utf-8"))
+    report_path = converted_dir / "mineru_eval_results.md"
+    report_path.write_text(_render_eval_results(rows), encoding="utf-8")
+    print(f"MinerU evaluation results template created: {report_path}")
+    return report_path
+
+
 def _render_report(*, cli_path: str | None, command_text: str, version_status: str, version_output: str) -> str:
     checked_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     if cli_path:
@@ -146,6 +161,26 @@ def _is_mineru_eval_candidate(row: dict[str, str]) -> bool:
     return "MinerU" in action or "OCR" in action or "表格" in confidence or "图片" in confidence or "视觉" in confidence
 
 
+def _parse_eval_plan_rows(markdown: str) -> list[dict[str, str]]:
+    table_lines = [line.strip() for line in markdown.splitlines() if line.strip().startswith("|")]
+    rows: list[dict[str, str]] = []
+    index = 0
+    while index < len(table_lines) - 1:
+        header = _split_table_row(table_lines[index])
+        separator = _split_table_row(table_lines[index + 1])
+        if "Source Anchor" in header and "原始文件" in header and "低置信度说明" in header and _is_separator(separator):
+            for row_line in table_lines[index + 2 :]:
+                cells = _split_table_row(row_line)
+                if len(cells) != len(header):
+                    break
+                row = dict(zip(header, cells))
+                if row.get("Source Anchor") and row.get("Source Anchor") != "待补充":
+                    rows.append(row)
+            break
+        index += 1
+    return rows
+
+
 def _render_eval_plan(rows: list[dict[str, str]], max_pages: int) -> str:
     lines = [
         "# MinerU Evaluation Plan",
@@ -191,6 +226,66 @@ def _render_eval_plan(rows: list[dict[str, str]], max_pages: int) -> str:
             "| 阅读顺序 | 待记录 | 待记录 | 待判断 |",
             "| 输出 Markdown 可读性 | 待记录 | 待记录 | 待判断 |",
             "| 部署复杂度 | 待记录 | 待记录 | 待判断 |",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _render_eval_results(rows: list[dict[str, str]]) -> str:
+    lines = [
+        "# MinerU Evaluation Results",
+        "",
+        "## 评估边界",
+        "",
+        "- Baseline：pymupdf4llm",
+        "- MinerU：可选高保真 source conversion 候选，只有小样证据明显更好时才考虑接入。",
+        "- 真实品牌资料只能放在 `_private_test_runs/` 私有测试区，不得写入正式 examples / docs / prompts / schemas。",
+        "- 不得把本评估结果写成品牌确认；它只说明资料转写工具链是否值得增强。",
+        "",
+        "## 页面级对比记录",
+        "",
+        "| Source Anchor | 原始文件 | 低置信度说明 | pymupdf4llm 观察 | MinerU 观察 | 结论 | 是否接入 |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    if rows:
+        for row in rows:
+            lines.append(
+                "| "
+                + " | ".join(
+                    [
+                        _cell(row.get("Source Anchor", "")),
+                        _cell(row.get("原始文件", "")),
+                        _cell(row.get("低置信度说明", "")),
+                        "待填写",
+                        "待填写",
+                        "待填写",
+                        "待判断",
+                    ]
+                )
+                + " |"
+            )
+    else:
+        lines.append("| 待补充 | 待补充 | 评估计划未列出有效候选页 | 待填写 | 待填写 | 待填写 | 待判断 |")
+
+    lines.extend(
+        [
+            "",
+            "## 接入判断",
+            "",
+            "| 维度 | 结论 | 证据 | 后续动作 |",
+            "|---|---|---|---|",
+            "| OCR 完整度 | 待判断 | 待填写 | 待定 |",
+            "| 表格还原 | 待判断 | 待填写 | 待定 |",
+            "| 图片/图表保留 | 待判断 | 待填写 | 待定 |",
+            "| 阅读顺序 | 待判断 | 待填写 | 待定 |",
+            "| 输出 Markdown 可读性 | 待判断 | 待填写 | 待定 |",
+            "| 部署复杂度 | 待判断 | 待填写 | 待定 |",
+            "",
+            "## 最终建议",
+            "",
+            "- 只有当 MinerU 在关键页明显优于 baseline，才考虑接入 `convert-source --engine mineru`。",
+            "- 如果 MinerU 只改善摘要表达、但没有改善 OCR / 表格 / 图表 / 阅读顺序证据，不应增加默认依赖。",
             "",
         ]
     )

@@ -215,6 +215,7 @@ brand-skill build-source-facts <project_dir>
 ```bash
 brand-skill check-mineru <project_dir>
 brand-skill plan-mineru-eval <project_dir> --max-pages 5
+brand-skill scaffold-mineru-eval-results <project_dir>
 ```
 
 `plan-mineru-eval` 会基于 `source_quality_report.md` 自动挑选最多 5 个低置信度页面作为对比候选。用示例品牌资料做 MinerU 对比时，优先覆盖：
@@ -224,6 +225,8 @@ brand-skill plan-mineru-eval <project_dir> --max-pages 5
 - 香型表格页。
 - 消费者实证页。
 - 26 年升级页。
+
+`scaffold-mineru-eval-results` 会生成 `converted_markdown/mineru_eval_results.md`，用于记录 pymupdf4llm baseline 与 MinerU 小样结果。该文件只记录转写工具链评估证据，不代表品牌确认，也不代表 MinerU 已经成为默认引擎。
 
 评估维度：
 
