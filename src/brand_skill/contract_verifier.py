@@ -35,6 +35,7 @@ def verify_project_contract(
     _check_source_conversion(project_dir, issues)
     _check_review_pack(project_dir, issues)
     _check_library(target_library, issues)
+    _check_value_benchmark(project_dir, issues)
     _check_unapproved_confirmed_status(project_dir, target_library, issues)
 
     if report_path:
@@ -73,6 +74,7 @@ def _write_verification_report(
         "- Exception review page",
         "- Context library entries and review queues",
         "- Brand Context Map report",
+        "- Direct PDF/PPT vs Skill benchmark",
         "- Private test file tracking",
         "- Optional privacy term scan",
         "- Unapproved confirmed-status claims",
@@ -246,6 +248,18 @@ def _check_review_pack(project_dir: Path, issues: list[str]) -> None:
     for marker in backend_markers:
         if marker in text:
             issues.append(f"Review page overexposes backend marker: {marker}")
+
+
+def _check_value_benchmark(project_dir: Path, issues: list[str]) -> None:
+    benchmark = project_dir / "evaluation" / "direct_vs_skill_benchmark.md"
+    if not benchmark.exists():
+        issues.append("Missing value benchmark: evaluation/direct_vs_skill_benchmark.md")
+        return
+
+    text = benchmark.read_text(encoding="utf-8")
+    for marker in ["Direct PDF/PPT vs Skill Benchmark", "固定问题集", "对比评分表", "覆盖率", "来源追溯", "长期知识沉淀"]:
+        if marker not in text:
+            issues.append(f"Value benchmark missing marker: {marker}")
 
 
 def _check_library(library_dir: Path, issues: list[str]) -> None:

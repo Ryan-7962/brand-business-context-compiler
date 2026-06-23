@@ -20,6 +20,7 @@ from .source_facts import build_source_facts
 from .source_converter import convert_source
 from .source_quality import build_source_quality_report
 from .source_versions import build_source_version_report
+from .value_benchmark import build_value_benchmark
 from .workflow import init_project, scaffold_output, validate_input, build_prompt_pack
 from .validators import check_brand_lock_sheet_draft, check_claim_matrix
 
@@ -91,6 +92,10 @@ def main() -> None:
     p_library_report = sub.add_parser("build-library-report")
     p_library_report.add_argument("library_dir")
 
+    p_value_benchmark = sub.add_parser("build-value-benchmark")
+    p_value_benchmark.add_argument("project_dir")
+    p_value_benchmark.add_argument("--library-dir")
+
     p_contract = sub.add_parser("verify-contract")
     p_contract.add_argument("project_dir")
     p_contract.add_argument("--library-dir")
@@ -149,6 +154,9 @@ def main() -> None:
         apply_context_library_update(project_dir, library_dir=library_dir)
     elif args.command == "build-library-report":
         build_library_report(Path(args.library_dir))
+    elif args.command == "build-value-benchmark":
+        library_dir = Path(args.library_dir) if args.library_dir else None
+        build_value_benchmark(project_dir, library_dir=library_dir)
     elif args.command == "verify-contract":
         library_dir = Path(args.library_dir) if args.library_dir else None
         report_path = project_dir / "contract_verification_report.md" if args.write_report else None

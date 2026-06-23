@@ -1,0 +1,96 @@
+"""Build a local scorecard for comparing direct AI reading with the Skill workflow."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+
+def build_value_benchmark(project_dir: Path, library_dir: Path | None = None) -> Path:
+    """Create a benchmark template that tests whether the Skill adds real value."""
+    evaluation_dir = project_dir / "evaluation"
+    evaluation_dir.mkdir(parents=True, exist_ok=True)
+    report_path = evaluation_dir / "direct_vs_skill_benchmark.md"
+    report_path.write_text(_render_report(project_dir, library_dir), encoding="utf-8")
+    print(f"Direct PDF/PPT vs Skill benchmark created: {report_path}")
+    return report_path
+
+
+def _render_report(project_dir: Path, library_dir: Path | None) -> str:
+    converted = project_dir / "converted_markdown"
+    outputs = project_dir / "outputs"
+    review_page = project_dir / "review" / "brand_review.html"
+    resolved_library = library_dir or (project_dir / "brand_context_library")
+    library_report = resolved_library / "library_report.html"
+
+    facts_count = _count_fact_rows(converted / "source_facts")
+    output_count = len(list(outputs.glob("*.md"))) if outputs.exists() else 0
+    quality_status = "存在" if (converted / "source_quality_report.md").exists() else "缺失"
+    version_status = "存在" if (converted / "source_version_report.md").exists() else "缺失"
+    review_status = "存在" if review_page.exists() else "缺失"
+    library_status = "存在" if library_report.exists() else "缺失"
+
+    return "\n".join(
+        [
+            "# Direct PDF/PPT vs Skill Benchmark",
+            "",
+            "## 评估目的",
+            "",
+            "这份 benchmark 用来验证本项目是否真的比“直接把原始 PDF/PPT 发给 AI”更有价值。这份 benchmark 不证明 Skill 一定更好，只提供同一批资料下的可比问题、评分维度和证据记录。",
+            "",
+            "## 对比对象",
+            "",
+            "- A：直接把原始 PDF/PPT 发给 AI，让 AI 直接总结和回答问题。",
+            "- B：先经 Skill 转写、抽 facts、编译、入库后再回答同样问题。",
+            "",
+            "## 固定问题集",
+            "",
+            "1. 这个资料大概讲什么？",
+            "2. 哪些内容被完整转写了？",
+            "3. 哪些页面/图片/表格/小字识别不可靠？",
+            "4. 哪些事实来自原文，来源在哪里？",
+            "5. 哪些内容可以长期进入品牌知识库？",
+            "6. 哪些内容只是临时政策、阶段判断或敏感信息，不能入库？",
+            "7. 如果未来写 GEO / PDP / 种草 / 销售 / 复盘 brief，应该调用哪些知识资产？",
+            "",
+            "## 当前 Skill 证据清单",
+            "",
+            f"- 来源转写质量报告：{quality_status}",
+            f"- 来源版本报告：{version_status}",
+            f"- 事实候选数：{facts_count}",
+            f"- 结构化输出文件数：{output_count}",
+            f"- 异常确认页：{review_status}",
+            f"- 知识库报告页：{library_status}",
+            "",
+            "## 对比评分表",
+            "",
+            "| 维度 | 直接读 PDF/PPT | Skill 链路 | 胜出方 | 证据 |",
+            "|---|---|---|---|---|",
+            "| 覆盖率 | 待记录 | 待记录 | 待判断 | 哪些页面、表格、图片文字被漏掉 |",
+            "| 准确率 | 待记录 | 待记录 | 待判断 | 是否误读、编造或混淆上下文 |",
+            "| 来源追溯 | 待记录 | 待记录 | 待判断 | 是否能定位到文件、页码、Source Anchor |",
+            "| 低置信度暴露 | 待记录 | 待记录 | 待判断 | 是否明确告诉用户哪些页不可靠 |",
+            "| 多文件版本冲突 | 待记录 | 待记录 | 待判断 | 是否识别旧版、新版、疑似冲突 |",
+            "| 长期知识沉淀 | 待记录 | 待记录 | 待判断 | 是否能形成可复用 Context Asset |",
+            "| 后续 brief 复用 | 待记录 | 待记录 | 待判断 | 是否能说明 GEO / PDP / 种草 / 销售 / 复盘该调用哪些资产 |",
+            "| 人工修正成本 | 待记录 | 待记录 | 待判断 | 需要使用者补充或纠错的数量与难度 |",
+            "",
+            "## 判定规则",
+            "",
+            "- 如果只是单份资料的一次性摘要，直接读 PDF/PPT 可以胜出。",
+            "- 如果 Skill 在来源追溯、多文件版本冲突、低置信度暴露、长期知识沉淀和后续 brief 复用上没有明显优势，应降低项目复杂度。",
+            "- 如果 Skill 能稳定减少重复阅读和人工纠错，并能把资料沉淀为可调用知识资产，才说明继续开发值得。",
+            "",
+        ]
+    )
+
+
+def _count_fact_rows(facts_dir: Path) -> int:
+    if not facts_dir.exists():
+        return 0
+    count = 0
+    for path in facts_dir.glob("*.md"):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            stripped = line.strip()
+            if stripped.startswith("| SF") and "Source Anchor" not in stripped:
+                count += 1
+    return count

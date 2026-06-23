@@ -17,6 +17,7 @@ from brand_skill.ima_importer import import_ima_media
 from brand_skill.output_compiler import compile_structured_outputs
 from brand_skill.review_pack import build_review_pack
 from brand_skill.mineru_adapter import check_mineru_readiness, plan_mineru_evaluation, scaffold_mineru_evaluation_results
+from brand_skill.value_benchmark import build_value_benchmark
 from brand_skill.source_quality import build_source_quality_report
 from brand_skill.source_facts import build_source_facts
 from brand_skill.source_versions import build_source_version_report
@@ -589,6 +590,70 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("表格行：模块=渠道；信息=抖音内容和电商承接", facts_text)
             self.assertIn("表格行：模块=待补充；信息=预算和负责人", facts_text)
             self.assertIn("表格结构需复核", facts_text)
+
+    def test_build_value_benchmark_creates_direct_pdf_vs_skill_scorecard(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            converted = project_dir / "converted_markdown"
+            facts_dir = converted / "source_facts"
+            outputs = project_dir / "outputs"
+            review_dir = project_dir / "review"
+            facts_dir.mkdir(parents=True)
+            outputs.mkdir(parents=True)
+            review_dir.mkdir(parents=True)
+            (converted / "source_quality_report.md").write_text(
+                "# Source Quality Report\n\n- 总页数：2\n\n| Source Anchor | 原始文件 | 低置信度说明 | 建议动作 |\n|---|---|---|---|\n| S001#page=2 | sample.pdf | 表格结构需复核 | MinerU / 人工复核 |\n",
+                encoding="utf-8",
+            )
+            (converted / "source_version_report.md").write_text(
+                "# Source Version Report\n\n- 疑似多版本组数：1\n- 最新修改时间线索：S002 / sample_final.pdf / 2026-01-02\n",
+                encoding="utf-8",
+            )
+            (facts_dir / "S001_source_facts.md").write_text(
+                "# Source Facts\n\n| Fact ID | Source Anchor | Fact Candidate | 信息状态 | 低置信度说明 |\n|---|---|---|---|---|\n| SF001-001 | S001#page=1 | 活动目标是提升品牌声量。 | 已从来源资料提取 | 无明显低置信度 |\n",
+                encoding="utf-8",
+            )
+            for filename in ["02_document_profile.md", "03_marketing_semantic_transcript.md", "10_context_asset_index.md", "11_context_library_update_plan.md"]:
+                (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
+            (review_dir / "brand_review.html").write_text("<html>EXCEPTION_REVIEW</html>", encoding="utf-8")
+            library_dir = Path(temp_dir) / "brand_context_library"
+            library_dir.mkdir()
+            (library_dir / "library_report.html").write_text("<html>品牌知识库概览</html>", encoding="utf-8")
+
+            with redirect_stdout(StringIO()):
+                report_path = build_value_benchmark(project_dir, library_dir=library_dir)
+
+            report_text = report_path.read_text(encoding="utf-8")
+            self.assertIn("# Direct PDF/PPT vs Skill Benchmark", report_text)
+            self.assertIn("直接把原始 PDF/PPT 发给 AI", report_text)
+            self.assertIn("先经 Skill 转写、抽 facts、编译、入库后再回答", report_text)
+            self.assertIn("这个资料大概讲什么？", report_text)
+            self.assertIn("哪些事实来自原文，来源在哪里？", report_text)
+            self.assertIn("来源转写质量报告：存在", report_text)
+            self.assertIn("事实候选数：1", report_text)
+            self.assertIn("结构化输出文件数：4", report_text)
+            self.assertIn("知识库报告页：存在", report_text)
+            self.assertIn("| 覆盖率 | 待记录 | 待记录 | 待判断 |", report_text)
+            self.assertIn("这份 benchmark 不证明 Skill 一定更好", report_text)
+
+    def test_cli_build_value_benchmark_command_writes_report(self) -> None:
+        import sys
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir(parents=True)
+            (converted / "source_quality_report.md").write_text("# Source Quality Report\n", encoding="utf-8")
+            (converted / "source_version_report.md").write_text("# Source Version Report\n", encoding="utf-8")
+            argv = sys.argv
+            sys.argv = ["brand-skill", "build-value-benchmark", str(project_dir)]
+            try:
+                with redirect_stdout(StringIO()):
+                    cli_main()
+            finally:
+                sys.argv = argv
+
+            self.assertTrue((project_dir / "evaluation" / "direct_vs_skill_benchmark.md").exists())
 
     def test_convert_source_preserves_external_source_manifest_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -1639,6 +1704,12 @@ class Phase1WorkflowTests(unittest.TestCase):
                 "识别问题待处理 需要处理的问题 文件大纲参考 自动通过，无需人工处理",
                 encoding="utf-8",
             )
+            evaluation_dir = project_dir / "evaluation"
+            evaluation_dir.mkdir()
+            (evaluation_dir / "direct_vs_skill_benchmark.md").write_text(
+                "# Direct PDF/PPT vs Skill Benchmark\n\n## 固定问题集\n\n## 对比评分表\n\n覆盖率 来源追溯 长期知识沉淀\n",
+                encoding="utf-8",
+            )
             library_dir = Path(temp_dir) / "brand_context_library"
             for dirname in ["brand", "review_queue", "retrieval_maps"]:
                 (library_dir / dirname).mkdir(parents=True, exist_ok=True)
@@ -1695,6 +1766,12 @@ class Phase1WorkflowTests(unittest.TestCase):
             review_dir.mkdir()
             (review_dir / "brand_review.html").write_text(
                 "识别问题待处理 需要处理的问题 文件大纲参考",
+                encoding="utf-8",
+            )
+            evaluation_dir = project_dir / "evaluation"
+            evaluation_dir.mkdir()
+            (evaluation_dir / "direct_vs_skill_benchmark.md").write_text(
+                "# Direct PDF/PPT vs Skill Benchmark\n\n## 固定问题集\n\n## 对比评分表\n\n覆盖率 来源追溯 长期知识沉淀\n",
                 encoding="utf-8",
             )
             library_dir = Path(temp_dir) / "brand_context_library"
@@ -1780,8 +1857,68 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Library report generated", output)
             self.assertIn("Contract verification passed", output)
             self.assertTrue((library_dir / "library_report.html").exists())
+            self.assertTrue((project_dir / "evaluation" / "direct_vs_skill_benchmark.md").exists())
             self.assertIn("Status: passed", report_path.read_text(encoding="utf-8"))
             report_path.unlink()
+
+    def test_verify_project_contract_fails_without_value_benchmark(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            outputs = project_dir / "outputs"
+            converted = project_dir / "converted_markdown"
+            transcripts = converted / "source_transcripts"
+            transcripts.mkdir(parents=True)
+            outputs.mkdir(parents=True)
+            for filename in [
+                "02_document_profile.md",
+                "03_marketing_semantic_transcript.md",
+                "04_key_facts_and_claims.md",
+                "05_strategy_and_execution_map.md",
+                "06_risk_and_review_items.md",
+                "10_context_asset_index.md",
+                "11_context_library_update_plan.md",
+            ]:
+                (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
+            (converted / "conversion_report.md").write_text(
+                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                encoding="utf-8",
+            )
+            (converted / "source_quality_report.md").write_text(
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| 建议动作 |\n|---|\n| 继续后续语义编译 |\n",
+                encoding="utf-8",
+            )
+            (converted / "source_version_report.md").write_text(
+                "# Source Version Report\n\n## 版本线索总览\n\n- 疑似多版本组数：0\n- 最新修改时间线索：不自动覆盖已有品牌知识。\n",
+                encoding="utf-8",
+            )
+            (transcripts / "S001_demo.md").write_text(
+                "Source Anchor：S001#page=1\nPage Screenshot：../assets/S001/page_01.png\n低置信度\n",
+                encoding="utf-8",
+            )
+            review_dir = project_dir / "review"
+            review_dir.mkdir()
+            (review_dir / "brand_review.html").write_text(
+                "识别问题待处理 需要处理的问题 文件大纲参考",
+                encoding="utf-8",
+            )
+            library_dir = Path(temp_dir) / "brand_context_library"
+            for dirname in ["brand", "review_queue", "retrieval_maps"]:
+                (library_dir / dirname).mkdir(parents=True, exist_ok=True)
+            (library_dir / "brand" / "brand-tone.md").write_text("# 品牌语气\n", encoding="utf-8")
+            (library_dir / "review_queue" / "conflicts.md").write_text("# Context Library Conflict Queue\n", encoding="utf-8")
+            (library_dir / "review_queue" / "updates.md").write_text("# 旧知识更新队列\n", encoding="utf-8")
+            (library_dir / "review_queue" / "do_not_promote.md").write_text("# Do Not Promote Queue\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "library_report.html").write_text(
+                "Brand Context Map Knowledge Explorer categoryFilter statusFilter 条目详情",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()) as stdout:
+                with self.assertRaises(SystemExit):
+                    verify_project_contract(project_dir, library_dir=library_dir)
+
+            self.assertIn("Missing value benchmark", stdout.getvalue())
 
     def test_verify_project_contract_fails_without_exception_review_page(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

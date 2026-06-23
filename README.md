@@ -113,6 +113,7 @@ brand-skill build-prompt-pack <project_dir>
 brand-skill build-review-pack <project_dir>
 brand-skill apply-library-update <project_dir> --library-dir <brand_context_library_dir>
 brand-skill build-library-report <brand_context_library_dir>
+brand-skill build-value-benchmark <project_dir> --library-dir <brand_context_library_dir>
 brand-skill verify-contract <project_dir> --library-dir <brand_context_library_dir> --write-report
 brand-skill demo-contract <project_dir> --library-dir <brand_context_library_dir>
 ```
@@ -130,8 +131,9 @@ brand-skill demo-contract <project_dir> --library-dir <brand_context_library_dir
 8. 查看 review/brand_review.html，只处理识别异常
 9. 运行 apply-library-update，把可沉淀内容写入 brand_context_library/
 10. 运行 build-library-report，生成一页中文知识库概览
-11. 运行 verify-contract --write-report，检查当前产物是否满足项目执行准则里的核心证据，并留下本地验证报告
-12. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
+11. 运行 build-value-benchmark，生成“直接读 PDF/PPT vs Skill 链路”的对比评估表
+12. 运行 verify-contract --write-report，检查当前产物是否满足项目执行准则里的核心证据，并留下本地验证报告
+13. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
 ```
 
 本地验收 demo 可用一条命令跑完入库、知识库报告页和 contract 验证：
@@ -154,7 +156,9 @@ brand-skill demo-contract examples/anonymous_marketing_campaign --library-dir /t
 
 `verify-contract` 会检查 `docs/project_success_contract.md` 中定义的核心证据，例如 source conversion 识别质量摘要、source quality report、source version report、关键 outputs、异常复核页、长期库条目、review queue、retrieval map、Brand Context Map、私有测试目录未被追踪、报告页离线静态约束，以及生成产物不得冒充 `已品牌确认`。异常复核页只应提示识别问题和文件大纲，不应退回到后台 Context Asset 全量审核页；知识库报告页也不应把 Source Anchor、Risk Level、后台报告文件名等质量标记铺到用户界面。若存在疑似多版本资料，报告页必须展示中文待处理事项、建议动作和最新修改时间线索。加上 `--write-report` 后会在项目根目录生成 `contract_verification_report.md`，用于保留本轮通过 / 失败证据。它用于每轮开发后的本地门禁，不替代人工业务判断。
 
-`demo-contract` 是给本地开发和匿名 demo 验收用的便捷命令，会依次执行 `build-source-quality-report`、`build-source-version-report`、`compile-outputs --keep-existing`、`apply-library-update`、`build-library-report` 和 `verify-contract --write-report`。
+`demo-contract` 是给本地开发和匿名 demo 验收用的便捷命令，会依次执行 `build-source-quality-report`、`build-source-version-report`、`compile-outputs --keep-existing`、`apply-library-update`、`build-library-report`、`build-value-benchmark` 和 `verify-contract --write-report`。
+
+`build-value-benchmark` 会生成 `evaluation/direct_vs_skill_benchmark.md`，用于对比“直接把 PDF/PPT 发给 AI”和“先经 Skill 转写、抽 facts、编译、入库后再回答”的差异。它要求后续用同一批资料、同一组问题评估覆盖率、准确率、来源追溯、低置信度暴露、多文件版本冲突、长期知识沉淀、后续 brief 复用和人工修正成本。
 
 如果需要在本机扫描私有测试关键词，可临时设置 `BRAND_SKILL_PRIVACY_TERMS_REGEX` 后再运行 `verify-contract`。不要把真实关键词写入仓库文件。
 
