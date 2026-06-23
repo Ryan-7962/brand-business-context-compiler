@@ -635,6 +635,13 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("知识库报告页：存在", report_text)
             self.assertIn("| 覆盖率 | 待记录 | 待记录 | 待判断 |", report_text)
             self.assertIn("这份 benchmark 不证明 Skill 一定更好", report_text)
+            self.assertIn("## A/B 评估提示词", report_text)
+            self.assertIn("### A. 直接读 PDF/PPT 的提示词", report_text)
+            self.assertIn("请只基于我上传的原始 PDF/PPT/文档回答", report_text)
+            self.assertIn("### B. Skill 链路回答提示词", report_text)
+            self.assertIn("请优先基于 source_facts、outputs 和 brand_context_library 回答", report_text)
+            self.assertIn("## 答案记录模板", report_text)
+            self.assertIn("| 问题 | 直接读 PDF/PPT 答案摘要 | Skill 链路答案摘要 | 差异 | 证据 |", report_text)
 
     def test_cli_build_value_benchmark_command_writes_report(self) -> None:
         import sys
@@ -1707,7 +1714,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             evaluation_dir = project_dir / "evaluation"
             evaluation_dir.mkdir()
             (evaluation_dir / "direct_vs_skill_benchmark.md").write_text(
-                "# Direct PDF/PPT vs Skill Benchmark\n\n## 固定问题集\n\n## 对比评分表\n\n覆盖率 来源追溯 长期知识沉淀\n",
+                "# Direct PDF/PPT vs Skill Benchmark\n\n## 固定问题集\n\n## 对比评分表\n\n## A/B 评估提示词\n\n### A. 直接读 PDF/PPT 的提示词\n\n### B. Skill 链路回答提示词\n\n## 答案记录模板\n\n覆盖率 来源追溯 长期知识沉淀\n",
                 encoding="utf-8",
             )
             library_dir = Path(temp_dir) / "brand_context_library"
@@ -1771,7 +1778,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             evaluation_dir = project_dir / "evaluation"
             evaluation_dir.mkdir()
             (evaluation_dir / "direct_vs_skill_benchmark.md").write_text(
-                "# Direct PDF/PPT vs Skill Benchmark\n\n## 固定问题集\n\n## 对比评分表\n\n覆盖率 来源追溯 长期知识沉淀\n",
+                "# Direct PDF/PPT vs Skill Benchmark\n\n## 固定问题集\n\n## 对比评分表\n\n## A/B 评估提示词\n\n### A. 直接读 PDF/PPT 的提示词\n\n### B. Skill 链路回答提示词\n\n## 答案记录模板\n\n覆盖率 来源追溯 长期知识沉淀\n",
                 encoding="utf-8",
             )
             library_dir = Path(temp_dir) / "brand_context_library"

@@ -257,7 +257,18 @@ def _check_value_benchmark(project_dir: Path, issues: list[str]) -> None:
         return
 
     text = benchmark.read_text(encoding="utf-8")
-    for marker in ["Direct PDF/PPT vs Skill Benchmark", "固定问题集", "对比评分表", "覆盖率", "来源追溯", "长期知识沉淀"]:
+    for marker in [
+        "Direct PDF/PPT vs Skill Benchmark",
+        "固定问题集",
+        "对比评分表",
+        "A/B 评估提示词",
+        "直接读 PDF/PPT 的提示词",
+        "Skill 链路回答提示词",
+        "答案记录模板",
+        "覆盖率",
+        "来源追溯",
+        "长期知识沉淀",
+    ]:
         if marker not in text:
             issues.append(f"Value benchmark missing marker: {marker}")
 

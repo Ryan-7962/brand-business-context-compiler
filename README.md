@@ -158,7 +158,7 @@ brand-skill demo-contract examples/anonymous_marketing_campaign --library-dir /t
 
 `demo-contract` 是给本地开发和匿名 demo 验收用的便捷命令，会依次执行 `build-source-quality-report`、`build-source-version-report`、`compile-outputs --keep-existing`、`apply-library-update`、`build-library-report`、`build-value-benchmark` 和 `verify-contract --write-report`。
 
-`build-value-benchmark` 会生成 `evaluation/direct_vs_skill_benchmark.md`，用于对比“直接把 PDF/PPT 发给 AI”和“先经 Skill 转写、抽 facts、编译、入库后再回答”的差异。它要求后续用同一批资料、同一组问题评估覆盖率、准确率、来源追溯、低置信度暴露、多文件版本冲突、长期知识沉淀、后续 brief 复用和人工修正成本。
+`build-value-benchmark` 会生成 `evaluation/direct_vs_skill_benchmark.md`，用于对比“直接把 PDF/PPT 发给 AI”和“先经 Skill 转写、抽 facts、编译、入库后再回答”的差异。它内置同一组问题、两套可复制评估提示词、答案记录模板和评分表，要求后续用同一批资料评估覆盖率、准确率、来源追溯、低置信度暴露、多文件版本冲突、长期知识沉淀、后续 brief 复用和人工修正成本。
 
 如果需要在本机扫描私有测试关键词，可临时设置 `BRAND_SKILL_PRIVACY_TERMS_REGEX` 后再运行 `verify-contract`。不要把真实关键词写入仓库文件。
 
