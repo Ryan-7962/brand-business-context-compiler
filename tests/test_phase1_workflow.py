@@ -16,7 +16,7 @@ from brand_skill.library_writer import apply_context_library_update
 from brand_skill.ima_importer import import_ima_media
 from brand_skill.output_compiler import compile_structured_outputs
 from brand_skill.review_pack import build_review_pack
-from brand_skill.mineru_adapter import check_mineru_readiness
+from brand_skill.mineru_adapter import check_mineru_readiness, plan_mineru_evaluation
 from brand_skill.source_quality import build_source_quality_report
 from brand_skill.source_facts import build_source_facts
 from brand_skill.source_versions import build_source_version_report
@@ -400,6 +400,63 @@ class Phase1WorkflowTests(unittest.TestCase):
             report_path = project_dir / "converted_markdown" / "mineru_readiness_report.md"
             self.assertTrue(report_path.exists())
             self.assertIn("MinerU Readiness Report", report_path.read_text(encoding="utf-8"))
+
+    def test_plan_mineru_evaluation_selects_high_value_quality_pages(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir(parents=True)
+            (converted / "source_quality_report.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Quality Report",
+                        "",
+                        "## 需要复核的页面",
+                        "",
+                        "| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 低置信度说明 | 建议动作 |",
+                        "|---|---|---|---|---|---|---|",
+                        "| S001#page=1 | sample.pdf | 120 | 0 | 0 | 无明显低置信度 | 继续后续编译 |",
+                        "| S001#page=2 | sample.pdf | 8 | 3 | 2 | 可抽取文字较少；含图片/视觉信息 | OCR / MinerU / 人工复核 |",
+                        "| S001#page=3 | sample.pdf | 80 | 0 | 0 | 表格结构需复核 | MinerU / 人工复核 |",
+                        "| S002#page=1 | deck.pptx | 20 | 待复核 | 待复核 | PPTX 轻量路径未保留版式 | MinerU / 原 PPT 人工复核 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                report_path = plan_mineru_evaluation(project_dir, max_pages=2)
+
+            report_text = report_path.read_text(encoding="utf-8")
+            self.assertIn("# MinerU Evaluation Plan", report_text)
+            self.assertIn("Baseline：pymupdf4llm", report_text)
+            self.assertIn("真实品牌资料只能放在 `_private_test_runs/`", report_text)
+            self.assertIn("| S001#page=2 | sample.pdf | 可抽取文字较少；含图片/视觉信息 | OCR / MinerU / 人工复核 |", report_text)
+            self.assertIn("| S001#page=3 | sample.pdf | 表格结构需复核 | MinerU / 人工复核 |", report_text)
+            self.assertNotIn("S002#page=1", report_text)
+            self.assertIn("OCR 完整度", report_text)
+            self.assertIn("表格还原", report_text)
+
+    def test_cli_plan_mineru_eval_command_writes_evaluation_plan(self) -> None:
+        import sys
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir(parents=True)
+            (converted / "source_quality_report.md").write_text(
+                "# Source Quality Report\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|\n| S001#page=2 | sample.pdf | 8 | 3 | 2 | 可抽取文字较少 | OCR / MinerU / 人工复核 |\n",
+                encoding="utf-8",
+            )
+            argv = sys.argv
+            sys.argv = ["brand-skill", "plan-mineru-eval", str(project_dir), "--max-pages", "1"]
+            try:
+                with redirect_stdout(StringIO()):
+                    cli_main()
+            finally:
+                sys.argv = argv
+
+            self.assertTrue((converted / "mineru_eval_plan.md").exists())
 
     def test_build_source_facts_creates_traceable_fact_candidates(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

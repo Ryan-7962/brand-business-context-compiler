@@ -56,6 +56,23 @@ def check_mineru_readiness(
     return report_path
 
 
+def plan_mineru_evaluation(project_dir: Path, *, max_pages: int = 5) -> Path:
+    """Select high-value pages for a local MinerU comparison plan."""
+    converted_dir = project_dir / "converted_markdown"
+    quality_report = converted_dir / "source_quality_report.md"
+    if not quality_report.exists():
+        print("Missing source quality report: converted_markdown/source_quality_report.md")
+        raise SystemExit(1)
+
+    rows = _parse_quality_rows(quality_report.read_text(encoding="utf-8"))
+    candidates = [row for row in rows if _is_mineru_eval_candidate(row)]
+    selected = candidates[:max_pages]
+    report_path = converted_dir / "mineru_eval_plan.md"
+    report_path.write_text(_render_eval_plan(selected, max_pages), encoding="utf-8")
+    print(f"MinerU evaluation plan created: {report_path}")
+    return report_path
+
+
 def _render_report(*, cli_path: str | None, command_text: str, version_status: str, version_output: str) -> str:
     checked_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     if cli_path:
@@ -95,3 +112,90 @@ def _render_report(*, cli_path: str | None, command_text: str, version_status: s
             "",
         ]
     )
+
+
+def _parse_quality_rows(markdown: str) -> list[dict[str, str]]:
+    table_lines = [line.strip() for line in markdown.splitlines() if line.strip().startswith("|")]
+    rows: list[dict[str, str]] = []
+    index = 0
+    while index < len(table_lines) - 1:
+        header = _split_table_row(table_lines[index])
+        separator = _split_table_row(table_lines[index + 1])
+        if "Source Anchor" in header and "建议动作" in header and _is_separator(separator):
+            for row_line in table_lines[index + 2 :]:
+                cells = _split_table_row(row_line)
+                if len(cells) != len(header):
+                    break
+                rows.append(dict(zip(header, cells)))
+            break
+        index += 1
+    return rows
+
+
+def _split_table_row(line: str) -> list[str]:
+    return [cell.strip() for cell in line.strip().strip("|").split("|")]
+
+
+def _is_separator(cells: list[str]) -> bool:
+    return bool(cells) and all(cell and set(cell.replace(" ", "")) <= {"-", ":"} for cell in cells)
+
+
+def _is_mineru_eval_candidate(row: dict[str, str]) -> bool:
+    action = row.get("建议动作", "")
+    confidence = row.get("低置信度说明", "")
+    return "MinerU" in action or "OCR" in action or "表格" in confidence or "图片" in confidence or "视觉" in confidence
+
+
+def _render_eval_plan(rows: list[dict[str, str]], max_pages: int) -> str:
+    lines = [
+        "# MinerU Evaluation Plan",
+        "",
+        "## 评估边界",
+        "",
+        "- Baseline：pymupdf4llm",
+        "- MinerU：仅作为高保真 source conversion 候选，不是品牌知识编译器本体。",
+        "- 真实品牌资料只能放在 `_private_test_runs/` 私有测试区，不得写入正式 examples / docs / prompts / schemas。",
+        f"- 本计划最多选择 {max_pages} 个页面 / slide 做小样对比。",
+        "",
+        "## 建议对比页面",
+        "",
+        "| Source Anchor | 原始文件 | 低置信度说明 | 建议动作 |",
+        "|---|---|---|---|",
+    ]
+    if rows:
+        for row in rows:
+            lines.append(
+                "| "
+                + " | ".join(
+                    [
+                        _cell(row.get("Source Anchor", "")),
+                        _cell(row.get("原始文件", "")),
+                        _cell(row.get("低置信度说明", "")),
+                        _cell(row.get("建议动作", "")),
+                    ]
+                )
+                + " |"
+            )
+    else:
+        lines.append("| 待补充 | 待补充 | 当前质量报告没有明显 MinerU 候选页 | 继续默认轻量路径 |")
+    lines.extend(
+        [
+            "",
+            "## 评估维度",
+            "",
+            "| 维度 | pymupdf4llm baseline | MinerU 小样结果 | 是否值得接入 |",
+            "|---|---|---|---|",
+            "| OCR 完整度 | 待记录 | 待记录 | 待判断 |",
+            "| 表格还原 | 待记录 | 待记录 | 待判断 |",
+            "| 图片/图表保留 | 待记录 | 待记录 | 待判断 |",
+            "| 阅读顺序 | 待记录 | 待记录 | 待判断 |",
+            "| 输出 Markdown 可读性 | 待记录 | 待记录 | 待判断 |",
+            "| 部署复杂度 | 待记录 | 待记录 | 待判断 |",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _cell(text: str) -> str:
+    return text.replace("|", "/").replace("\n", " ").strip()

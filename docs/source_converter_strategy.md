@@ -214,9 +214,10 @@ brand-skill build-source-facts <project_dir>
 
 ```bash
 brand-skill check-mineru <project_dir>
+brand-skill plan-mineru-eval <project_dir> --max-pages 5
 ```
 
-用示例品牌产品培训资料抽 5 页做 MinerU 对比：
+`plan-mineru-eval` 会基于 `source_quality_report.md` 自动挑选最多 5 个低置信度页面作为对比候选。用示例品牌资料做 MinerU 对比时，优先覆盖：
 
 - 封面/纯视觉页。
 - 卖点总览页。

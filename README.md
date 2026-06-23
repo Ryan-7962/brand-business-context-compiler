@@ -173,9 +173,12 @@ brand-skill check-claim-matrix <project_dir>
 
 ```bash
 brand-skill check-mineru <project_dir>
+brand-skill plan-mineru-eval <project_dir> --max-pages 5
 ```
 
 该命令会生成 `converted_markdown/mineru_readiness_report.md`，记录是否检测到 MinerU CLI、CLI 路径、版本输出和下一步建议。它只做本地 readiness 检查，不会读取或上传品牌资料，也不代表 `convert-source --engine mineru` 已经完成真实高保真转写接入。
+
+`plan-mineru-eval` 会读取 `converted_markdown/source_quality_report.md`，自动挑选最多 5 个最适合做 MinerU 对比的小样页面，并生成 `converted_markdown/mineru_eval_plan.md`。它只生成本地评估计划，不运行 MinerU，也不上传真实品牌资料。
 
 如果 `source/` 中存在当前不支持的文件类型，`convert-source` 会停止并列出文件路径，不会静默跳过。这是为了避免品牌资料漏转后仍被误认为已经完整入库。
 
