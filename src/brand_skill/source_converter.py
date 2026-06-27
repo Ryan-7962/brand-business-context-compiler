@@ -148,6 +148,13 @@ def _iter_supported_sources(project_dir: Path, supported_suffixes: set[str]) -> 
     )
 
 
+def _clear_generated_markdown_files(directory: Path) -> None:
+    if not directory.exists():
+        return
+    for path in directory.glob("*.md"):
+        path.unlink()
+
+
 def _iter_source_text_documents(project_dir: Path) -> list[Path]:
     source_dir = project_dir / "source"
     if not source_dir.exists():
@@ -254,6 +261,32 @@ def _text_source_kind(path: Path) -> tuple[str, str, str]:
     raise ValueError(f"Unsupported text source: {path}")
 
 
+def _text_source_pages(text: str) -> list[dict[str, str]]:
+    stripped_text = text.strip()
+    if not stripped_text:
+        return [{"label": "Page 1", "text": ""}]
+
+    slide_matches = list(
+        re.finditer(
+            r"^(?P<heading>#{1,6}\s*)?(?P<title>(?:Slide|Page|幻灯片|页)\s*[0-9０-９]+[^\n]*)$",
+            stripped_text,
+            flags=re.MULTILINE | re.IGNORECASE,
+        )
+    )
+    if not slide_matches:
+        return [{"label": "Page 1", "text": stripped_text}]
+
+    pages: list[dict[str, str]] = []
+    prelude = stripped_text[: slide_matches[0].start()].strip()
+    for index, match in enumerate(slide_matches):
+        end = slide_matches[index + 1].start() if index + 1 < len(slide_matches) else len(stripped_text)
+        page_text = stripped_text[match.start() : end].strip()
+        if index == 0 and prelude:
+            page_text = f"{prelude}\n\n{page_text}"
+        pages.append({"label": match.group("title").strip(), "text": page_text})
+    return pages
+
+
 def convert_source(
     project_dir: Path,
     engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE,
@@ -308,6 +341,7 @@ def convert_source(
     assets_root = converted_dir / "assets"
     transcripts_dir.mkdir(parents=True, exist_ok=True)
     assets_root.mkdir(parents=True, exist_ok=True)
+    _clear_generated_markdown_files(transcripts_dir)
 
     report_rows: list[list[str]] = []
     for text_source in text_sources:
@@ -316,6 +350,7 @@ def convert_source(
         transcript_name = f"{source_id}_{safe_name}.md"
         created_at, modified_at = _file_timestamps(text_source)
         file_type, text, conversion_method = _text_source_kind(text_source)
+        pages = _text_source_pages(text)
         low_confidence_text = "无明显低置信度" if text.strip() else "源稿为空"
         external_metadata = _external_source_metadata(project_dir, source_manifest, text_source)
 
@@ -330,34 +365,42 @@ def convert_source(
             f"- 文件创建时间：{created_at}",
             f"- 文件修改时间：{modified_at}",
             "- 版本判断说明：若多份资料内容冲突，优先参考修改时间更新的文件；但关键品牌口径仍需进入冲突队列或人工复核，不自动覆盖。",
-            "- 页数：1",
+            f"- 页数：{len(pages)}",
             f"- 转写引擎：{engine}",
             f"- 转写方式：{conversion_method}",
             f"- 低置信度说明：{file_type} 源稿不包含真实 PDF / PPT 版式截图；若原始资料来自图片、表格或小字，请补充对应截图复核。",
             "",
-            "## Page 1",
-            f"- Source Anchor：{source_id}#page=1",
-            f"- Page Screenshot：不适用（{file_type} source）",
-            f"- Extracted text chars：{len(text.strip())}",
-            "- Embedded images detected：0",
-            "- Vector drawings detected：0",
-            "",
-            "### Text",
-            text.strip() if text.strip() else "> 低置信度，源稿为空。",
-            "",
-            "### Images / Charts",
-            f"{file_type} 源稿未生成页面截图；若来源包含图片、图表或长图，请补充原始视觉文件。",
-            "",
-            "### Tables",
-            f"{file_type} 表格按文本保留，复杂表格仍需人工复核。",
-            "",
-            "### Notes / Footnotes / Small Print",
-            f"{file_type} 源稿不保留原始版式小字信息；如来自 PDF / PPT，请以原始页面为准复核。",
-            "",
-            "### Low Confidence / Need Review",
-            f"- {low_confidence_text}",
-            "",
         ]
+        for page_index, page in enumerate(pages, start=1):
+            page_text = page["text"].strip()
+            page_low_confidence = "无明显低置信度" if page_text else "源稿为空"
+            lines.extend(
+                [
+                    f"## Page {page_index}",
+                    f"- Source Anchor：{source_id}#page={page_index}",
+                    f"- Source Section：{page['label']}",
+                    f"- Page Screenshot：不适用（{file_type} source）",
+                    f"- Extracted text chars：{len(page_text)}",
+                    "- Embedded images detected：0",
+                    "- Vector drawings detected：0",
+                    "",
+                    "### Text",
+                    page_text if page_text else "> 低置信度，源稿为空。",
+                    "",
+                    "### Images / Charts",
+                    f"{file_type} 源稿未生成页面截图；若来源包含图片、图表或长图，请补充原始视觉文件。",
+                    "",
+                    "### Tables",
+                    f"{file_type} 表格按文本保留，复杂表格仍需人工复核。",
+                    "",
+                    "### Notes / Footnotes / Small Print",
+                    f"{file_type} 源稿不保留原始版式小字信息；如来自 PDF / PPT，请以原始页面为准复核。",
+                    "",
+                    "### Low Confidence / Need Review",
+                    f"- {page_low_confidence}",
+                    "",
+                ]
+            )
         (transcripts_dir / transcript_name).write_text("\n".join(lines), encoding="utf-8")
 
         report_rows.append(
@@ -370,7 +413,7 @@ def convert_source(
                 engine,
                 conversion_method,
                 "不适用",
-                "1",
+                f"1-{len(pages)}" if len(pages) > 1 else "1",
                 "按文本保留",
                 "不适用",
                 "不适用",
@@ -607,6 +650,7 @@ def _convert_source_with_markitdown(
     assets_root = converted_dir / "assets"
     transcripts_dir.mkdir(parents=True, exist_ok=True)
     assets_root.mkdir(parents=True, exist_ok=True)
+    _clear_generated_markdown_files(transcripts_dir)
 
     report_rows: list[list[str]] = []
     for source_file in supported_sources:

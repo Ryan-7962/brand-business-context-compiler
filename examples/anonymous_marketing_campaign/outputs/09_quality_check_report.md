@@ -2,9 +2,9 @@
 
 ## 自动检查
 
-- Source facts：27 条。
-- Source pages：7 页/段。
-- 待复核事项：2 项。
+- Source facts：14 条。
+- Source pages：6 页/段。
+- 待复核事项：1 项。
 - 大纲分类：4 类。
 
 ## 结论

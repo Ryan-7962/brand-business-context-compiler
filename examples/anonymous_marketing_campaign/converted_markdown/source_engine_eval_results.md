@@ -12,8 +12,7 @@
 
 | Source Anchor | 原始文件 | 推荐对比引擎 | pymupdf4llm 观察 | MarkItDown 观察 | MinerU 观察 | 结论 | 是否调整默认链路 |
 |---|---|---|---|---|---|---|---|
-| S001#page=3 | city_refresh_campaign.md | MarkItDown / MinerU / pymupdf4llm baseline | 待填写 | 待填写 | 待填写 | 待判断 | 否，待证据 |
-| S001#page=6 | city_refresh_campaign.md | MarkItDown / MinerU / pymupdf4llm baseline | 待填写 | 待填写 | 待填写 | 待判断 | 否，待证据 |
+| 待补充 | 待补充 | pymupdf4llm baseline | 待填写 | 待填写 | 待填写 | 待判断 | 否，待证据 |
 
 ## 接入判断表
 

@@ -19,6 +19,8 @@ def build_source_facts(project_dir: Path) -> None:
 
     facts_dir = project_dir / "converted_markdown" / "source_facts"
     facts_dir.mkdir(parents=True, exist_ok=True)
+    for path in facts_dir.glob("*.md"):
+        path.unlink()
     for transcript in transcripts:
         facts_path = facts_dir / f"{transcript.stem}_source_facts.md"
         facts_path.write_text(_render_source_facts(transcript), encoding="utf-8")

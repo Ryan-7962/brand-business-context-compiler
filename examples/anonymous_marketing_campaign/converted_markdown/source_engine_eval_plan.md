@@ -12,8 +12,7 @@
 
 | Source Anchor | 原始文件 | 低置信度说明 | 建议动作 | 推荐对比引擎 |
 |---|---|---|---|---|
-| S001#page=3 | city_refresh_campaign.md | 目标人群无定量调研依据。 | 人工复核 | MarkItDown / MinerU / pymupdf4llm baseline |
-| S001#page=6 | city_refresh_campaign.md | 预算、人员分工、渠道合作名单缺失。 | 人工复核 | MarkItDown / MinerU / pymupdf4llm baseline |
+| 待补充 | 待补充 | 当前质量报告没有明显候选页 | 继续默认轻量路径 | pymupdf4llm baseline |
 
 ## 对比记录模板
 

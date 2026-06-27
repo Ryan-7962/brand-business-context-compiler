@@ -232,6 +232,53 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Markdown 源稿转写", report_text)
             self.assertIn("识别质量摘要", report_text)
 
+    def test_convert_source_splits_markdown_slide_headings_into_page_anchors(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            source_dir = project_dir / "source" / "campaign_plan"
+            source_dir.mkdir(parents=True)
+            (source_dir / "slides.md").write_text(
+                "# 匿名活动方案\n\n"
+                "> 本文件为虚构源材料。\n\n"
+                "## Slide 1｜项目背景\n\n"
+                "建立夏季品牌联想。\n\n"
+                "## Slide 2｜触点规划\n\n"
+                "- 线下体验。\n"
+                "- 社媒内容。\n",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                convert_source(project_dir, engine="pymupdf4llm")
+
+            transcript = project_dir / "converted_markdown" / "source_transcripts" / "S001_campaign_plan.md"
+            report = project_dir / "converted_markdown" / "conversion_report.md"
+            transcript_text = transcript.read_text(encoding="utf-8")
+            report_text = report.read_text(encoding="utf-8")
+            self.assertIn("Source Anchor：S001#page=1", transcript_text)
+            self.assertIn("Source Section：Slide 1｜项目背景", transcript_text)
+            self.assertIn("Source Anchor：S001#page=2", transcript_text)
+            self.assertIn("Source Section：Slide 2｜触点规划", transcript_text)
+            self.assertIn("本文件为虚构源材料", transcript_text)
+            self.assertIn("| S001 | slides.md |", report_text)
+            self.assertIn(" | 1-2 | ", report_text)
+
+    def test_convert_source_removes_stale_transcripts_before_rewriting(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            source_dir = project_dir / "source" / "campaign"
+            transcripts_dir = project_dir / "converted_markdown" / "source_transcripts"
+            source_dir.mkdir(parents=True)
+            transcripts_dir.mkdir(parents=True)
+            (source_dir / "brief.md").write_text("# Brief\n\n活动重点。", encoding="utf-8")
+            (transcripts_dir / "S999_old_source.md").write_text("stale", encoding="utf-8")
+
+            with redirect_stdout(StringIO()):
+                convert_source(project_dir, engine="pymupdf4llm")
+
+            self.assertFalse((transcripts_dir / "S999_old_source.md").exists())
+            self.assertTrue((transcripts_dir / "S001_campaign.md").exists())
+
     def test_convert_source_accepts_plain_text_source_documents(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir)
@@ -254,6 +301,29 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("终端物料复盘", transcript_text)
             self.assertIn("Plain Text 源稿转写", report_text)
             self.assertIn("识别质量摘要", report_text)
+
+    def test_build_source_facts_removes_stale_fact_files_before_rewriting(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            transcripts_dir = project_dir / "converted_markdown" / "source_transcripts"
+            facts_dir = project_dir / "converted_markdown" / "source_facts"
+            transcripts_dir.mkdir(parents=True)
+            facts_dir.mkdir(parents=True)
+            (facts_dir / "S999_old_source_facts.md").write_text("stale", encoding="utf-8")
+            (transcripts_dir / "S001_demo.md").write_text(
+                "# Source Transcript｜demo.md\n\n"
+                "## Source Metadata\n- Source ID：S001\n\n"
+                "## Page 1\n- Source Anchor：S001#page=1\n\n"
+                "### Text\n活动重点。\n\n"
+                "### Low Confidence / Need Review\n- 无明显低置信度\n",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_source_facts(project_dir)
+
+            self.assertFalse((facts_dir / "S999_old_source_facts.md").exists())
+            self.assertTrue((facts_dir / "S001_demo_source_facts.md").exists())
 
     def test_convert_source_accepts_docx_source_documents(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
