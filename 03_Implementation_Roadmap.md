@@ -20,6 +20,9 @@
 - `converted_markdown/source_transcripts/`
 - `converted_markdown/assets/`
 - `converted_markdown/conversion_report.md`
+- `converted_markdown/source_engine_readiness_report.md`
+- `converted_markdown/source_engine_eval_plan.md`
+- `converted_markdown/source_engine_eval_results.md`
 - `docs/source_converter_strategy.md`
 
 成功标准：
@@ -27,6 +30,28 @@
 - 保留页码 / slide 编号。
 - 保留页面截图和低置信度说明。
 - 不在转写层提前做营销总结。
+- 使用同一批低置信度页面评估 pymupdf4llm baseline、Microsoft MarkItDown、MinerU，不凭工具名直接替换默认链路。
+
+## Phase 1.5. Source Engine Evaluation
+
+目标：建立资料转写引擎的本地评估框架，判断 MarkItDown / MinerU 是否值得接入，而不是把开源工具当成项目本体。
+
+交付：
+
+- `brand-skill check-source-engines <project_dir>`
+- `brand-skill plan-source-engine-eval <project_dir> --max-pages 5`
+- `brand-skill scaffold-source-engine-eval-results <project_dir>`
+- `converted_markdown/source_engine_readiness_report.md`
+- `converted_markdown/source_engine_eval_plan.md`
+- `converted_markdown/source_engine_eval_results.md`
+
+成功标准：
+
+- 能说明本机是否检测到 MarkItDown / MinerU CLI。
+- 能从 `source_quality_report.md` 选出最多 5 个高价值小样。
+- 能生成小样结果记录模板，明确候选引擎尚未凭空替换默认链路。
+- 对比维度覆盖文字覆盖率、页码 / slide 锚点、表格结构、图片 / 图表 / 小字、阅读顺序、Markdown 可读性、部署复杂度、隐私和外部服务风险。
+- 结论只能指导后续 adapter 接入，不得被写成品牌确认或公开 demo 内容。
 
 ## Phase 2. Marketing Semantic Base
 

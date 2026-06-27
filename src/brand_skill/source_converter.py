@@ -7,11 +7,25 @@ import zipfile
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Callable, Any
 from xml.etree import ElementTree
 
 
 SUPPORTED_LIGHTWEIGHT_ENGINE = "pymupdf4llm"
-SUPPORTED_SOURCE_SUFFIXES = {".pdf", ".md", ".txt", ".docx", ".pptx"}
+SUPPORTED_MARKITDOWN_ENGINE = "markitdown"
+SUPPORTED_ENGINE_NAMES = {SUPPORTED_LIGHTWEIGHT_ENGINE, SUPPORTED_MARKITDOWN_ENGINE, "mineru"}
+SUPPORTED_LIGHTWEIGHT_SUFFIXES = {".pdf", ".md", ".txt", ".docx", ".pptx"}
+SUPPORTED_MARKITDOWN_SUFFIXES = SUPPORTED_LIGHTWEIGHT_SUFFIXES | {
+    ".csv",
+    ".htm",
+    ".html",
+    ".json",
+    ".xlsx",
+    ".xls",
+    ".xml",
+    ".zip",
+}
+SUPPORTED_SOURCE_SUFFIXES = SUPPORTED_LIGHTWEIGHT_SUFFIXES
 IGNORED_SOURCE_FILENAMES = {"README.md", ".DS_Store", "source_manifest.json"}
 
 
@@ -103,14 +117,34 @@ def _external_source_summary(metadata: dict[str, str]) -> str:
     return " / ".join(part for part in parts if part) or "本地 source/"
 
 
-def _iter_unsupported_sources(project_dir: Path) -> list[Path]:
+def _supported_suffixes_for_engine(engine: str) -> set[str]:
+    if engine == SUPPORTED_MARKITDOWN_ENGINE:
+        return SUPPORTED_MARKITDOWN_SUFFIXES
+    return SUPPORTED_LIGHTWEIGHT_SUFFIXES
+
+
+def _iter_unsupported_sources(project_dir: Path, supported_suffixes: set[str]) -> list[Path]:
     source_dir = project_dir / "source"
     if not source_dir.exists():
         return []
     return sorted(
         path
         for path in source_dir.rglob("*")
-        if path.is_file() and path.name not in IGNORED_SOURCE_FILENAMES and path.suffix.lower() not in SUPPORTED_SOURCE_SUFFIXES
+        if path.is_file() and path.name not in IGNORED_SOURCE_FILENAMES and path.suffix.lower() not in supported_suffixes
+    )
+
+
+def _iter_supported_sources(project_dir: Path, supported_suffixes: set[str]) -> list[Path]:
+    source_dir = project_dir / "source"
+    if not source_dir.exists():
+        return []
+    return sorted(
+        (
+            path
+            for path in source_dir.rglob("*")
+            if path.is_file() and path.name not in IGNORED_SOURCE_FILENAMES and path.suffix.lower() in supported_suffixes
+        ),
+        key=lambda path: _source_sort_key(project_dir, path),
     )
 
 
@@ -220,7 +254,12 @@ def _text_source_kind(path: Path) -> tuple[str, str, str]:
     raise ValueError(f"Unsupported text source: {path}")
 
 
-def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE) -> None:
+def convert_source(
+    project_dir: Path,
+    engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE,
+    *,
+    markitdown_factory: Callable[[], Any] | None = None,
+) -> None:
     """Convert source documents into Markdown transcripts.
 
     The first implementation intentionally keeps MinerU as an optional adapter
@@ -233,11 +272,12 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
             "mineru -p <input_path> -o <output_path> -b pipeline"
         )
         raise SystemExit(1)
-    if engine != SUPPORTED_LIGHTWEIGHT_ENGINE:
+    if engine not in SUPPORTED_ENGINE_NAMES:
         print(f"Unsupported source conversion engine: {engine}")
         raise SystemExit(1)
 
-    unsupported_sources = _iter_unsupported_sources(project_dir)
+    supported_suffixes = _supported_suffixes_for_engine(engine)
+    unsupported_sources = _iter_unsupported_sources(project_dir, supported_suffixes)
     if unsupported_sources:
         print("Unsupported source file(s) found under source/:")
         source_dir = project_dir / "source"
@@ -248,6 +288,10 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
                 label = source_file
             print(f"- {label}")
         raise SystemExit(1)
+
+    if engine == SUPPORTED_MARKITDOWN_ENGINE:
+        _convert_source_with_markitdown(project_dir, markitdown_factory=markitdown_factory)
+        return
 
     pdfs = _iter_source_pdfs(project_dir)
     text_sources = [*_iter_source_text_documents(project_dir), *_iter_source_docx(project_dir)]
@@ -543,6 +587,177 @@ def convert_source(project_dir: Path, engine: str = SUPPORTED_LIGHTWEIGHT_ENGINE
     report_rows.sort(key=lambda row: row[0])
     _write_conversion_report(converted_dir / "conversion_report.md", report_rows)
     print(f"Converted {len(supported_sources)} source file(s) into {converted_dir}")
+
+
+def _convert_source_with_markitdown(
+    project_dir: Path,
+    *,
+    markitdown_factory: Callable[[], Any] | None = None,
+) -> None:
+    converter = _load_markitdown_converter(markitdown_factory)
+    supported_sources = _iter_supported_sources(project_dir, SUPPORTED_MARKITDOWN_SUFFIXES)
+    if not supported_sources:
+        print("No supported source files found under source/.")
+        raise SystemExit(1)
+
+    source_ids = {source: f"S{index:03d}" for index, source in enumerate(supported_sources, start=1)}
+    source_manifest = _load_source_manifest(project_dir)
+    converted_dir = project_dir / "converted_markdown"
+    transcripts_dir = converted_dir / "source_transcripts"
+    assets_root = converted_dir / "assets"
+    transcripts_dir.mkdir(parents=True, exist_ok=True)
+    assets_root.mkdir(parents=True, exist_ok=True)
+
+    report_rows: list[list[str]] = []
+    for source_file in supported_sources:
+        source_id = source_ids[source_file]
+        safe_name = _source_label(project_dir, source_file)
+        transcript_name = f"{source_id}_{safe_name}.md"
+        asset_dir_name = f"{source_id}_{safe_name}"
+        asset_dir = assets_root / asset_dir_name
+        created_at, modified_at = _file_timestamps(source_file)
+        external_metadata = _external_source_metadata(project_dir, source_manifest, source_file)
+        result = converter.convert(str(source_file))
+        text = _markitdown_text(result).strip()
+        file_type = _markitdown_file_type(source_file)
+        page_count, first_screenshot = _markitdown_page_evidence(source_file, asset_dir, asset_dir_name)
+        low_confidence_text = (
+            "MarkItDown 输出未保留稳定页码/slide 边界，图片、图表、表格和小字需抽样复核"
+            if text
+            else "MarkItDown 未抽取到可用文本，需回到原文件或 OCR 路径复核"
+        )
+        page_range = f"1-{page_count}" if page_count > 1 else "1"
+        screenshot_label = first_screenshot or f"不适用（{file_type} source）"
+
+        lines = [
+            f"# Source Transcript｜{source_file.name}",
+            "",
+            "## Source Metadata",
+            f"- Source ID：{source_id}",
+            f"- 原始文件：{source_file.name}",
+            *_external_source_lines(external_metadata),
+            f"- 文件类型：{file_type}",
+            f"- 文件创建时间：{created_at}",
+            f"- 文件修改时间：{modified_at}",
+            "- 版本判断说明：若多份资料内容冲突，优先参考修改时间更新的文件；但关键品牌口径仍需进入冲突队列或人工复核，不自动覆盖。",
+            f"- 页数：{page_count}",
+            f"- 转写引擎：{SUPPORTED_MARKITDOWN_ENGINE}",
+            "- 转写方式：Microsoft MarkItDown 本地 Markdown 转换",
+            f"- 低置信度说明：{low_confidence_text}",
+            "",
+            "## Page 1",
+            f"- Source Anchor：{source_id}#page=1",
+            f"- Page Screenshot：{screenshot_label}",
+            f"- Extracted text chars：{len(text)}",
+            "- Embedded images detected：待复核",
+            "- Vector drawings detected：待复核",
+            "",
+            "### Text",
+            text if text else "> 低置信度，未抽取到可用文本。",
+            "",
+            "### Images / Charts",
+            "MarkItDown 主要输出 Markdown 文本；图片、图表、长图和视觉版式需结合原文件或高保真引擎复核。",
+            "",
+            "### Tables",
+            "MarkItDown 可能保留部分表格文本，但复杂表格结构、合并单元格和跨页表格仍需人工复核。",
+            "",
+            "### Notes / Footnotes / Small Print",
+            "页脚、备注、角标、小字和隐藏备注需抽样复核，不能直接视为 100% 保留。",
+            "",
+            "### Low Confidence / Need Review",
+            f"- {low_confidence_text}",
+            "",
+        ]
+        (transcripts_dir / transcript_name).write_text("\n".join(lines), encoding="utf-8")
+
+        report_rows.append(
+            [
+                source_id,
+                source_file.name,
+                created_at,
+                modified_at,
+                f"converted_markdown/source_transcripts/{transcript_name}",
+                SUPPORTED_MARKITDOWN_ENGINE,
+                "Microsoft MarkItDown 本地 Markdown 转换",
+                "否",
+                page_range,
+                "待复核",
+                "部分/待复核",
+                "待复核",
+                low_confidence_text,
+                "抽样检查页码/slide 边界、图片、表格、小字和关键品牌口径",
+                _external_source_summary(external_metadata),
+            ]
+        )
+
+    report_rows.sort(key=lambda row: row[0])
+    _write_conversion_report(converted_dir / "conversion_report.md", report_rows)
+    print(f"Converted {len(supported_sources)} source file(s) into {converted_dir}")
+
+
+def _load_markitdown_converter(markitdown_factory: Callable[[], Any] | None) -> Any:
+    if markitdown_factory is not None:
+        return markitdown_factory()
+    try:
+        from markitdown import MarkItDown
+    except ImportError as exc:
+        print(
+            "MarkItDown is an optional source converter. "
+            "Install it in the project environment with: "
+            ".venv/bin/python -m pip install 'markitdown[all]'"
+        )
+        raise SystemExit(1) from exc
+    return MarkItDown(enable_plugins=False)
+
+
+def _markitdown_text(result: Any) -> str:
+    text_content = getattr(result, "text_content", None)
+    if text_content:
+        return str(text_content)
+    markdown = getattr(result, "markdown", None)
+    if markdown:
+        return str(markdown)
+    return str(result)
+
+
+def _markitdown_file_type(path: Path) -> str:
+    labels = {
+        ".csv": "CSV",
+        ".docx": "Word Document",
+        ".htm": "HTML",
+        ".html": "HTML",
+        ".json": "JSON",
+        ".md": "Markdown",
+        ".pdf": "PDF",
+        ".pptx": "PowerPoint",
+        ".txt": "Plain Text",
+        ".xls": "Excel",
+        ".xlsx": "Excel",
+        ".xml": "XML",
+        ".zip": "ZIP Archive",
+    }
+    return labels.get(path.suffix.lower(), path.suffix.lower().lstrip(".").upper() or "Unknown")
+
+
+def _markitdown_page_evidence(source_file: Path, asset_dir: Path, asset_dir_name: str) -> tuple[int, str | None]:
+    if source_file.suffix.lower() != ".pdf":
+        return 1, None
+    try:
+        import fitz
+    except ImportError:
+        return 1, None
+
+    asset_dir.mkdir(parents=True, exist_ok=True)
+    doc = fitz.open(source_file)
+    try:
+        page_count = max(1, doc.page_count)
+        page = doc[0]
+        pix = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5), alpha=False)
+        screenshot = asset_dir / "page_01.png"
+        pix.save(screenshot)
+    finally:
+        doc.close()
+    return page_count, f"../assets/{asset_dir_name}/page_01.png"
 
 
 def _write_conversion_report(path: Path, rows: list[list[str]]) -> None:

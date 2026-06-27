@@ -38,6 +38,8 @@ Exception Review Queue 异常复核
 
 第一阶段的核心成品不是下游 brief，也不是产品知识卡，而是一组可供 AI 稳定理解、检索和复用的 **Brand Context Assets**。
 
+更新后的项目目标见 `docs/project_goal.md`。本项目的长期方向是本地优先的 Brand / Business Context Compiler：把临时读文件升级为持续积累、可追溯、可复用的上下文系统。
+
 ## 2.1 Skill 组架构
 
 | Skill | 作用 | 第一阶段是否默认启用 |
@@ -104,7 +106,7 @@ Context Library Update Plan
 第一阶段具体目标：
 
 1. 定义标准输入目录结构，覆盖常见 Marketing 文件类型。
-2. 定义 Source-to-Markdown 中间层，尽量保留原资料信息。
+2. 定义 Source-to-Markdown 中间层，尽量保留原资料信息，并用 pymupdf4llm / MarkItDown / MinerU 等候选引擎做小样评估。
 3. 定义 Document Profile，识别文件类型、目的、读者和业务阶段。
 4. 定义 Marketing Semantic Transcript，不只做摘要，而是更完整的 AI-readable 转述。
 5. 定义通用营销结构：事实、claim、策略、执行、指标、复盘、风险、待确认。
@@ -182,6 +184,7 @@ outputs/<project_slug>/optional_product_module/
 
 - 任意一组品牌 Marketing PDF/PPT 能先转成尽量保真的 Markdown 中间稿。
 - 中间稿保留页码/slide 编号、表格、图片占位、备注、低置信度区域和来源锚点。
+- 能生成 source engine readiness / evaluation plan / evaluation results，用同一批低置信度页面评估 pymupdf4llm、Microsoft MarkItDown、MinerU 等候选引擎，而不是凭工具名直接替换默认链路。
 - AI 能识别资料类型，而不是把所有资料都套成产品资料。
 - AI 能生成完整的 Marketing Semantic Transcript，保留策略逻辑和执行逻辑。
 - 关键事实、数据、claim、策略、执行动作、风险和待确认项能被拆清楚。
@@ -221,6 +224,8 @@ outputs/<project_slug>/optional_product_module/
 ### D2. 先保真转写，再语义编译
 
 Source-to-Markdown 资料转写层必须尽量保留原始资料的信息密度和来源锚点。不要在转写层提前做营销总结或删减。
+
+转写层采用 adapter / evaluation-first 思路。`pymupdf4llm` 是当前 baseline；Microsoft MarkItDown 是多格式 Markdown 转换优先候选；MinerU 是复杂版式、OCR、表格和阅读顺序的高保真候选；DuanYan007/markitdown4j 作为 Java / PaddleOCR / 本地批量部署的后续候选。任何候选引擎都必须先通过小样证据证明能降低漏读和人工复核成本，再进入默认或可选实现。
 
 ### D3. 不强行产品化
 

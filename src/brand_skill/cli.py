@@ -19,6 +19,7 @@ from .phase1_runner import run_phase1_workflow
 from .review_pack import build_review_pack
 from .source_facts import build_source_facts
 from .source_converter import convert_source
+from .source_engine_eval import check_source_engines, plan_source_engine_evaluation, scaffold_source_engine_evaluation_results
 from .source_quality import build_source_quality_report
 from .source_versions import build_source_version_report
 from .value_benchmark import build_value_benchmark
@@ -53,7 +54,7 @@ def main() -> None:
 
     p_convert = sub.add_parser("convert-source")
     p_convert.add_argument("project_dir")
-    p_convert.add_argument("--engine", default="pymupdf4llm", choices=["pymupdf4llm", "mineru"])
+    p_convert.add_argument("--engine", default="pymupdf4llm", choices=["pymupdf4llm", "markitdown", "mineru"])
 
     p_source_facts = sub.add_parser("build-source-facts")
     p_source_facts.add_argument("project_dir")
@@ -63,6 +64,16 @@ def main() -> None:
 
     p_source_versions = sub.add_parser("build-source-version-report")
     p_source_versions.add_argument("project_dir")
+
+    p_check_source_engines = sub.add_parser("check-source-engines")
+    p_check_source_engines.add_argument("project_dir")
+
+    p_plan_source_engines = sub.add_parser("plan-source-engine-eval")
+    p_plan_source_engines.add_argument("project_dir")
+    p_plan_source_engines.add_argument("--max-pages", type=int, default=5)
+
+    p_scaffold_source_engine_results = sub.add_parser("scaffold-source-engine-eval-results")
+    p_scaffold_source_engine_results.add_argument("project_dir")
 
     p_check_mineru = sub.add_parser("check-mineru")
     p_check_mineru.add_argument("project_dir")
@@ -109,7 +120,7 @@ def main() -> None:
     p_run_phase1 = sub.add_parser("run-phase1")
     p_run_phase1.add_argument("project_dir")
     p_run_phase1.add_argument("--library-dir")
-    p_run_phase1.add_argument("--engine", default="pymupdf4llm", choices=["pymupdf4llm", "mineru"])
+    p_run_phase1.add_argument("--engine", default="pymupdf4llm", choices=["pymupdf4llm", "markitdown", "mineru"])
     p_run_phase1.add_argument("--keep-existing", action="store_true")
 
     args = parser.parse_args()
@@ -137,6 +148,12 @@ def main() -> None:
         build_source_quality_report(project_dir)
     elif args.command == "build-source-version-report":
         build_source_version_report(project_dir)
+    elif args.command == "check-source-engines":
+        check_source_engines(project_dir)
+    elif args.command == "plan-source-engine-eval":
+        plan_source_engine_evaluation(project_dir, max_pages=args.max_pages)
+    elif args.command == "scaffold-source-engine-eval-results":
+        scaffold_source_engine_evaluation_results(project_dir)
     elif args.command == "check-mineru":
         check_mineru_readiness(project_dir)
     elif args.command == "plan-mineru-eval":

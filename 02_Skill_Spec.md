@@ -114,7 +114,13 @@ CLI：
 
 ```bash
 brand-skill convert-source <project_dir> --engine pymupdf4llm
+brand-skill convert-source <project_dir> --engine markitdown
+brand-skill check-source-engines <project_dir>
+brand-skill plan-source-engine-eval <project_dir> --max-pages 5
+brand-skill scaffold-source-engine-eval-results <project_dir>
 ```
+
+`pymupdf4llm` 是当前 baseline。Microsoft MarkItDown 已作为可选本地 adapter 接入，用于评估多格式 Markdown 转换；本地未安装时不影响默认链路。MinerU 仍作为复杂版式、OCR、表格和阅读顺序的高保真候选。候选引擎必须先通过本地小样评估证明能降低漏读和人工复核成本，不能因为 stars、issue 数或工具名直接替换默认链路。
 
 ### Step 3. Document Profile
 

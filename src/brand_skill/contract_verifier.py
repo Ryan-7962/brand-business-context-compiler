@@ -71,6 +71,7 @@ def _write_verification_report(
         "",
         "- Required structured outputs",
         "- Source conversion report, quality/version summaries, and source transcripts",
+        "- Source engine readiness, evaluation plan, and evaluation results",
         "- Exception review page",
         "- Context library entries and review queues",
         "- Brand Context Map report",
@@ -190,6 +191,9 @@ def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
     report = converted_dir / "conversion_report.md"
     quality_report = converted_dir / "source_quality_report.md"
     version_report = converted_dir / "source_version_report.md"
+    engine_readiness_report = converted_dir / "source_engine_readiness_report.md"
+    engine_eval_plan = converted_dir / "source_engine_eval_plan.md"
+    engine_eval_results = converted_dir / "source_engine_eval_results.md"
     transcripts_dir = converted_dir / "source_transcripts"
     if not report.exists():
         issues.append("Missing source conversion report: converted_markdown/conversion_report.md")
@@ -227,6 +231,30 @@ def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
         for marker in ["版本线索总览", "疑似多版本组数", "不自动覆盖"]:
             if marker not in version_text:
                 issues.append(f"Source version report missing marker: {marker}")
+
+    if not engine_readiness_report.exists():
+        issues.append("Missing source engine readiness report: converted_markdown/source_engine_readiness_report.md")
+    else:
+        readiness_text = engine_readiness_report.read_text(encoding="utf-8")
+        for marker in ["Source Engine Readiness Report", "pymupdf4llm", "Microsoft MarkItDown", "MinerU", "Source-to-Markdown"]:
+            if marker not in readiness_text:
+                issues.append(f"Source engine readiness report missing marker: {marker}")
+
+    if not engine_eval_plan.exists():
+        issues.append("Missing source engine evaluation plan: converted_markdown/source_engine_eval_plan.md")
+    else:
+        eval_text = engine_eval_plan.read_text(encoding="utf-8")
+        for marker in ["Source Engine Evaluation Plan", "pymupdf4llm", "MarkItDown", "MinerU", "文字覆盖率", "隐私"]:
+            if marker not in eval_text:
+                issues.append(f"Source engine evaluation plan missing marker: {marker}")
+
+    if not engine_eval_results.exists():
+        issues.append("Missing source engine evaluation results: converted_markdown/source_engine_eval_results.md")
+    else:
+        results_text = engine_eval_results.read_text(encoding="utf-8")
+        for marker in ["Source Engine Evaluation Results", "pymupdf4llm", "MarkItDown", "MinerU", "是否调整默认链路", "隐私"]:
+            if marker not in results_text:
+                issues.append(f"Source engine evaluation results missing marker: {marker}")
 
 
 def _check_review_pack(project_dir: Path, issues: list[str]) -> None:

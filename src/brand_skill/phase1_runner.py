@@ -10,6 +10,7 @@ from .library_writer import apply_context_library_update
 from .output_compiler import compile_structured_outputs
 from .review_pack import build_review_pack
 from .source_converter import convert_source
+from .source_engine_eval import check_source_engines, plan_source_engine_evaluation, scaffold_source_engine_evaluation_results
 from .source_facts import build_source_facts
 from .source_quality import build_source_quality_report
 from .source_versions import build_source_version_report
@@ -28,6 +29,9 @@ def run_phase1_workflow(
     convert_source(project_dir, engine=engine)
     build_source_facts(project_dir)
     build_source_quality_report(project_dir)
+    check_source_engines(project_dir)
+    plan_source_engine_evaluation(project_dir)
+    scaffold_source_engine_evaluation_results(project_dir)
     build_source_version_report(project_dir)
     compile_structured_outputs(project_dir, keep_existing=keep_existing)
     build_review_pack(project_dir)

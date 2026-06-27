@@ -20,6 +20,7 @@ from brand_skill.mineru_adapter import check_mineru_readiness, plan_mineru_evalu
 from brand_skill.value_benchmark import build_value_benchmark
 from brand_skill.source_quality import build_source_quality_report
 from brand_skill.source_facts import build_source_facts
+from brand_skill.source_engine_eval import check_source_engines, plan_source_engine_evaluation, scaffold_source_engine_evaluation_results
 from brand_skill.source_versions import build_source_version_report
 from brand_skill.source_converter import convert_source
 from brand_skill.validators import (
@@ -45,6 +46,40 @@ class Phase1WorkflowTests(unittest.TestCase):
         }
         for filename, text in files.items():
             (outputs / filename).write_text(text, encoding="utf-8")
+
+    def _write_source_engine_reports(self, project_dir: Path) -> None:
+        converted = project_dir / "converted_markdown"
+        converted.mkdir(parents=True, exist_ok=True)
+        (converted / "source_engine_readiness_report.md").write_text(
+            "# Source Engine Readiness Report\n\n"
+            "- Microsoft MarkItDown / MinerU 都只是 Source-to-Markdown 候选引擎。\n\n"
+            "| Engine | 状态 |\n"
+            "|---|---|\n"
+            "| pymupdf4llm | 内置默认 |\n"
+            "| markitdown | Microsoft MarkItDown 候选 |\n"
+            "| mineru | MinerU 候选 |\n",
+            encoding="utf-8",
+        )
+        (converted / "source_engine_eval_plan.md").write_text(
+            "# Source Engine Evaluation Plan\n\n"
+            "- Baseline：pymupdf4llm。\n"
+            "- 候选：MarkItDown / MinerU。\n"
+            "- 隐私：真实品牌资料只在私有目录评估。\n\n"
+            "| 维度 | pymupdf4llm baseline | MarkItDown | MinerU |\n"
+            "|---|---|---|---|\n"
+            "| 文字覆盖率 | 待记录 | 待记录 | 待记录 |\n",
+            encoding="utf-8",
+        )
+        (converted / "source_engine_eval_results.md").write_text(
+            "# Source Engine Evaluation Results\n\n"
+            "- Baseline：pymupdf4llm。\n"
+            "- 候选：MarkItDown / MinerU。\n"
+            "- 隐私：真实品牌资料只在私有目录评估。\n\n"
+            "| Source Anchor | 是否调整默认链路 |\n"
+            "|---|---|\n"
+            "| S001#page=1 | 否，待证据 |\n",
+            encoding="utf-8",
+        )
 
     def test_scaffold_output_uses_phase1_marketing_semantic_files(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -334,6 +369,73 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("campaign/long_image.png", output)
             self.assertFalse((project_dir / "converted_markdown" / "conversion_report.md").exists())
 
+    def test_convert_source_markitdown_adapter_accepts_html_source(self) -> None:
+        class FakeMarkItDownResult:
+            text_content = "# 活动复盘\n\n核心内容：渠道打法和投放总结。"
+
+        class FakeMarkItDown:
+            def __init__(self) -> None:
+                self.paths = []
+
+            def convert(self, path: str):
+                self.paths.append(path)
+                return FakeMarkItDownResult()
+
+        fake_converter = FakeMarkItDown()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            source_dir = project_dir / "source" / "campaign"
+            source_dir.mkdir(parents=True)
+            (source_dir / "recap.html").write_text(
+                "<html><body><h1>活动复盘</h1><p>核心内容：渠道打法和投放总结。</p></body></html>",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                convert_source(project_dir, engine="markitdown", markitdown_factory=lambda: fake_converter)
+
+            transcript = project_dir / "converted_markdown" / "source_transcripts" / "S001_campaign.md"
+            report = project_dir / "converted_markdown" / "conversion_report.md"
+            transcript_text = transcript.read_text(encoding="utf-8")
+            report_text = report.read_text(encoding="utf-8")
+            self.assertEqual(fake_converter.paths, [str(source_dir / "recap.html")])
+            self.assertIn("文件类型：HTML", transcript_text)
+            self.assertIn("转写引擎：markitdown", transcript_text)
+            self.assertIn("Source Anchor：S001#page=1", transcript_text)
+            self.assertIn("渠道打法和投放总结", transcript_text)
+            self.assertIn("MarkItDown 输出未保留稳定页码/slide 边界", transcript_text)
+            self.assertIn("markitdown", report_text)
+            self.assertIn("Microsoft MarkItDown 本地 Markdown 转换", report_text)
+
+    def test_convert_source_markitdown_fails_with_install_hint_when_missing(self) -> None:
+        import builtins
+
+        real_import = builtins.__import__
+
+        def fake_import(name, *args, **kwargs):
+            if name == "markitdown":
+                raise ImportError("No module named 'markitdown'")
+            return real_import(name, *args, **kwargs)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            source_dir = project_dir / "source" / "campaign"
+            source_dir.mkdir(parents=True)
+            (source_dir / "brief.md").write_text("# Brief\n", encoding="utf-8")
+
+            builtins.__import__ = fake_import
+            try:
+                with redirect_stdout(StringIO()) as stdout:
+                    with self.assertRaises(SystemExit):
+                        convert_source(project_dir, engine="markitdown")
+            finally:
+                builtins.__import__ = real_import
+
+            output = stdout.getvalue()
+            self.assertIn("MarkItDown is an optional source converter", output)
+            self.assertIn("pip install 'markitdown[all]'", output)
+
     def test_convert_source_marks_mineru_as_optional(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             with redirect_stdout(StringIO()) as stdout:
@@ -401,6 +503,159 @@ class Phase1WorkflowTests(unittest.TestCase):
             report_path = project_dir / "converted_markdown" / "mineru_readiness_report.md"
             self.assertTrue(report_path.exists())
             self.assertIn("MinerU Readiness Report", report_path.read_text(encoding="utf-8"))
+
+    def test_check_source_engines_records_markitdown_and_mineru_candidates(self) -> None:
+        class FakeResult:
+            returncode = 0
+            stdout = "tool version\n"
+            stderr = ""
+
+        calls = []
+
+        def fake_which(name):
+            if name == "markitdown":
+                return "/usr/local/bin/markitdown"
+            if name == "mineru":
+                return None
+            return None
+
+        def fake_runner(command, **_kwargs):
+            calls.append(command)
+            return FakeResult()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+
+            with redirect_stdout(StringIO()):
+                report_path = check_source_engines(project_dir, which=fake_which, runner=fake_runner)
+
+            report_text = report_path.read_text(encoding="utf-8")
+            self.assertEqual(calls, [["/usr/local/bin/markitdown", "--version"]])
+            self.assertIn("# Source Engine Readiness Report", report_text)
+            self.assertIn("pymupdf4llm", report_text)
+            self.assertIn("markitdown", report_text)
+            self.assertIn("mineru", report_text)
+            self.assertIn("Microsoft MarkItDown", report_text)
+            self.assertIn("未检测到 CLI", report_text)
+            self.assertIn("不上传真实品牌资料", report_text)
+
+    def test_plan_source_engine_evaluation_creates_multiengine_plan(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir(parents=True)
+            (converted / "source_quality_report.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Quality Report",
+                        "",
+                        "| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 低置信度说明 | 建议动作 |",
+                        "|---|---|---|---|---|---|---|",
+                        "| S001#page=1 | deck.pptx | 20 | 待复核 | 待复核 | PPTX 轻量路径未保留版式 | MinerU / 原 PPT 人工复核 |",
+                        "| S002#page=3 | report.pdf | 80 | 0 | 0 | 表格结构需复核 | MinerU / 人工复核 |",
+                        "| S003#page=1 | clean.pdf | 120 | 0 | 0 | 无明显低置信度 | 继续后续编译 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                report_path = plan_source_engine_evaluation(project_dir, max_pages=2)
+
+            report_text = report_path.read_text(encoding="utf-8")
+            self.assertIn("# Source Engine Evaluation Plan", report_text)
+            self.assertIn("Microsoft MarkItDown", report_text)
+            self.assertIn("MinerU", report_text)
+            self.assertIn("pymupdf4llm baseline", report_text)
+            self.assertIn("| S001#page=1 | deck.pptx", report_text)
+            self.assertIn("MarkItDown / pymupdf4llm baseline", report_text)
+            self.assertIn("| S002#page=3 | report.pdf", report_text)
+            self.assertIn("真实品牌资料只能在 `_private_test_runs/`", report_text)
+
+    def test_cli_plan_source_engine_eval_command_writes_plan(self) -> None:
+        import sys
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir(parents=True)
+            (converted / "source_quality_report.md").write_text(
+                "# Source Quality Report\n\n| Source Anchor | 原始文件 | 低置信度说明 | 建议动作 |\n|---|---|---|---|\n| S001#page=2 | sample.pdf | 可抽取文字较少 | OCR / MinerU / 人工复核 |\n",
+                encoding="utf-8",
+            )
+            argv = sys.argv
+            sys.argv = ["brand-skill", "plan-source-engine-eval", str(project_dir), "--max-pages", "1"]
+            try:
+                with redirect_stdout(StringIO()):
+                    cli_main()
+            finally:
+                sys.argv = argv
+
+            report_path = project_dir / "converted_markdown" / "source_engine_eval_plan.md"
+            self.assertTrue(report_path.exists())
+            self.assertIn("Source Engine Evaluation Plan", report_path.read_text(encoding="utf-8"))
+
+    def test_scaffold_source_engine_evaluation_results_uses_plan_candidates(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir(parents=True)
+            (converted / "source_engine_eval_plan.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Engine Evaluation Plan",
+                        "",
+                        "## 建议小样",
+                        "",
+                        "| Source Anchor | 原始文件 | 低置信度说明 | 建议动作 | 推荐对比引擎 |",
+                        "|---|---|---|---|---|",
+                        "| S001#page=1 | deck.pptx | PPTX 轻量路径未保留版式 | 原 PPT 人工复核 | MarkItDown / pymupdf4llm baseline |",
+                        "| S002#page=3 | report.pdf | 表格结构需复核 | MinerU / 人工复核 | MinerU / MarkItDown / pymupdf4llm baseline |",
+                        "",
+                        "## 对比记录模板",
+                        "",
+                        "| 维度 | pymupdf4llm baseline | MarkItDown | MinerU | 是否改善后续知识编译 |",
+                        "|---|---|---|---|---|",
+                        "| 文字覆盖率 | 待记录 | 待记录 | 待记录 | 待判断 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                report_path = scaffold_source_engine_evaluation_results(project_dir)
+
+            report_text = report_path.read_text(encoding="utf-8")
+            self.assertIn("# Source Engine Evaluation Results", report_text)
+            self.assertIn("真实品牌资料只能在 `_private_test_runs/`", report_text)
+            self.assertIn("| S001#page=1 | deck.pptx | MarkItDown / pymupdf4llm baseline | 待填写 | 待填写 | 待填写 | 待判断 | 否，待证据 |", report_text)
+            self.assertIn("| S002#page=3 | report.pdf | MinerU / MarkItDown / pymupdf4llm baseline | 待填写 | 待填写 | 待填写 | 待判断 | 否，待证据 |", report_text)
+            self.assertNotIn("| 文字覆盖率 | 待记录", report_text)
+            self.assertIn("是否调整默认链路", report_text)
+            self.assertIn("隐私和外部服务风险", report_text)
+
+    def test_cli_scaffold_source_engine_eval_results_command_writes_results(self) -> None:
+        import sys
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir(parents=True)
+            (converted / "source_engine_eval_plan.md").write_text(
+                "# Source Engine Evaluation Plan\n\n| Source Anchor | 原始文件 | 低置信度说明 | 建议动作 | 推荐对比引擎 |\n|---|---|---|---|---|\n| S001#page=1 | sample.html | 多格式输入 | 人工复核 | MarkItDown / pymupdf4llm baseline |\n",
+                encoding="utf-8",
+            )
+            argv = sys.argv
+            sys.argv = ["brand-skill", "scaffold-source-engine-eval-results", str(project_dir)]
+            try:
+                with redirect_stdout(StringIO()):
+                    cli_main()
+            finally:
+                sys.argv = argv
+
+            report_path = converted / "source_engine_eval_results.md"
+            self.assertTrue(report_path.exists())
+            self.assertIn("Source Engine Evaluation Results", report_path.read_text(encoding="utf-8"))
 
     def test_plan_mineru_evaluation_selects_high_value_quality_pages(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -1737,6 +1992,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 "# Source Version Report\n\n## 版本线索总览\n\n- 疑似多版本组数：0\n- 最新修改时间线索：不自动覆盖已有品牌知识。\n",
                 encoding="utf-8",
             )
+            self._write_source_engine_reports(project_dir)
             (transcripts / "S001_demo.md").write_text(
                 "Source Anchor：S001#page=1\nPage Screenshot：../assets/S001/page_01.png\n低置信度\n",
                 encoding="utf-8",
@@ -1801,6 +2057,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 "# Source Version Report\n\n## 版本线索总览\n\n- 疑似多版本组数：0\n- 最新修改时间线索：不自动覆盖已有品牌知识。\n",
                 encoding="utf-8",
             )
+            self._write_source_engine_reports(project_dir)
             (transcripts / "S001_demo.md").write_text(
                 "Source Anchor：S001#page=1\nPage Screenshot：../assets/S001/page_01.png\n低置信度\n",
                 encoding="utf-8",
@@ -1858,6 +2115,50 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Status: failed", report)
             self.assertIn("Missing outputs directory", report)
             self.assertIn("Missing context library", report)
+
+    def test_verify_project_contract_fails_without_source_engine_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            outputs = project_dir / "outputs"
+            converted = project_dir / "converted_markdown"
+            transcripts = converted / "source_transcripts"
+            transcripts.mkdir(parents=True)
+            outputs.mkdir(parents=True)
+            for filename in [
+                "02_document_profile.md",
+                "03_marketing_semantic_transcript.md",
+                "04_key_facts_and_claims.md",
+                "05_strategy_and_execution_map.md",
+                "06_risk_and_review_items.md",
+                "10_context_asset_index.md",
+                "11_context_library_update_plan.md",
+            ]:
+                (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
+            (converted / "conversion_report.md").write_text(
+                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                encoding="utf-8",
+            )
+            (converted / "source_quality_report.md").write_text(
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| 建议动作 |\n|---|\n| 继续后续语义编译 |\n",
+                encoding="utf-8",
+            )
+            (converted / "source_version_report.md").write_text(
+                "# Source Version Report\n\n## 版本线索总览\n\n- 疑似多版本组数：0\n- 最新修改时间线索：不自动覆盖已有品牌知识。\n",
+                encoding="utf-8",
+            )
+            (transcripts / "S001_demo.md").write_text(
+                "Source Anchor：S001#page=1\nPage Screenshot：../assets/S001/page_01.png\n低置信度\n",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()) as stdout:
+                with self.assertRaises(SystemExit):
+                    verify_project_contract(project_dir, library_dir=Path(temp_dir) / "missing_library")
+
+            output = stdout.getvalue()
+            self.assertIn("Missing source engine readiness report", output)
+            self.assertIn("Missing source engine evaluation plan", output)
+            self.assertIn("Missing source engine evaluation results", output)
 
     def test_cli_verify_contract_can_write_report(self) -> None:
         import sys

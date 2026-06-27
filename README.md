@@ -12,6 +12,8 @@
 6. 生成 Context Library Update Plan，说明本次资料如何并入长期品牌知识库。
 7. 生成 Exception Review Queue，只在识别异常时请用户修正。
 
+更新后的项目目标见 [docs/project_goal.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/project_goal.md)。当前定位可简化为：把“临时把 PDF/PPT 发给 AI 读”升级为“持续积累、可追溯、可复用的本地品牌 / 业务上下文系统”。
+
 ## Skill 组结构
 
 | Skill | 第一阶段职责 |
@@ -107,6 +109,9 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 brand-skill convert-source <project_dir> --engine pymupdf4llm
 brand-skill build-source-quality-report <project_dir>
 brand-skill build-source-version-report <project_dir>
+brand-skill check-source-engines <project_dir>
+brand-skill plan-source-engine-eval <project_dir> --max-pages 5
+brand-skill scaffold-source-engine-eval-results <project_dir>
 brand-skill build-source-facts <project_dir>
 brand-skill compile-outputs <project_dir>
 brand-skill scaffold-output <project_dir>
@@ -134,17 +139,18 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 ```text
 1. 把 PDF / PPTX / Markdown / TXT / DOCX 源稿放入 source/；PPT 旧格式 / 长图可先转成 PDF 或后续接入高保真转换器
 2. 运行 source conversion，生成带页码和低置信度标记的 Markdown
-3. 运行 build-source-quality-report，生成识别质量报告，定位需要 OCR / MinerU / 人工复核的页面
+3. 运行 build-source-quality-report，生成识别质量报告，定位需要 OCR / MinerU / MarkItDown / 人工复核的页面
 4. 运行 build-source-version-report，生成版本线索报告，定位同主题多版本资料
-5. 运行 build-source-facts，生成只基于来源原文的事实候选层
-6. 运行 compile-outputs，先生成 00-11 结构化输出底稿
-7. 如需更高质量表达，再用 Prompt Bundle 或模型在底稿基础上精修
-8. 查看 review/brand_review.html，只处理识别异常
-9. 运行 apply-library-update，把可沉淀内容写入 brand_context_library/
-10. 运行 build-library-report，生成一页中文知识库概览
-11. 运行 build-value-benchmark，生成“直接读 PDF/PPT vs Skill 链路”的对比评估表
-12. 运行 verify-contract --write-report，检查当前产物是否满足项目执行准则里的核心证据，并留下本地验证报告
-13. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
+5. 可选运行 check-source-engines 和 plan-source-engine-eval，评估 pymupdf4llm / MarkItDown / MinerU 的小样对比条件
+6. 运行 build-source-facts，生成只基于来源原文的事实候选层
+7. 运行 compile-outputs，先生成 00-11 结构化输出底稿
+8. 如需更高质量表达，再用 Prompt Bundle 或模型在底稿基础上精修
+9. 查看 review/brand_review.html，只处理识别异常
+10. 运行 apply-library-update，把可沉淀内容写入 brand_context_library/
+11. 运行 build-library-report，生成一页中文知识库概览
+12. 运行 build-value-benchmark，生成“直接读 PDF/PPT vs Skill 链路”的对比评估表
+13. 运行 verify-contract --write-report，检查当前产物是否满足项目执行准则里的核心证据，并留下本地验证报告
+14. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
 ```
 
 本地验收 demo 可用一条命令跑完入库、知识库报告页和 contract 验证：
@@ -182,7 +188,25 @@ brand-skill check-claim-matrix <project_dir>
 
 `convert-source` 当前支持默认轻量引擎 `pymupdf4llm`：PDF 会生成逐页转写和页面截图；PPTX / Markdown / TXT / DOCX 源稿会作为文档类资料进入同一套 source transcript / conversion report 流程。PPTX 轻量路径只抽取 slide 文本，不保留完整版式、图片、图表、动画和备注。多个源文件一起导入时，Source ID 会按 `source/` 下的相对路径稳定分配，避免因为文件类型不同导致引用编号漂移。
 
+`markitdown` 作为多格式 Markdown 转换候选已接入可选 adapter，但尚未设为默认引擎。安装后可运行 `brand-skill convert-source <project_dir> --engine markitdown`；如果本地未安装，CLI 会提示使用 `.venv/bin/python -m pip install 'markitdown[all]'`。Microsoft MarkItDown 适合优先评估 PDF、PPTX、DOCX、XLSX、HTML、ZIP 等多格式输入；DuanYan007/markitdown4j 暂作为 Java、本地 OCR、PaddleOCR 或批量部署方向的后续候选。两者都只属于 Source-to-Markdown 层，不能替代 Context Asset Index、Library Update Plan、版本冲突处理和长期知识库。
+
+MarkItDown 输出会进入同一套 `source_transcripts/` 和 `conversion_report.md` 格式，但它不保证稳定页码 / slide 边界，也不等于高保真 OCR。用于真实品牌资料时，应继续结合 `source_quality_report.md` 和 `source_engine_eval_plan.md` 抽样检查图片、表格、小字、阅读顺序和关键品牌口径。
+
 `mineru` 作为高保真 optional engine 已预留架构，但第一版不强制安装。MinerU 适合后续增强 PDF / PPTX / DOCX / XLSX / 图片 / 扫描件的版面、表格、图片、OCR 和阅读顺序识别；当前本项目只在本地提示官方 CLI 入口，例如 `mineru -p <input_path> -o <output_path> -b pipeline`，不会默认上传真实品牌资料或把 MinerU 设为必需依赖。
+
+如需统一检查候选 source engines，可运行：
+
+```bash
+brand-skill check-source-engines <project_dir>
+brand-skill plan-source-engine-eval <project_dir> --max-pages 5
+brand-skill scaffold-source-engine-eval-results <project_dir>
+```
+
+`check-source-engines` 会生成 `converted_markdown/source_engine_readiness_report.md`，记录当前本机是否检测到 MarkItDown / MinerU CLI，并明确这些工具只是转写候选，不是品牌知识编译器本体。
+
+`plan-source-engine-eval` 会读取 `converted_markdown/source_quality_report.md`，生成 `converted_markdown/source_engine_eval_plan.md`，用于选择最多 5 个高价值小样，对比 pymupdf4llm baseline、MarkItDown 和 MinerU 在文字覆盖率、表格、图片/图表、阅读顺序、Markdown 可读性、部署复杂度和隐私风险上的差异。
+
+`scaffold-source-engine-eval-results` 会读取 `source_engine_eval_plan.md`，生成 `converted_markdown/source_engine_eval_results.md`。该文件只记录候选引擎小样对比证据，不是品牌确认；在没有真实小样证据前，默认判断仍保持 `pymupdf4llm` baseline。
 
 如需判断本机是否具备 MinerU 小样评估条件，可先运行：
 
@@ -254,6 +278,7 @@ brand-skill import-ima-media _private_test_runs/<run_name> \
 - `_private_test_runs/private_brand_bpm_sample/`：本地私有品牌 BPM 测试样本，已加入 `.gitignore`，不属于正式 Skill 内置 demo。
 - `examples/`：正式匿名化 demo 目录，后续只放虚构品牌、合成数据或已授权公开资料。
 - `docs/source_converter_strategy.md`：资料转写层策略，包含 MinerU 等高保真解析项目可吸收经验。
+- `docs/project_goal.md`：更新后的项目目标、价值边界、Source Engine 策略和第一阶段验收标准。
 - `docs/brand_context_library_architecture.md`：长期品牌上下文知识库结构。
 - `docs/project_success_contract.md`：项目执行准则，定义最终目标、验证证据、限制条件、操作边界、下一步判断规则和阻塞报告格式。
 - `discussion_context/`：本次对话沉淀的开发背景与关键讨论摘录。
