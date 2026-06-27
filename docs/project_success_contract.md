@@ -36,6 +36,7 @@ Codex 最终应把本项目推进为一个本地优先的 Brand / Business Conte
 
 - CLI 能从示例项目生成或更新真实文件，而不是只在对话中描述方案。
 - `SKILL.md` 能作为 AI Agent 的技能入口，明确第一阶段边界、默认 CLI 工作流、source engine 评估、人工复核范围、隐私边界和验收命令。
+- `prompt_bundle.md`、`prompts/` 和 `schemas/` 能构成第一阶段 Prompt / Schema 包，至少覆盖 Source-to-Markdown、Document Profile、Marketing Semantic Transcript、Key Facts、Strategy、Risk、Review Pack、Context Asset Index、Context Library Update Plan 和 Quality Check。
 - `brand-skill run-phase1 <project_dir>` 能从 `source/` 原始资料跑到 `contract_verification_report.md`，避免使用者手动串联步骤时漏掉 source facts、review page 或 benchmark。
 - `converted_markdown/` 中有来源转写、页码 / 截图 / 低置信度说明、识别质量摘要和文件创建 / 修改时间。
 - `converted_markdown/source_quality_report.md` 能告诉使用者哪些页面需要 OCR、MinerU 或人工复核。

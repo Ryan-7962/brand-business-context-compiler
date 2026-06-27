@@ -14,7 +14,7 @@
 
 更新后的项目目标见 [docs/project_goal.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/project_goal.md)。当前定位可简化为：把“临时把 PDF/PPT 发给 AI 读”升级为“持续积累、可追溯、可复用的本地品牌 / 业务上下文系统”。
 
-`SKILL.md` 是 AI Agent 的技能入口，说明第一阶段边界、默认 CLI 工作流、source engine 评估规则、人工复核范围和验收命令。`verify-contract` 会检查该入口是否存在，避免项目只剩代码和文档而没有可执行 skill 包入口。
+`SKILL.md` 是 AI Agent 的技能入口，说明第一阶段边界、默认 CLI 工作流、source engine 评估规则、人工复核范围和验收命令。`prompt_bundle.md`、`prompts/` 和 `schemas/` 是第一阶段 Prompt / Schema 包。`verify-contract` 会检查这些入口和核心文件是否存在，避免项目只剩代码和文档而没有可执行 skill 包。
 
 ## Skill 组结构
 

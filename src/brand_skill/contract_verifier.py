@@ -18,6 +18,31 @@ REQUIRED_OUTPUTS = [
     "11_context_library_update_plan.md",
 ]
 
+REQUIRED_PHASE1_PROMPTS = [
+    "00_source_to_markdown_conversion.md",
+    "01_generate_document_profile.md",
+    "02_generate_marketing_semantic_transcript.md",
+    "03_generate_key_facts_and_claims.md",
+    "04_generate_strategy_and_execution_map.md",
+    "05_generate_risk_and_review_items.md",
+    "06_generate_ai_ready_marketing_brief_base.md",
+    "07_generate_review_pack.md",
+    "08_generate_context_asset_index.md",
+    "09_generate_context_library_update_plan.md",
+    "11_quality_check.md",
+]
+
+REQUIRED_CORE_SCHEMAS = [
+    "source_index.schema.md",
+    "source_conversion_report.schema.md",
+    "document_profile.schema.md",
+    "marketing_semantic_transcript.schema.md",
+    "risk_and_review_items.schema.md",
+    "context_asset_index.schema.md",
+    "context_library_update_plan.schema.md",
+    "quality_check_report.schema.md",
+]
+
 
 def verify_project_contract(
     project_dir: Path,
@@ -31,6 +56,7 @@ def verify_project_contract(
 
     if target_repo:
         _check_skill_package(target_repo, issues)
+        _check_prompt_schema_package(target_repo, issues)
         _check_repo_privacy(target_repo, issues)
     _check_outputs(project_dir, issues)
     _check_source_conversion(project_dir, issues)
@@ -72,6 +98,7 @@ def _write_verification_report(
         "",
         "- Required structured outputs",
         "- Skill package entrypoint",
+        "- Prompt and schema package",
         "- Source conversion report, quality/version summaries, and source transcripts",
         "- Source engine readiness, evaluation plan, and evaluation results",
         "- Exception review page",
@@ -114,6 +141,33 @@ def _check_skill_package(repo_dir: Path, issues: list[str]) -> None:
     for marker in required_markers:
         if marker not in text:
             issues.append(f"Skill package entrypoint missing marker: {marker}")
+
+
+def _check_prompt_schema_package(repo_dir: Path, issues: list[str]) -> None:
+    prompt_bundle = repo_dir / "prompt_bundle.md"
+    if not prompt_bundle.exists():
+        issues.append("Missing prompt package bundle: prompt_bundle.md")
+    else:
+        bundle_text = prompt_bundle.read_text(encoding="utf-8")
+        for marker in ["Prompt Bundle", "Source-to-Markdown", "Marketing Semantic Transcript", "Context Asset Index"]:
+            if marker not in bundle_text:
+                issues.append(f"Prompt package bundle missing marker: {marker}")
+
+    prompts_dir = repo_dir / "prompts"
+    for filename in REQUIRED_PHASE1_PROMPTS:
+        path = prompts_dir / filename
+        if not path.exists():
+            issues.append(f"Missing required Phase 1 prompt: prompts/{filename}")
+        elif not path.read_text(encoding="utf-8").strip():
+            issues.append(f"Empty required Phase 1 prompt: prompts/{filename}")
+
+    schemas_dir = repo_dir / "schemas"
+    for filename in REQUIRED_CORE_SCHEMAS:
+        path = schemas_dir / filename
+        if not path.exists():
+            issues.append(f"Missing required core schema: schemas/{filename}")
+        elif not path.read_text(encoding="utf-8").strip():
+            issues.append(f"Empty required core schema: schemas/{filename}")
 
 
 def _find_repo_dir(path: Path) -> Path | None:

@@ -2187,6 +2187,41 @@ class Phase1WorkflowTests(unittest.TestCase):
         self.assertIn("source_engine_eval_results.md", skill_text)
         self.assertIn("_private_test_runs/", skill_text)
 
+    def test_verify_project_contract_fails_without_prompt_schema_package_when_repo_is_known(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_dir = Path(temp_dir) / "repo"
+            project_dir = repo_dir / "demo_project"
+            repo_dir.mkdir()
+            project_dir.mkdir()
+            (repo_dir / "SKILL.md").write_text(
+                "---\nname: brand-business-context-compiler\ndescription: Use when testing.\n---\n"
+                "brand-skill run-phase1\nSource Conversion Engines\nsource_engine_eval_results.md\n"
+                "review/brand_review.html\nlibrary_report.html\n_private_test_runs/\nDo not\n",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()) as stdout:
+                with self.assertRaises(SystemExit):
+                    verify_project_contract(
+                        project_dir,
+                        library_dir=repo_dir / "missing_library",
+                        repo_dir=repo_dir,
+                    )
+
+            output = stdout.getvalue()
+            self.assertIn("Missing prompt package bundle: prompt_bundle.md", output)
+            self.assertIn("Missing required Phase 1 prompt", output)
+            self.assertIn("Missing required core schema", output)
+
+    def test_verify_project_contract_accepts_current_prompt_schema_package(self) -> None:
+        repo_dir = Path(__file__).resolve().parents[1]
+
+        self.assertTrue((repo_dir / "prompt_bundle.md").exists())
+        self.assertTrue((repo_dir / "prompts" / "00_source_to_markdown_conversion.md").exists())
+        self.assertTrue((repo_dir / "prompts" / "09_generate_context_library_update_plan.md").exists())
+        self.assertTrue((repo_dir / "schemas" / "source_conversion_report.schema.md").exists())
+        self.assertTrue((repo_dir / "schemas" / "context_library_update_plan.schema.md").exists())
+
     def test_cli_verify_contract_can_write_report(self) -> None:
         import sys
 
