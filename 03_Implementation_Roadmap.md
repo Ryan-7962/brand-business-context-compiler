@@ -17,6 +17,7 @@
 
 交付：
 
+- `SKILL.md`
 - `converted_markdown/source_transcripts/`
 - `converted_markdown/assets/`
 - `converted_markdown/conversion_report.md`
@@ -27,6 +28,7 @@
 
 成功标准：
 
+- AI Agent 能从 `SKILL.md` 读到第一阶段边界、默认 CLI 工作流、复核范围和验收命令。
 - 保留页码 / slide 编号。
 - 保留页面截图和低置信度说明。
 - 不在转写层提前做营销总结。

@@ -30,6 +30,7 @@ def verify_project_contract(
     target_repo = repo_dir or _find_repo_dir(project_dir)
 
     if target_repo:
+        _check_skill_package(target_repo, issues)
         _check_repo_privacy(target_repo, issues)
     _check_outputs(project_dir, issues)
     _check_source_conversion(project_dir, issues)
@@ -70,6 +71,7 @@ def _write_verification_report(
         "## Checked Evidence",
         "",
         "- Required structured outputs",
+        "- Skill package entrypoint",
         "- Source conversion report, quality/version summaries, and source transcripts",
         "- Source engine readiness, evaluation plan, and evaluation results",
         "- Exception review page",
@@ -89,6 +91,29 @@ def _write_verification_report(
         lines.append("No issues found.")
     lines.append("")
     report_path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def _check_skill_package(repo_dir: Path, issues: list[str]) -> None:
+    skill_path = repo_dir / "SKILL.md"
+    if not skill_path.exists():
+        issues.append("Missing skill package entrypoint: SKILL.md")
+        return
+
+    text = skill_path.read_text(encoding="utf-8")
+    required_markers = [
+        "name: brand-business-context-compiler",
+        "description: Use when",
+        "brand-skill run-phase1",
+        "Source Conversion Engines",
+        "source_engine_eval_results.md",
+        "review/brand_review.html",
+        "library_report.html",
+        "_private_test_runs/",
+        "Do not",
+    ]
+    for marker in required_markers:
+        if marker not in text:
+            issues.append(f"Skill package entrypoint missing marker: {marker}")
 
 
 def _find_repo_dir(path: Path) -> Path | None:

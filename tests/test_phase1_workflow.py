@@ -2160,6 +2160,33 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Missing source engine evaluation plan", output)
             self.assertIn("Missing source engine evaluation results", output)
 
+    def test_verify_project_contract_fails_without_skill_entrypoint_when_repo_is_known(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_dir = Path(temp_dir) / "repo"
+            project_dir = repo_dir / "demo_project"
+            repo_dir.mkdir()
+            project_dir.mkdir()
+
+            with redirect_stdout(StringIO()) as stdout:
+                with self.assertRaises(SystemExit):
+                    verify_project_contract(
+                        project_dir,
+                        library_dir=repo_dir / "missing_library",
+                        repo_dir=repo_dir,
+                    )
+
+            output = stdout.getvalue()
+            self.assertIn("Missing skill package entrypoint: SKILL.md", output)
+
+    def test_verify_project_contract_accepts_current_skill_entrypoint(self) -> None:
+        repo_dir = Path(__file__).resolve().parents[1]
+        skill_text = (repo_dir / "SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("name: brand-business-context-compiler", skill_text)
+        self.assertIn("brand-skill run-phase1", skill_text)
+        self.assertIn("source_engine_eval_results.md", skill_text)
+        self.assertIn("_private_test_runs/", skill_text)
+
     def test_cli_verify_contract_can_write_report(self) -> None:
         import sys
 

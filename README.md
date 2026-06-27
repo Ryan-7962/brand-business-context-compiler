@@ -14,6 +14,8 @@
 
 更新后的项目目标见 [docs/project_goal.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/project_goal.md)。当前定位可简化为：把“临时把 PDF/PPT 发给 AI 读”升级为“持续积累、可追溯、可复用的本地品牌 / 业务上下文系统”。
 
+`SKILL.md` 是 AI Agent 的技能入口，说明第一阶段边界、默认 CLI 工作流、source engine 评估规则、人工复核范围和验收命令。`verify-contract` 会检查该入口是否存在，避免项目只剩代码和文档而没有可执行 skill 包入口。
+
 ## Skill 组结构
 
 | Skill | 第一阶段职责 |
@@ -270,6 +272,7 @@ brand-skill import-ima-media _private_test_runs/<run_name> \
 ## 目录说明
 
 - `00_Codex_开发总提示词.md`：可直接复制给 Codex 的完整开发提示词。
+- `SKILL.md`：AI Agent 使用本项目时的技能入口和第一阶段执行规则。
 - `01_PRD_Brand_Product_Knowledge_Compiler.md`：当前保留原文件名，但内容已按 Brand Marketing Context Compiler 重写。
 - `02_Skill_Spec.md`：Skill 工作流与规则。
 - `prompts/`：各步骤可复用提示词。
