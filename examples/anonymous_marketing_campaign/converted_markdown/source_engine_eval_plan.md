@@ -1,0 +1,35 @@
+# Source Engine Evaluation Plan
+
+## 评估目标
+
+- 目标不是证明某个开源工具更有名，而是判断它是否能让品牌资料转写更完整、更少漏读、更适合后续上下文编译。
+- Baseline：当前 `pymupdf4llm` 轻量路径。
+- 候选：Microsoft MarkItDown、MinerU；DuanYan007/markitdown4j 暂作为后续 Java / PaddleOCR 方向候选。
+- 真实品牌资料只能在 `_private_test_runs/` 中评估，评估结论不得包含真实品牌名、价格、预算、销量或平台数据。
+- 本计划最多选择 5 个页面 / slide / 文件片段做小样对比。
+
+## 建议小样
+
+| Source Anchor | 原始文件 | 低置信度说明 | 建议动作 | 推荐对比引擎 |
+|---|---|---|---|---|
+| S001#page=3 | city_refresh_campaign.md | 目标人群无定量调研依据。 | 人工复核 | MarkItDown / MinerU / pymupdf4llm baseline |
+| S001#page=6 | city_refresh_campaign.md | 预算、人员分工、渠道合作名单缺失。 | 人工复核 | MarkItDown / MinerU / pymupdf4llm baseline |
+
+## 对比记录模板
+
+| 维度 | pymupdf4llm baseline | MarkItDown | MinerU | 是否改善后续知识编译 |
+|---|---|---|---|---|
+| 文字覆盖率 | 待记录 | 待记录 | 待记录 | 待判断 |
+| 页码 / slide 锚点 | 待记录 | 待记录 | 待记录 | 待判断 |
+| 表格结构 | 待记录 | 待记录 | 待记录 | 待判断 |
+| 图片 / 图表 / 小字 | 待记录 | 待记录 | 待记录 | 待判断 |
+| 阅读顺序 | 待记录 | 待记录 | 待记录 | 待判断 |
+| Markdown 可读性 | 待记录 | 待记录 | 待记录 | 待判断 |
+| 本地部署复杂度 | 待记录 | 待记录 | 待记录 | 待判断 |
+| 隐私和外部服务风险 | 待记录 | 待记录 | 待记录 | 待判断 |
+
+## 接入判断
+
+- 如果 MarkItDown 只让 Markdown 更顺眼，但没有提升页码锚点、表格、视觉页或多格式覆盖，不应替换默认引擎。
+- 如果 MinerU 只提升少数复杂页，但部署成本高，应保持 optional，不进入默认链路。
+- 只有当候选引擎明显降低人工复核成本，并能保留 source anchor，才进入 `convert-source --engine <engine>` 实现。
