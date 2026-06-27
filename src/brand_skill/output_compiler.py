@@ -142,17 +142,24 @@ def _build_documents(
     fact_rows = facts or [{"Fact ID": "SF000-001", "Source Anchor": "待补充", "Evidence Text": "待补充", "信息状态": "待补充", "低置信度说明": "待补充"}]
     page_rows = pages or [{"anchor": row.get("Source Anchor", "待补充"), "text": row.get("Evidence Text", ""), "low_confidence": row.get("低置信度说明", "")} for row in fact_rows]
     source_rows = sources or [{"来源编号": "S001", "原始文件": "待补充", "原始文件创建时间": "待补充", "原始文件修改时间": "待补充", "页码/Slide 范围": "待补充"}]
-    review_items = review_rows or [
-        {"Source Anchor": row.get("Source Anchor", "待补充"), "低置信度说明": row.get("低置信度说明", "待复核"), "建议动作": "人工复核"}
-        for row in fact_rows
-        if _needs_review(row.get("低置信度说明", ""))
-    ]
+    review_items = _merge_review_items(
+        _quality_review_items(review_rows),
+        [
+            {
+                "Source Anchor": row.get("Source Anchor", "待补充"),
+                "低置信度说明": _review_reason(row),
+                "建议动作": "人工复核 / 补充业务信息",
+            }
+            for row in fact_rows
+            if _row_needs_review(row)
+        ],
+    )
     first_fact = fact_rows[0]
     title = project_name
     profile = _infer_document_profile(fact_rows)
     outline = _build_marketing_outline(fact_rows)
     facts_table = "\n".join(
-        f"| {row.get('Fact ID', '')} | {_cell(row.get('Evidence Text', ''))} | {row.get('Source Anchor', '')} | {row.get('信息状态', '已从来源资料提取')} | {'是' if _needs_review(row.get('低置信度说明', '')) else '否'} |"
+        f"| {row.get('Fact ID', '')} | {_cell(row.get('Evidence Text', ''))} | {row.get('Source Anchor', '')} | {row.get('信息状态', '已从来源资料提取')} | {'是' if _row_needs_review(row) else '否'} |"
         for row in fact_rows
     )
     source_table = "\n".join(
@@ -179,7 +186,7 @@ def _build_documents(
         for index, row in enumerate(review_items, start=1)
     )
     asset_rows = "\n".join(
-        f"| CA{index:03d} | {_asset_type_for_fact(row, profile['asset_type'])} | {_cell(row.get('Evidence Text', ''))} | {profile['reuse_scene']} | {row.get('Source Anchor', '')} | {row.get('信息状态', '已从来源资料提取')} | {'高' if _needs_review(row.get('低置信度说明', '')) else '中'} |"
+        f"| CA{index:03d} | {_asset_type_for_fact(row, profile['asset_type'])} | {_cell(row.get('Evidence Text', ''))} | {profile['reuse_scene']} | {row.get('Source Anchor', '')} | {row.get('信息状态', '已从来源资料提取')} | {'高' if _row_needs_review(row) else '中'} |"
         for index, row in enumerate(fact_rows[:10], start=1)
     )
     library_rows = "\n".join(
@@ -209,7 +216,63 @@ def _build_documents(
 
 def _needs_review(text: str) -> bool:
     normalized = text.strip().rstrip("。.!！")
-    return bool(normalized and normalized != "无明显低置信度")
+    if not normalized or normalized.startswith("无明显低置信度"):
+        return False
+    return True
+
+
+def _row_needs_review(row: dict[str, str]) -> bool:
+    return _needs_review(row.get("低置信度说明", "")) or _evidence_mentions_missing_context(row.get("Evidence Text", ""))
+
+
+def _review_reason(row: dict[str, str]) -> str:
+    low_confidence = row.get("低置信度说明", "").strip()
+    if _needs_review(low_confidence):
+        return low_confidence
+    evidence = row.get("Evidence Text", "").strip()
+    if _evidence_mentions_missing_context(evidence):
+        return f"来源文本提示信息缺口：{evidence}"
+    return low_confidence or "待复核"
+
+
+def _evidence_mentions_missing_context(text: str) -> bool:
+    markers = [
+        "未提供",
+        "暂未提供",
+        "没有提供",
+        "缺少",
+        "缺失",
+        "待补充",
+        "需要补充",
+        "需补充",
+        "待确认",
+    ]
+    return any(marker in text for marker in markers)
+
+
+def _merge_review_items(*item_groups: list[dict[str, str]]) -> list[dict[str, str]]:
+    merged: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for items in item_groups:
+        for item in items:
+            anchor = item.get("Source Anchor", "待补充")
+            reason = item.get("低置信度说明", "待复核")
+            key = (anchor, reason)
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(item)
+    return merged
+
+
+def _quality_review_items(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    items: list[dict[str, str]] = []
+    for row in rows:
+        reason = row.get("低置信度说明", "")
+        action = row.get("建议动作", "")
+        if _needs_review(reason) or any(marker in action for marker in ["OCR", "MinerU", "人工复核", "复核", "补充"]):
+            items.append(row)
+    return items
 
 
 def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:

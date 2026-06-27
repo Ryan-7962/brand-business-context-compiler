@@ -1454,6 +1454,74 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("自动识别的大纲", brief)
             self.assertIn("大纲分类：4 类", quality)
 
+    def test_compile_structured_outputs_flags_missing_context_even_when_extraction_confidence_is_ok(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            facts = project_dir / "converted_markdown" / "source_facts"
+            facts.mkdir(parents=True)
+            (facts / "S001_source_facts.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Facts",
+                        "",
+                        "| Fact ID | Source Anchor | Evidence Text | 信息状态 | 低置信度说明 |",
+                        "|---|---|---|---|---|",
+                        "| SF001-001 | S001#page=1 | 预算、渠道合作名单和负责人暂未提供，需要补充。 | 已从来源资料提取 | 无明显低置信度。 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                compile_structured_outputs(project_dir)
+
+            key_facts = (project_dir / "outputs" / "04_key_facts_and_claims.md").read_text(encoding="utf-8")
+            risks = (project_dir / "outputs" / "06_risk_and_review_items.md").read_text(encoding="utf-8")
+            quality = (project_dir / "outputs" / "09_quality_check_report.md").read_text(encoding="utf-8")
+            self.assertIn("| SF001-001 | 预算、渠道合作名单和负责人暂未提供，需要补充。 | S001#page=1 | 已从来源资料提取 | 是 |", key_facts)
+            self.assertIn("来源文本提示信息缺口", risks)
+            self.assertIn("待复核事项：1 项", quality)
+
+    def test_compile_structured_outputs_does_not_queue_no_obvious_low_confidence_rows(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            facts = converted / "source_facts"
+            facts.mkdir(parents=True)
+            (facts / "S001_source_facts.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Facts",
+                        "",
+                        "| Fact ID | Source Anchor | Evidence Text | 信息状态 | 低置信度说明 |",
+                        "|---|---|---|---|---|",
+                        "| SF001-001 | S001#page=1 | 活动目标是建立城市清爽心智。 | 已从来源资料提取 | 无明显低置信度页面 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (converted / "source_quality_report.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Quality Report",
+                        "",
+                        "| Source Anchor | 原始文件 | 低置信度说明 | 建议动作 |",
+                        "|---|---|---|---|",
+                        "| S001#page=1 | demo.md | 无明显低置信度页面 | 继续后续语义编译 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                compile_structured_outputs(project_dir)
+
+            risks = (project_dir / "outputs" / "06_risk_and_review_items.md").read_text(encoding="utf-8")
+            key_facts = (project_dir / "outputs" / "04_key_facts_and_claims.md").read_text(encoding="utf-8")
+            self.assertIn("| SF001-001 | 活动目标是建立城市清爽心智。 | S001#page=1 | 已从来源资料提取 | 否 |", key_facts)
+            self.assertNotIn("无明显低置信度页面 | 中", risks)
+            self.assertIn("暂无明显风险", risks)
+
     def test_compile_structured_outputs_keeps_table_facts_as_structured_assets(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir)
