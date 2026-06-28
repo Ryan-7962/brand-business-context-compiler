@@ -2204,17 +2204,17 @@ class Phase1WorkflowTests(unittest.TestCase):
             transcripts = converted / "source_transcripts"
             transcripts.mkdir(parents=True)
             outputs.mkdir(parents=True)
-            required_outputs = [
-                "02_document_profile.md",
-                "03_marketing_semantic_transcript.md",
-                "04_key_facts_and_claims.md",
-                "05_strategy_and_execution_map.md",
-                "06_risk_and_review_items.md",
-                "10_context_asset_index.md",
-                "11_context_library_update_plan.md",
-            ]
-            for filename in required_outputs:
-                (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
+            files = {
+                "02_document_profile.md": "# Document Profile\n\n| 字段 | 内容 | 信息状态 | 待确认 |\n|---|---|---|---|\n| 文件类型 | 活动方案 | AI 结构化转述，待确认 | 是 |\n| 文件目的 | 对齐传播策略 | AI 结构化转述，待确认 | 是 |\n",
+                "03_marketing_semantic_transcript.md": "# Marketing Semantic Transcript\n\n## Page / Slide 1\n\n- Source Anchor：S001#page=1\n\n### 原页核心内容转述\n\n活动方案提出提升品牌声量。\n",
+                "04_key_facts_and_claims.md": "# Key Facts\n\n| Fact ID | 事实 | 信息状态 | 待确认 |\n|---|---|---|---|\n| SF001 | 活动目标为提升品牌声量 | 已从来源资料提取 | 否 |\n",
+                "05_strategy_and_execution_map.md": "# Strategy and Execution Map\n\n## 自动识别的大纲\n\n- 活动目标\n",
+                "06_risk_and_review_items.md": "# Risk and Review Items\n\n| Review ID | 审核项 | 建议 |\n|---|---|---|\n| R000 | 暂无明显风险 | 继续后续编译 |\n",
+                "10_context_asset_index.md": "# Context Asset Index\n\n| Asset ID | 可复用资产 | 适用场景 | 信息状态 |\n|---|---|---|---|\n| CA001 | 活动目标为提升品牌声量 | Campaign brief | 已从来源资料提取 |\n",
+                "11_context_library_update_plan.md": "# Context Library Update Plan\n\n## 2. New Context Entries\n\n| Entry ID | 标题 |\n|---|---|\n| LCE001 | 活动目标 |\n\n## 4. Do Not Promote\n\n- 不提升待确认内容。\n",
+            }
+            for filename, content in files.items():
+                (outputs / filename).write_text(content, encoding="utf-8")
             (converted / "conversion_report.md").write_text(
                 "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
@@ -2270,16 +2270,17 @@ class Phase1WorkflowTests(unittest.TestCase):
             transcripts = converted / "source_transcripts"
             transcripts.mkdir(parents=True)
             outputs.mkdir(parents=True)
-            for filename in [
-                "02_document_profile.md",
-                "03_marketing_semantic_transcript.md",
-                "04_key_facts_and_claims.md",
-                "05_strategy_and_execution_map.md",
-                "06_risk_and_review_items.md",
-                "10_context_asset_index.md",
-                "11_context_library_update_plan.md",
-            ]:
-                (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
+            files = {
+                "02_document_profile.md": "# Document Profile\n\n| 字段 | 内容 | 信息状态 | 待确认 |\n|---|---|---|---|\n| 文件类型 | 活动方案 | AI 结构化转述，待确认 | 是 |\n| 文件目的 | 对齐传播策略 | AI 结构化转述，待确认 | 是 |\n",
+                "03_marketing_semantic_transcript.md": "# Marketing Semantic Transcript\n\n## Page / Slide 1\n\n- Source Anchor：S001#page=1\n\n### 原页核心内容转述\n\n活动方案提出提升品牌声量。\n",
+                "04_key_facts_and_claims.md": "# Key Facts\n\n| Fact ID | 事实 | 信息状态 | 待确认 |\n|---|---|---|---|\n| SF001 | 活动目标为提升品牌声量 | 已从来源资料提取 | 否 |\n",
+                "05_strategy_and_execution_map.md": "# Strategy and Execution Map\n\n## 自动识别的大纲\n\n- 活动目标\n",
+                "06_risk_and_review_items.md": "# Risk and Review Items\n\n| Review ID | 审核项 | 建议 |\n|---|---|---|\n| R000 | 暂无明显风险 | 继续后续编译 |\n",
+                "10_context_asset_index.md": "# Context Asset Index\n\n| Asset ID | 可复用资产 | 适用场景 | 信息状态 |\n|---|---|---|---|\n| CA001 | 活动目标为提升品牌声量 | Campaign brief | 已从来源资料提取 |\n",
+                "11_context_library_update_plan.md": "# Context Library Update Plan\n\n## 2. New Context Entries\n\n| Entry ID | 标题 |\n|---|---|\n| LCE001 | 活动目标 |\n\n## 4. Do Not Promote\n\n- 不提升待确认内容。\n",
+            }
+            for filename, content in files.items():
+                (outputs / filename).write_text(content, encoding="utf-8")
             (converted / "conversion_report.md").write_text(
                 "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
                 encoding="utf-8",

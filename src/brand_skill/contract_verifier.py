@@ -233,6 +233,25 @@ def _check_outputs(project_dir: Path, issues: list[str]) -> None:
             issues.append(f"Missing required output: outputs/{filename}")
         elif not path.read_text(encoding="utf-8").strip():
             issues.append(f"Empty required output: outputs/{filename}")
+    _check_structured_output_markers(outputs_dir, issues)
+
+
+def _check_structured_output_markers(outputs_dir: Path, issues: list[str]) -> None:
+    required_markers = {
+        "02_document_profile.md": ["文件类型", "文件目的", "信息状态", "待确认"],
+        "03_marketing_semantic_transcript.md": ["Marketing Semantic Transcript", "Source Anchor", "原页核心内容转述"],
+        "04_key_facts_and_claims.md": ["Key Facts", "信息状态", "待确认"],
+        "10_context_asset_index.md": ["Context Asset Index", "适用场景", "信息状态"],
+        "11_context_library_update_plan.md": ["Context Library Update Plan", "New Context Entries", "Do Not Promote"],
+    }
+    for filename, markers in required_markers.items():
+        path = outputs_dir / filename
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for marker in markers:
+            if marker not in text:
+                issues.append(f"Structured output missing marker in outputs/{filename}: {marker}")
 
 
 def _check_unapproved_confirmed_status(project_dir: Path, library_dir: Path, issues: list[str]) -> None:
