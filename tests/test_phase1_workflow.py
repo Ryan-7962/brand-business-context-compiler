@@ -2220,7 +2220,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
-                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| 建议动作 |\n|---|\n| 继续后续语义编译 |\n",
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
                 encoding="utf-8",
             )
             (converted / "source_version_report.md").write_text(
@@ -2285,7 +2285,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
-                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| 建议动作 |\n|---|\n| 继续后续语义编译 |\n",
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
                 encoding="utf-8",
             )
             (converted / "source_version_report.md").write_text(
@@ -2374,7 +2374,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
-                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| 建议动作 |\n|---|\n| 继续后续语义编译 |\n",
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
                 encoding="utf-8",
             )
             (converted / "source_version_report.md").write_text(
@@ -2525,7 +2525,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
-                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| 建议动作 |\n|---|\n| 继续后续语义编译 |\n",
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
                 encoding="utf-8",
             )
             (converted / "source_version_report.md").write_text(
@@ -2861,7 +2861,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
-                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| 建议动作 |\n|---|\n| 继续后续语义编译 |\n",
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
                 encoding="utf-8",
             )
             (converted / "source_version_report.md").write_text(

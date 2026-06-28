@@ -299,7 +299,7 @@ def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
         issues.append("Missing source quality report: converted_markdown/source_quality_report.md")
     else:
         quality_text = quality_report.read_text(encoding="utf-8")
-        for marker in ["识别质量总览", "需要复核页数", "建议动作"]:
+        for marker in ["识别质量总览", "需要复核页数", "表格数", "建议动作"]:
             if marker not in quality_text:
                 issues.append(f"Source quality report missing marker: {marker}")
 
