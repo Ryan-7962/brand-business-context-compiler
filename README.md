@@ -265,7 +265,7 @@ brand-skill import-ima-media _private_test_runs/<run_name> \
 
 `build-source-facts` 会读取 `converted_markdown/source_transcripts/`，生成 `converted_markdown/source_facts/`。这一步只抽取来源中已经出现的文字证据，保留 Source Anchor、章节上下文、表格行和低置信度说明；它不做品牌确认、不做外发安全判断，也不补写资料中没有的信息。
 
-`build-source-quality-report` 会读取 source transcripts，生成 `converted_markdown/source_quality_report.md`。它汇总总页数、需要复核页数、低文字量页面、含图片/图形页面和低置信度说明，并给出 OCR / MinerU / 人工复核等建议动作。
+`build-source-quality-report` 会读取 source transcripts，生成 `converted_markdown/source_quality_report.md`。它汇总总页数、需要复核页数、低文字量页面、含图片/图形页面、表格页和低置信度说明，并给出 OCR / MinerU / MarkItDown / 人工复核等建议动作。`表格数` 是正式质量证据之一，用于避免表格资料被误判为“文字正常、无需复核”。
 
 `compile-outputs` 会读取 `source_facts/`、source transcripts、source quality report 和 source version report，生成 00-11 结构化 Markdown 初稿。它会把表格行保留为“表格结构信息”和 `structured_table` 资产，避免表格资料被压平成普通摘要。它是本地确定性底稿编译器，不调用模型，不做品牌确认，不补写来源资料没有的信息；后续可以再用 Prompt Bundle 或模型精修表达。
 

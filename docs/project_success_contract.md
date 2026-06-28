@@ -39,7 +39,7 @@ Codex 最终应把本项目推进为一个本地优先的 Brand / Business Conte
 - `prompt_bundle.md`、`prompts/` 和 `schemas/` 能构成第一阶段 Prompt / Schema 包，至少覆盖 Source-to-Markdown、Document Profile、Marketing Semantic Transcript、Key Facts、Strategy、Risk、Review Pack、Context Asset Index、Context Library Update Plan 和 Quality Check。
 - `brand-skill run-phase1 <project_dir>` 能从 `source/` 原始资料跑到 `contract_verification_report.md`，避免使用者手动串联步骤时漏掉 source facts、review page 或 benchmark。
 - `converted_markdown/` 中有来源转写、页码 / 截图 / 低置信度说明、识别质量摘要和文件创建 / 修改时间。
-- `converted_markdown/source_quality_report.md` 能告诉使用者哪些页面需要 OCR、MinerU 或人工复核。
+- `converted_markdown/source_quality_report.md` 能告诉使用者哪些页面需要 OCR、MinerU、MarkItDown 或人工复核，并必须包含 `表格数`，避免表格页被误判为无需复核。
 - `converted_markdown/source_version_report.md` 能告诉使用者哪些资料疑似同主题多版本、最新修改时间线索是什么；常见 `v2` / `final` / 日期 / hash 后缀应被归一化为版本线索，但仍明确不自动覆盖旧知识。
 - `converted_markdown/source_engine_readiness_report.md` 能告诉使用者当前本机是否具备 pymupdf4llm baseline、MarkItDown 和 MinerU 的评估条件，并明确候选引擎只属于 Source-to-Markdown 层。
 - `converted_markdown/source_engine_eval_plan.md` 能从 source quality report 中挑选最多 5 个高价值小样，对比 pymupdf4llm、MarkItDown、MinerU 在文字覆盖率、页码 / slide 锚点、表格结构、图片 / 图表 / 小字、阅读顺序、Markdown 可读性、部署复杂度和隐私风险上的差异。
