@@ -42,6 +42,7 @@ def _parse_transcript(path: Path) -> list[dict[str, str | int]]:
                 "text_chars": _metadata_int(block, "Extracted text chars"),
                 "image_count": _metadata_int(block, "Embedded images detected"),
                 "drawing_count": _metadata_int(block, "Vector drawings detected"),
+                "table_count": _markdown_table_count(block),
                 "low_confidence": _low_confidence(block),
             }
         )
@@ -77,6 +78,32 @@ def _metadata_int(markdown: str, label: str) -> int:
     return int(match.group(0)) if match else 0
 
 
+def _markdown_table_count(markdown: str) -> int:
+    lines = [line.strip() for line in markdown.splitlines()]
+    count = 0
+    index = 0
+    while index < len(lines) - 1:
+        if _looks_like_table_row(lines[index]) and _looks_like_separator(lines[index + 1]):
+            count += 1
+            index += 2
+            while index < len(lines) and _looks_like_table_row(lines[index]):
+                index += 1
+            continue
+        index += 1
+    return count
+
+
+def _looks_like_table_row(line: str) -> bool:
+    return line.startswith("|") and line.endswith("|") and line.count("|") >= 2
+
+
+def _looks_like_separator(line: str) -> bool:
+    if not _looks_like_table_row(line):
+        return False
+    cells = [cell.strip() for cell in line.strip("|").split("|")]
+    return bool(cells) and all(cell and set(cell.replace(" ", "")) <= {"-", ":"} for cell in cells)
+
+
 def _low_confidence(markdown: str) -> str:
     section = _extract_subsection(markdown, "Low Confidence / Need Review")
     for line in section.splitlines():
@@ -103,6 +130,7 @@ def _needs_review(row: dict[str, str | int]) -> bool:
         or int(row["text_chars"]) < 20
         or int(row["image_count"]) > 0
         or int(row["drawing_count"]) > 0
+        or int(row["table_count"]) > 0
     )
 
 
@@ -112,6 +140,8 @@ def _normalize_low_confidence(text: str) -> str:
 
 def _recommended_action(row: dict[str, str | int]) -> str:
     reasons = str(row["low_confidence"])
+    if int(row["table_count"]) > 0 or "表格" in reasons:
+        return "MinerU / MarkItDown / 人工复核"
     if int(row["image_count"]) > 0 or int(row["text_chars"]) < 20 or "图片" in reasons or "视觉" in reasons:
         return "OCR / MinerU / 人工复核"
     if "PowerPoint 轻量转写" in reasons:
@@ -131,11 +161,11 @@ def _render_report(page_rows: list[dict[str, str | int]], review_rows: list[dict
         "",
         "## 需要复核的页面",
         "",
-        "| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 低置信度说明 | 建议动作 |",
-        "|---|---|---|---|---|---|---|",
+        "| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |",
+        "|---|---|---|---|---|---|---|---|",
     ]
     if not review_rows:
-        lines.append("| - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |")
+        lines.append("| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |")
     else:
         for row in review_rows:
             lines.append(
@@ -147,6 +177,7 @@ def _render_report(page_rows: list[dict[str, str | int]], review_rows: list[dict
                         str(row["text_chars"]),
                         str(row["image_count"]),
                         str(row["drawing_count"]),
+                        str(row["table_count"]),
                         _cell(str(row["low_confidence"])),
                         _recommended_action(row),
                     ]

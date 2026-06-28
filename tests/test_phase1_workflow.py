@@ -1161,6 +1161,21 @@ class Phase1WorkflowTests(unittest.TestCase):
                         "### Low Confidence / Need Review",
                         "- 可抽取文字较少；含图片/视觉信息",
                         "",
+                        "## Page 3",
+                        "- Source Anchor：S001#page=3",
+                        "- Page Screenshot：../assets/S001/page_03.png",
+                        "- Extracted text chars：120",
+                        "- Embedded images detected：0",
+                        "- Vector drawings detected：0",
+                        "",
+                        "### Text",
+                        "| 渠道 | 预算 | 负责人 |",
+                        "|---|---|---|",
+                        "| 抖音 | 待补充 | 待确认 |",
+                        "",
+                        "### Low Confidence / Need Review",
+                        "- 无明显低置信度。",
+                        "",
                     ]
                 ),
                 encoding="utf-8",
@@ -1172,9 +1187,10 @@ class Phase1WorkflowTests(unittest.TestCase):
             report = project_dir / "converted_markdown" / "source_quality_report.md"
             report_text = report.read_text(encoding="utf-8")
             self.assertIn("# Source Quality Report", report_text)
-            self.assertIn("- 总页数：2", report_text)
-            self.assertIn("- 需要复核页数：1", report_text)
-            self.assertIn("| S001#page=2 | sample.pdf | 8 | 3 | 2 | 可抽取文字较少；含图片/视觉信息 | OCR / MinerU / 人工复核 |", report_text)
+            self.assertIn("- 总页数：3", report_text)
+            self.assertIn("- 需要复核页数：2", report_text)
+            self.assertIn("| S001#page=2 | sample.pdf | 8 | 3 | 2 | 0 | 可抽取文字较少；含图片/视觉信息 | OCR / MinerU / 人工复核 |", report_text)
+            self.assertIn("| S001#page=3 | sample.pdf | 120 | 0 | 0 | 1 | 无明显低置信度。 | MinerU / MarkItDown / 人工复核 |", report_text)
             self.assertIn("优先处理含图片、低文字量、表格或小字页面", report_text)
 
     def test_build_source_version_report_groups_likely_versions_by_modified_time(self) -> None:
