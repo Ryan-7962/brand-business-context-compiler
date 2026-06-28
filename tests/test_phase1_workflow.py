@@ -2168,7 +2168,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             review_dir = project_dir / "review"
             review_dir.mkdir()
             (review_dir / "brand_review.html").write_text(
-                "识别问题待处理 需要处理的问题 文件大纲参考 自动通过，无需人工处理",
+                "识别问题待处理 整个文件概述 需要处理的问题 文件大纲参考 自动通过，无需人工处理",
                 encoding="utf-8",
             )
             evaluation_dir = project_dir / "evaluation"
@@ -2233,7 +2233,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             review_dir = project_dir / "review"
             review_dir.mkdir()
             (review_dir / "brand_review.html").write_text(
-                "识别问题待处理 需要处理的问题 文件大纲参考",
+                "识别问题待处理 整个文件概述 需要处理的问题 文件大纲参考",
                 encoding="utf-8",
             )
             evaluation_dir = project_dir / "evaluation"
@@ -2472,7 +2472,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             review_dir = project_dir / "review"
             review_dir.mkdir()
             (review_dir / "brand_review.html").write_text(
-                "识别问题待处理 需要处理的问题 文件大纲参考",
+                "识别问题待处理 整个文件概述 需要处理的问题 文件大纲参考",
                 encoding="utf-8",
             )
             library_dir = Path(temp_dir) / "brand_context_library"
@@ -2568,7 +2568,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             review_dir = project_dir / "review"
             review_dir.mkdir()
             (review_dir / "brand_review.html").write_text(
-                "Context Asset Index Review 来源位置：S001#page=1 class=\"source-anchor\"",
+                "Context Asset Index Review Review ID Source Anchor 来源位置：S001#page=1 来源锚点 风险等级 class=\"source-anchor\"",
                 encoding="utf-8",
             )
             library_dir = Path(temp_dir) / "brand_context_library"
@@ -2749,7 +2749,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             review_dir = project_dir / "review"
             review_dir.mkdir()
             (review_dir / "brand_review.html").write_text(
-                "识别问题待处理 需要处理的问题 文件大纲参考",
+                "识别问题待处理 整个文件概述 需要处理的问题 文件大纲参考",
                 encoding="utf-8",
             )
             library_dir = Path(temp_dir) / "brand_context_library"
@@ -2808,7 +2808,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             review_dir = project_dir / "review"
             review_dir.mkdir()
             (review_dir / "brand_review.html").write_text(
-                "识别问题待处理 需要处理的问题 文件大纲参考",
+                "识别问题待处理 整个文件概述 需要处理的问题 文件大纲参考",
                 encoding="utf-8",
             )
             library_dir = Path(temp_dir) / "brand_context_library"

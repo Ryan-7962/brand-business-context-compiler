@@ -343,7 +343,7 @@ def _check_review_pack(project_dir: Path, issues: list[str]) -> None:
         return
 
     text = review_page.read_text(encoding="utf-8")
-    required_markers = ["识别问题待处理", "文件大纲参考"]
+    required_markers = ["识别问题待处理", "整个文件概述", "文件大纲参考"]
     for marker in required_markers:
         if marker not in text:
             issues.append(f"Review page missing exception-review marker: {marker}")
@@ -351,7 +351,16 @@ def _check_review_pack(project_dir: Path, issues: list[str]) -> None:
     if not any(marker in text for marker in ["需要处理的问题", "自动通过，无需人工处理"]):
         issues.append("Review page missing exception-review marker: 需要处理的问题 or 自动通过，无需人工处理")
 
-    backend_markers = ["Context Asset Index Review", 'class="source-anchor"', "来源位置：", "Risk Level"]
+    backend_markers = [
+        "Context Asset Index Review",
+        'class="source-anchor"',
+        "Review ID",
+        "Source Anchor",
+        "来源位置：",
+        "来源锚点",
+        "Risk Level",
+        "风险等级",
+    ]
     for marker in backend_markers:
         if marker in text:
             issues.append(f"Review page overexposes backend marker: {marker}")
