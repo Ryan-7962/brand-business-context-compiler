@@ -8,6 +8,7 @@ from .contract_verifier import verify_project_contract
 from .library_report import build_library_report
 from .library_writer import apply_context_library_update
 from .output_compiler import compile_structured_outputs
+from .review_pack import build_review_pack
 from .source_engine_eval import check_source_engines, plan_source_engine_evaluation, scaffold_source_engine_evaluation_results
 from .source_quality import build_source_quality_report
 from .source_versions import build_source_version_report
@@ -22,6 +23,7 @@ def run_demo_contract(project_dir: Path, library_dir: Path | None = None) -> Non
     scaffold_source_engine_evaluation_results(project_dir)
     build_source_version_report(project_dir)
     compile_structured_outputs(project_dir, keep_existing=True)
+    build_review_pack(project_dir)
     apply_context_library_update(project_dir, library_dir=target_library)
     build_library_report(target_library)
     build_value_benchmark(project_dir, library_dir=target_library)

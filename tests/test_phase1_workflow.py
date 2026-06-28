@@ -2494,6 +2494,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 sys.argv = argv
 
             output = stdout.getvalue()
+            self.assertIn("Review pack created", output)
             self.assertIn("Context library updated", output)
             self.assertIn("Library report generated", output)
             self.assertIn("Contract verification passed", output)
