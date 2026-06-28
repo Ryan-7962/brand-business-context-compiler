@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>品牌知识库概览</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2933;
+      --muted: #5f6b7a;
+      --line: #d9e0e8;
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --accent: #0f766e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+    header {
+      padding: 28px 32px 18px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    h2 { margin: 0 0 14px; font-size: 18px; }
+    main {
+      display: grid;
+      gap: 16px;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .metric, section, aside {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+    }
+    .metric strong {
+      display: block;
+      color: var(--accent);
+      font-size: 30px;
+      line-height: 1.1;
+    }
+    .metric span, .muted { color: var(--muted); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .workbench {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+      gap: 16px;
+      align-items: start;
+    }
+    ul { margin: 0; padding-left: 20px; }
+    .count-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      padding: 0;
+      list-style: none;
+    }
+    .count-list li {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 12px;
+      background: #fbfcfe;
+    }
+    .count-list small {
+      flex-basis: 100%;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .context-map {
+      overflow: hidden;
+    }
+    .map-canvas {
+      display: grid;
+      gap: 14px;
+    }
+    .map-center {
+      justify-self: center;
+      border: 2px solid var(--accent);
+      border-radius: 999px;
+      padding: 16px 22px;
+      font-weight: 700;
+      color: var(--accent);
+      background: #effcf9;
+    }
+    .map-branches {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .map-category {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcfe;
+    }
+    .map-category > button, .map-entry {
+      width: 100%;
+      border: 0;
+      text-align: left;
+      background: transparent;
+      color: var(--ink);
+      font: inherit;
+      cursor: pointer;
+    }
+    .map-category > button {
+      font-weight: 700;
+    }
+    .map-entry {
+      display: block;
+      margin-top: 8px;
+      border-left: 3px solid #b7c5d4;
+      padding: 7px 8px;
+      background: #ffffff;
+      border-radius: 6px;
+    }
+    .map-entry span, .explorer-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .explorer-controls {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .explorer-controls input, .explorer-controls select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 10px;
+      font: inherit;
+      background: #ffffff;
+    }
+    .explorer-list {
+      display: grid;
+      gap: 8px;
+    }
+    .explorer-item {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 12px;
+      text-align: left;
+      background: #fbfcfe;
+      color: var(--ink);
+      font: inherit;
+      cursor: pointer;
+    }
+    .detail-panel dl {
+      display: grid;
+      grid-template-columns: 72px minmax(0, 1fr);
+      gap: 8px 12px;
+      margin: 0;
+    }
+    .detail-panel dt {
+      color: var(--muted);
+    }
+    .detail-panel dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+    @media (max-width: 760px) {
+      header { padding: 22px 18px 14px; }
+      main { padding: 14px; }
+      .metrics, .grid, .count-list, .workbench, .map-branches, .explorer-controls { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>品牌知识库概览</h1>
+    <p class="muted">这页用于快速判断：现在沉淀了什么、还有哪些需要处理、后续哪些营销任务可以直接复用。</p>
+  </header>
+  <main>
+    <div class="metrics">
+      <div class="metric"><strong>已沉淀 5 个知识条目</strong><span>来自品牌、产品、活动、话术、人群、案例等长期上下文。</span></div>
+      <div class="metric"><strong>待处理 1 项</strong><span>只统计需要人工判断的冲突和旧知识更新，不要求逐条确认全部内容。</span></div>
+    </div>
+    
+    <section class="context-map" aria-label="Brand Context Map">
+      <h2>Brand Context Map｜知识地图</h2>
+      <div class="map-canvas">
+        <div class="map-center">品牌知识库</div>
+        <div class="map-branches"><div class="map-category">
+              <button type="button" data-node-type="category" data-category-id="project">
+                项目与活动
+                <span>5 个条目 · 已启用</span>
+              </button>
+              <button class="map-entry" type="button" data-node-type="entry" data-entry-id="lce001-本文件为虚构源材料用于演示-source-to">
+              本文件为虚构源材料，用于演示 Source-to
+              <span>正常</span>
+            </button>
+<button class="map-entry" type="button" data-node-type="entry" data-entry-id="lce002-slide-1项目背景云杉生活希望在夏季建立">
+              Slide 1｜项目背景：云杉生活希望在夏季建立
+              <span>正常</span>
+            </button>
+<button class="map-entry" type="button" data-node-type="entry" data-entry-id="lce003-slide-2活动目标建立品牌关键词城市">
+              Slide 2｜活动目标：建立品牌关键词：城市、
+              <span>正常</span>
+            </button>
+<button class="map-entry" type="button" data-node-type="entry" data-entry-id="lce004-slide-2活动目标形成-3-类可复用内容">
+              Slide 2｜活动目标：形成 3 类可复用内容
+              <span>正常</span>
+            </button>
+<button class="map-entry" type="button" data-node-type="entry" data-entry-id="lce005-slide-2活动目标沉淀后续-geo">
+              Slide 2｜活动目标：沉淀后续 GEO /
+              <span>正常</span>
+            </button>
+            </div></div>
+      </div>
+    </section>
+    
+    <div class="workbench">
+      <section class="knowledge-explorer" aria-label="Knowledge Explorer">
+        <h2>Knowledge Explorer｜知识目录</h2>
+        <div class="explorer-controls">
+          <input data-role="searchInput" type="search" placeholder="搜索知识条目">
+          <select data-role="categoryFilter" aria-label="分类筛选">
+            <option value="all">全部分类</option>
+            <option value="project">项目与活动</option>
+          </select>
+          <select data-role="statusFilter" aria-label="状态筛选">
+            <option value="all">全部状态</option>
+            <option value="正常">正常</option>
+            <option value="待更新">待更新</option>
+            <option value="冲突">冲突</option>
+          </select>
+        </div>
+        <div class="explorer-list" data-role="explorerList">
+          <button class="explorer-item" type="button" data-entry-id="lce001-本文件为虚构源材料用于演示-source-to">
+          本文件为虚构源材料，用于演示 Source-to
+          <span>项目与活动 · 正常</span>
+        </button><button class="explorer-item" type="button" data-entry-id="lce002-slide-1项目背景云杉生活希望在夏季建立">
+          Slide 1｜项目背景：云杉生活希望在夏季建立
+          <span>项目与活动 · 正常</span>
+        </button><button class="explorer-item" type="button" data-entry-id="lce003-slide-2活动目标建立品牌关键词城市">
+          Slide 2｜活动目标：建立品牌关键词：城市、
+          <span>项目与活动 · 正常</span>
+        </button><button class="explorer-item" type="button" data-entry-id="lce004-slide-2活动目标形成-3-类可复用内容">
+          Slide 2｜活动目标：形成 3 类可复用内容
+          <span>项目与活动 · 正常</span>
+        </button><button class="explorer-item" type="button" data-entry-id="lce005-slide-2活动目标沉淀后续-geo">
+          Slide 2｜活动目标：沉淀后续 GEO /
+          <span>项目与活动 · 正常</span>
+        </button>
+        </div>
+      </section>
+      <aside class="detail-panel" data-role="detailPanel">
+        <h2>条目详情</h2>
+        <p class="muted">点击知识地图或目录里的条目，查看摘要、分类、路径和状态。</p>
+      </aside>
+    </div>
+    <section>
+      <h2>知识分布</h2>
+      <ul class="count-list"><li>
+          <span>项目与活动</span>
+          <strong>5</strong>
+          <small>默认推荐 · 已启用</small>
+        </li></ul>
+    </section>
+    <div class="grid">
+      <section>
+        <h2>需要处理</h2>
+        <ul class="count-list"><li><span>冲突待判断</span><strong>0</strong></li>
+<li><span>旧知识待更新</span><strong>1</strong></li>
+<li><span>不进入长期库</span><strong>1</strong></li></ul>
+      </section>
+      <section>
+        <h2>最近入库</h2>
+        <ul><li>LCE001: 本文件为虚构源材料，用于演示 Source-to -&gt; `project/lce001-本文件为虚构源材料用于演示-source-to.md`</li><li>LCE002: Slide 1｜项目背景：云杉生活希望在夏季建立 -&gt; `project/lce002-slide-1项目背景云杉生活希望在夏季建立.md`</li><li>LCE003: Slide 2｜活动目标：建立品牌关键词：城市、 -&gt; `project/lce003-slide-2活动目标建立品牌关键词城市.md`</li><li>LCE004: Slide 2｜活动目标：形成 3 类可复用内容 -&gt; `project/lce004-slide-2活动目标形成-3-类可复用内容.md`</li><li>LCE005: Slide 2｜活动目标：沉淀后续 GEO / -&gt; `project/lce005-slide-2活动目标沉淀后续-geo.md`</li></ul>
+      </section>
+    </div>
+    <section>
+      <h2>待处理事项</h2>
+      <ul class="review-items"><li>
+              <strong>旧知识待更新｜待检索</strong>
+              <p>建议动作：补充；冲突或风险：需人工判断是否与旧知识冲突；来源事实可补充长期库；检索长期库中可能相关的旧条目，判断是否补充、修正、替换或暂不处理。</p>
+            </li><li>
+              <strong>不进入长期库｜不进入长期库</strong>
+              <p>不把待确认、低置信度或临时执行信息直接提升为长期知识。</p>
+            </li></ul>
+    </section>
+    <section>
+      <h2>后续可直接复用的场景</h2>
+      <ul><li>后续 brief 可调用本资料中已保留原文定位的事实，但必须回到 source facts 和 transcript 校验。</li></ul>
+    </section>
+    <section>
+      <h2>知识条目</h2>
+      <ul><li><strong>本文件为虚构源材料，用于演示 Source-to</strong><span>项目与活动</span><p>本文件为虚构源材料，用于演示 Source-to-Markdown 后的输入形态。</p></li><li><strong>Slide 1｜项目背景：云杉生活希望在夏季建立</strong><span>项目与活动</span><p>Slide 1｜项目背景：云杉生活希望在夏季建立“城市日常清爽管理”的品牌联想。目标不是强调单一商品功效，而是通过线下体验、社媒内容和电商承接，把品牌从季节性购买扩展到日常生活方式场景。</p></li><li><strong>Slide 2｜活动目标：建立品牌关键词：城市、</strong><span>项目与活动</span><p>Slide 2｜活动目标：建立品牌关键词：城市、清爽、轻便、日常。</p></li><li><strong>Slide 2｜活动目标：形成 3 类可复用内容</strong><span>项目与活动</span><p>Slide 2｜活动目标：形成 3 类可复用内容资产：街区体验图文、短视频脚本、门店导购话术。</p></li><li><strong>Slide 2｜活动目标：沉淀后续 GEO /</strong><span>项目与活动</span><p>Slide 2｜活动目标：沉淀后续 GEO / PDP / 种草 / 销售 brief 可调用的品牌上下文。</p></li></ul>
+    </section>
+    <script>
+      window.__BRAND_CONTEXT_LIBRARY__ = {"categories": [{"id": "project", "label": "项目与活动", "description": "默认推荐分类", "source": "默认推荐", "status": "已启用", "count": 5}], "entries": [{"id": "lce001-本文件为虚构源材料用于演示-source-to", "title": "本文件为虚构源材料，用于演示 Source-to", "summary": "本文件为虚构源材料，用于演示 Source-to-Markdown 后的输入形态。", "category": "project", "categoryLabel": "项目与活动", "path": "project/lce001-本文件为虚构源材料用于演示-source-to.md", "status": "正常", "reviewNote": ""}, {"id": "lce002-slide-1项目背景云杉生活希望在夏季建立", "title": "Slide 1｜项目背景：云杉生活希望在夏季建立", "summary": "Slide 1｜项目背景：云杉生活希望在夏季建立“城市日常清爽管理”的品牌联想。目标不是强调单一商品功效，而是通过线下体验、社媒内容和电商承接，把品牌从季节性购买扩展到日常生活方式场景。", "category": "project", "categoryLabel": "项目与活动", "path": "project/lce002-slide-1项目背景云杉生活希望在夏季建立.md", "status": "正常", "reviewNote": ""}, {"id": "lce003-slide-2活动目标建立品牌关键词城市", "title": "Slide 2｜活动目标：建立品牌关键词：城市、", "summary": "Slide 2｜活动目标：建立品牌关键词：城市、清爽、轻便、日常。", "category": "project", "categoryLabel": "项目与活动", "path": "project/lce003-slide-2活动目标建立品牌关键词城市.md", "status": "正常", "reviewNote": ""}, {"id": "lce004-slide-2活动目标形成-3-类可复用内容", "title": "Slide 2｜活动目标：形成 3 类可复用内容", "summary": "Slide 2｜活动目标：形成 3 类可复用内容资产：街区体验图文、短视频脚本、门店导购话术。", "category": "project", "categoryLabel": "项目与活动", "path": "project/lce004-slide-2活动目标形成-3-类可复用内容.md", "status": "正常", "reviewNote": ""}, {"id": "lce005-slide-2活动目标沉淀后续-geo", "title": "Slide 2｜活动目标：沉淀后续 GEO /", "summary": "Slide 2｜活动目标：沉淀后续 GEO / PDP / 种草 / 销售 brief 可调用的品牌上下文。", "category": "project", "categoryLabel": "项目与活动", "path": "project/lce005-slide-2活动目标沉淀后续-geo.md", "status": "正常", "reviewNote": ""}], "queueCounts": {"冲突待判断": 0, "旧知识待更新": 1, "不进入长期库": 1}, "reviewItems": [{"kind": "旧知识待更新", "title": "待检索", "summary": "建议动作：补充；冲突或风险：需人工判断是否与旧知识冲突；来源事实可补充长期库；检索长期库中可能相关的旧条目，判断是否补充、修正、替换或暂不处理。"}, {"kind": "不进入长期库", "title": "不进入长期库", "summary": "不把待确认、低置信度或临时执行信息直接提升为长期知识。"}], "recentUpdates": ["LCE001: 本文件为虚构源材料，用于演示 Source-to -> `project/lce001-本文件为虚构源材料用于演示-source-to.md`", "LCE002: Slide 1｜项目背景：云杉生活希望在夏季建立 -> `project/lce002-slide-1项目背景云杉生活希望在夏季建立.md`", "LCE003: Slide 2｜活动目标：建立品牌关键词：城市、 -> `project/lce003-slide-2活动目标建立品牌关键词城市.md`", "LCE004: Slide 2｜活动目标：形成 3 类可复用内容 -> `project/lce004-slide-2活动目标形成-3-类可复用内容.md`", "LCE005: Slide 2｜活动目标：沉淀后续 GEO / -> `project/lce005-slide-2活动目标沉淀后续-geo.md`"], "reusableNotes": ["后续 brief 可调用本资料中已保留原文定位的事实，但必须回到 source facts 和 transcript 校验。"]};
+      
+const libraryData = window.__BRAND_CONTEXT_LIBRARY__;
+const searchInput = document.querySelector('[data-role="searchInput"]');
+const categoryFilter = document.querySelector('[data-role="categoryFilter"]');
+const statusFilter = document.querySelector('[data-role="statusFilter"]');
+const explorerList = document.querySelector('[data-role="explorerList"]');
+const detailPanel = document.querySelector('[data-role="detailPanel"]');
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>'"]/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;'
+  }[char]));
+}
+
+function renderExplorer() {
+  const keyword = searchInput.value.trim().toLowerCase();
+  const category = categoryFilter.value;
+  const status = statusFilter.value;
+  const entries = libraryData.entries.filter((entry) => {
+    const haystack = `${entry.title} ${entry.summary} ${entry.categoryLabel}`.toLowerCase();
+    const matchesKeyword = !keyword || haystack.includes(keyword);
+    const matchesCategory = category === 'all' || entry.category === category;
+    const matchesStatus = status === 'all' || entry.status === status;
+    return matchesKeyword && matchesCategory && matchesStatus;
+  });
+  explorerList.innerHTML = entries.map((entry) => `
+    <button class="explorer-item" type="button" data-entry-id="${escapeHtml(entry.id)}">
+      ${escapeHtml(entry.title)}
+      <span>${escapeHtml(entry.categoryLabel)} · ${escapeHtml(entry.status)}</span>
+    </button>
+  `).join('') || '<p class="muted">没有匹配的知识条目。</p>';
+}
+
+function selectEntry(entryId) {
+  const entry = libraryData.entries.find((item) => item.id === entryId);
+  if (!entry) return;
+  detailPanel.innerHTML = `
+    <h2>${escapeHtml(entry.title)}</h2>
+    <p>${escapeHtml(entry.summary)}</p>
+    <dl>
+      <dt>分类</dt><dd>${escapeHtml(entry.categoryLabel)}</dd>
+      <dt>文件路径</dt><dd>${escapeHtml(entry.path)}</dd>
+      <dt>状态</dt><dd>${escapeHtml(entry.status)}</dd>
+      <dt>处理提示</dt><dd>${escapeHtml(entry.reviewNote || '无需处理')}</dd>
+    </dl>
+  `;
+}
+
+document.addEventListener('click', (event) => {
+  const entryButton = event.target.closest('[data-entry-id]');
+  if (entryButton) {
+    selectEntry(entryButton.dataset.entryId);
+    return;
+  }
+  const categoryButton = event.target.closest('[data-category-id]');
+  if (categoryButton) {
+    categoryFilter.value = categoryButton.dataset.categoryId;
+    renderExplorer();
+  }
+});
+
+searchInput.addEventListener('input', renderExplorer);
+categoryFilter.addEventListener('change', renderExplorer);
+statusFilter.addEventListener('change', renderExplorer);
+renderExplorer();
+
+    </script>
+  </main>
+</body>
+</html>

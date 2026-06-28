@@ -16,8 +16,9 @@ REQUIRED_OUTPUTS = [
 
 
 SECTION_CONFIG = [
-    ("exceptions", "需要处理的问题"),
+    ("overview", "整个文件概述"),
     ("context", "文件大纲参考"),
+    ("exceptions", "需要处理的问题"),
 ]
 
 
@@ -144,7 +145,18 @@ def _extract_profile_summary(profile: str) -> str:
 
 def _extract_outline(transcript: str) -> str:
     outline = _extract_heading_section(transcript, "总体结构")
-    return _remove_source_noise(outline) if outline else "暂未稳定抽取出文件大纲，需要先补全文转述。"
+    if outline:
+        return _remove_source_noise(outline)
+
+    slide_titles = re.findall(r"^##\s+(Slide|Page)\s+\d+[｜|:：]\s*(.+?)\s*$", transcript, re.MULTILINE)
+    if slide_titles:
+        return "\n".join(f"- {title.strip()}" for _, title in slide_titles)
+
+    page_blocks = re.findall(r"^##\s+Page / Slide\s+(\d+)\s*$", transcript, re.MULTILINE)
+    if page_blocks:
+        return "\n".join(f"- 第 {page_number} 页 / 幻灯片" for page_number in page_blocks)
+
+    return "暂未稳定抽取出文件大纲，需要先补全文转述。"
 
 
 def _extract_main_content(transcript: str) -> str:
@@ -202,11 +214,12 @@ def _review_table_to_issue_list(review_items: str) -> str:
     items = []
     for row in rows:
         issue = row.get("审核项", "").strip()
-        suggestion = row.get("建议处理", "").strip()
+        suggestion = (row.get("建议处理", "") or row.get("建议", "")).strip()
         if not issue or not _keep_user_confirmation_issue(issue):
             continue
-        text = f"- {issue}"
-        if suggestion:
+        cleaned_issue = _clean_review_issue(issue)
+        text = f"- {cleaned_issue}"
+        if suggestion and suggestion not in {"人工复核 / 补充业务信息"}:
             text += f"。建议：{suggestion}"
         items.append(_remove_source_noise(text))
     return "\n".join(items)
@@ -215,6 +228,8 @@ def _review_table_to_issue_list(review_items: str) -> str:
 def _keep_user_confirmation_issue(text: str) -> bool:
     if not text.strip():
         return False
+    if _is_missing_context_issue(text):
+        return True
     excluded_terms = [
         "外发",
         "法务",
@@ -236,6 +251,28 @@ def _keep_user_confirmation_issue(text: str) -> bool:
         return False
     included_terms = ["未稳定", "错位", "小字", "图表", "图片", "OCR", "识别", "抽取", "会议", "日期", "参会", "决策"]
     return any(term in text for term in included_terms)
+
+
+def _is_missing_context_issue(text: str) -> bool:
+    return any(
+        marker in text
+        for marker in [
+            "来源文本提示信息缺口",
+            "资料没有提供",
+            "暂未提供",
+            "待补充",
+            "需要品牌经理补充",
+            "需要补充",
+            "需补充",
+        ]
+    )
+
+
+def _clean_review_issue(text: str) -> str:
+    text = re.sub(r"^来源文本提示信息缺口[：:]\s*", "", text.strip())
+    text = re.sub(r"^Slide\s+\d+\s*[｜|]\s*", "", text)
+    text = re.sub(r"^Page\s+\d+\s*[｜|]\s*", "", text)
+    return text.strip()
 
 
 def _strip_title(markdown: str) -> str:
@@ -339,6 +376,7 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
     exceptions = _extract_unclear_items(transcript, review_items)
     has_exceptions = _has_exception_items(exceptions)
     review_content = {
+        "overview": _extract_profile_summary(profile),
         "exceptions": exceptions if has_exceptions else "这份文件当前没有识别异常需要人工处理，可以先进入结构化知识库。",
         "context": outline,
     }

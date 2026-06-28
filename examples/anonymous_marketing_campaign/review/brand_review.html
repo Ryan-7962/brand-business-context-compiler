@@ -135,15 +135,16 @@
     <div>
       <h1>anonymous_marketing_campaign｜识别问题待处理</h1>
       <div class="summary">
-        <span class="metric">自动通过，无需人工处理</span>
-        <span class="metric">待处理问题：0</span>
+        <span class="metric">需要人工处理</span>
+        <span class="metric">待处理问题：2</span>
       </div>
     </div>
     <button class="download" onclick="downloadDecisions()">导出确认意见</button>
   </header>
   <div class="layout">
-    <nav><a href="#exceptions">需要处理的问题</a>
-<a href="#context">文件大纲参考</a></nav>
+    <nav><a href="#overview">整个文件概述</a>
+<a href="#context">文件大纲参考</a>
+<a href="#exceptions">需要处理的问题</a></nav>
     <main>
       <section id="how-to-review">
         <h2>处理规则</h2>
@@ -154,18 +155,25 @@
         </ul>
         <textarea id="decision-json" readonly>{&quot;文件&quot;: &quot;anonymous_marketing_campaign&quot;, &quot;确认意见&quot;: {}}</textarea>
       </section>
-      <section id="exceptions"><h2>需要处理的问题</h2><p>这份文件当前没有识别异常需要人工处理，可以先进入结构化知识库。</p>
-    <div class="review-controls" data-section="exceptions">
-      <button onclick="setDecision('exceptions', '无需处理')">无需处理</button>
-      <button onclick="setDecision('exceptions', '已补充修正')">已补充修正</button>
-      <button onclick="setDecision('exceptions', '暂时跳过')">暂时跳过</button>
+      <section id="overview"><h2>整个文件概述</h2><ul><li>文件类型：活动方案 / 广告提案</li><li>文件目的：组织传播策略、创意主线、触点和内容资产</li><li>业务阶段：提案 / 立项 / 执行准备</li></ul>
+    <div class="review-controls" data-section="overview">
+      <button onclick="setDecision('overview', '无需处理')">无需处理</button>
+      <button onclick="setDecision('overview', '已补充修正')">已补充修正</button>
+      <button onclick="setDecision('overview', '暂时跳过')">暂时跳过</button>
     </div>
     </section>
-<section id="context"><h2>文件大纲参考</h2><p>暂未稳定抽取出文件大纲，需要先补全文转述。</p>
+<section id="context"><h2>文件大纲参考</h2><ul><li>项目背景</li><li>活动目标</li><li>目标人群</li><li>策略主线</li><li>触点规划</li><li>审核要求</li></ul>
     <div class="review-controls" data-section="context">
       <button onclick="setDecision('context', '无需处理')">无需处理</button>
       <button onclick="setDecision('context', '已补充修正')">已补充修正</button>
       <button onclick="setDecision('context', '暂时跳过')">暂时跳过</button>
+    </div>
+    </section>
+<section id="exceptions"><h2>需要处理的问题</h2><ul><li>目标人群：主要人群为 24-35 岁城市通勤人群，关注夏季出行、办公、运动后的体感舒适。资料没有提供定量消费者调研，需要品牌经理补充。</li><li>审核要求：预算、人员分工、渠道合作名单暂未提供。</li></ul>
+    <div class="review-controls" data-section="exceptions">
+      <button onclick="setDecision('exceptions', '无需处理')">无需处理</button>
+      <button onclick="setDecision('exceptions', '已补充修正')">已补充修正</button>
+      <button onclick="setDecision('exceptions', '暂时跳过')">暂时跳过</button>
     </div>
     </section>
       <section id="manual-feedback">

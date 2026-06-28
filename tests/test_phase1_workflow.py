@@ -1584,6 +1584,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             text = html.read_text(encoding="utf-8")
             self.assertTrue(html.exists())
             self.assertIn("识别问题待处理", text)
+            self.assertIn("整个文件概述", text)
             self.assertIn("需要处理的问题", text)
             self.assertIn("文件大纲参考", text)
             self.assertIn("人工修正", text)
@@ -1592,6 +1593,35 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertNotIn('class="source-anchor"', text)
             self.assertNotIn("来源位置：", text)
             self.assertNotIn("Context Asset Index Review", text)
+
+    def test_build_review_pack_shows_missing_context_without_backend_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            outputs = project_dir / "outputs"
+            outputs.mkdir()
+            files = {
+                "02_document_profile.md": "# Document Profile｜示例活动\n\n## 1. 文件定位\n\n这是一份活动方案资料。\n",
+                "03_marketing_semantic_transcript.md": "# Marketing Semantic Transcript｜示例活动\n\n## Page / Slide 1\n\n### 原页核心内容转述\n\n## Slide 1｜活动背景\n\n建立夏季品牌联想。\n\n## Page / Slide 2\n\n### 原页核心内容转述\n\n## Slide 2｜目标人群\n\n资料没有提供定量消费者调研，需要品牌经理补充。\n",
+                "06_risk_and_review_items.md": "# Risk and Review Items\n\n| Review ID | 审核项 | 风险等级 | 来源锚点 | 建议 |\n|---|---|---|---|---|\n| R001 | 来源文本提示信息缺口：Slide 2｜目标人群：资料没有提供定量消费者调研，需要品牌经理补充。 | 中 | S001#page=2 | 人工复核 / 补充业务信息 |\n| R002 | 来源文本提示信息缺口：Slide 3｜审核要求：预算、人员分工、渠道合作名单暂未提供。 | 中 | S001#page=3 | 人工复核 / 补充业务信息 |\n",
+            }
+            for filename, text in files.items():
+                (outputs / filename).write_text(text, encoding="utf-8")
+
+            with redirect_stdout(StringIO()):
+                build_review_pack(project_dir)
+
+            text = (project_dir / "review" / "brand_review.html").read_text(encoding="utf-8")
+            self.assertIn("需要人工处理", text)
+            self.assertIn("待处理问题：2", text)
+            self.assertIn("资料没有提供定量消费者调研", text)
+            self.assertIn("预算、人员分工、渠道合作名单暂未提供", text)
+            self.assertIn("活动背景", text)
+            self.assertNotIn("Review ID", text)
+            self.assertNotIn("来源锚点", text)
+            self.assertNotIn("风险等级", text)
+            self.assertNotIn("Source Anchor", text)
+            self.assertNotIn("Risk Level", text)
+            self.assertNotIn('class="source-anchor"', text)
 
     def test_build_review_pack_auto_passes_without_exceptions(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
