@@ -1736,6 +1736,57 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Existing Updates: 1", index_text)
             self.assertIn("Retrieval Note Batches: 1", index_text)
 
+    def test_apply_context_library_update_skips_identical_reimport(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+            outputs = project_dir / "outputs"
+            outputs.mkdir(parents=True)
+            (outputs / "11_context_library_update_plan.md").write_text(
+                "\n".join(
+                    [
+                        "# Context Library Update Plan",
+                        "",
+                        "## 2. New Context Entries",
+                        "",
+                        "| Entry ID | 建议归档位置 | 标题 | 内容摘要 | 来源资产 | 稳定性 | 写入建议 |",
+                        "|---|---|---|---|---|---|---|",
+                        "| LCE001 | brand | 夏季关键词 | 城市、清爽、轻便、日常。 | CA001 | 项目期有效 | 暂存 |",
+                        "",
+                        "## 3. Existing Context Updates",
+                        "",
+                        "| 可能影响的已有条目 | 更新方式 | 新信息 | 冲突或风险 | 版本判断依据 |",
+                        "|---|---|---|---|---|",
+                        "| 待检索 | 补充 | 夏季关键词需要补充轻便表达。 | 可能与旧品牌口径不一致 | 来源文件修改时间较新 |",
+                        "",
+                        "## 4. Do Not Promote",
+                        "",
+                        "- 不把临时预算写入长期库。",
+                        "",
+                        "## 6. Retrieval Notes",
+                        "",
+                        "生成夏季活动方案时可以调用本资料。",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            library_dir = Path(temp_dir) / "brand_context_library"
+
+            with redirect_stdout(StringIO()):
+                apply_context_library_update(project_dir, library_dir=library_dir)
+            with redirect_stdout(StringIO()) as stdout:
+                apply_context_library_update(project_dir, library_dir=library_dir)
+
+            self.assertIn("Entries applied: 0", stdout.getvalue())
+            self.assertIn("Entries skipped: 1", stdout.getvalue())
+            self.assertIn("Conflicts queued: 0", stdout.getvalue())
+            index_text = (library_dir / "00_library_index.md").read_text(encoding="utf-8")
+            self.assertIn("Conflicts: 0", index_text)
+            self.assertIn("Existing Updates: 1", index_text)
+            self.assertIn("Do Not Promote Records: 1", index_text)
+            self.assertIn("Retrieval Note Batches: 1", index_text)
+            self.assertEqual(len(list((library_dir / "brand").glob("*.md"))), 1)
+            self.assertEqual((library_dir / "evolution_log.md").read_text(encoding="utf-8").count("demo_project"), 1)
+
     def test_apply_context_library_update_queues_conflicts_without_overwriting(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir) / "demo_project"

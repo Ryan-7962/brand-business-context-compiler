@@ -39,6 +39,7 @@ def apply_context_library_update(project_dir: Path, library_dir: Path | None = N
     retrieval_notes = _extract_section(text, "6. Retrieval Notes")
     applied = []
     conflicts = []
+    skipped = []
     for entry in entries:
         action = entry.get("写入建议", "").strip()
         if action not in {"写入", "暂存"}:
@@ -46,24 +47,30 @@ def apply_context_library_update(project_dir: Path, library_dir: Path | None = N
         location = _normalize_location(entry.get("建议归档位置", ""))
         conflict_path = _find_conflict(target_dir, location, entry)
         if conflict_path:
+            if _is_same_library_entry(conflict_path, entry, location):
+                skipped.append((entry, conflict_path))
+                continue
             conflicts.append((entry, conflict_path))
             continue
         entry_path = _write_library_entry(target_dir, location, entry)
         applied.append((entry, entry_path))
 
+    changed = bool(applied or conflicts)
     if conflicts:
-        _append_conflict_queue(target_dir, project_dir.name, conflicts)
+        changed = _append_conflict_queue(target_dir, project_dir.name, conflicts) or changed
     all_updates = existing_updates + source_version_updates
     if all_updates:
-        _append_update_queue(target_dir, project_dir.name, all_updates)
+        changed = _append_update_queue(target_dir, project_dir.name, all_updates) or changed
     if do_not_promote:
-        _append_do_not_promote_queue(target_dir, project_dir.name, do_not_promote)
+        changed = _append_do_not_promote_queue(target_dir, project_dir.name, do_not_promote) or changed
     if retrieval_notes:
-        _append_retrieval_notes(target_dir, project_dir.name, retrieval_notes)
-    _append_evolution_log(target_dir, project_dir.name, applied)
+        changed = _append_retrieval_notes(target_dir, project_dir.name, retrieval_notes) or changed
+    if changed:
+        _append_evolution_log(target_dir, project_dir.name, applied)
     _refresh_library_index(target_dir)
     print(f"Context library updated: {target_dir}")
     print(f"Entries applied: {len(applied)}")
+    print(f"Entries skipped: {len(skipped)}")
     print(f"Conflicts queued: {len(conflicts)}")
 
 
@@ -219,6 +226,14 @@ def _find_conflict(library_dir: Path, location: str, entry: dict[str, str]) -> P
     return None
 
 
+def _is_same_library_entry(path: Path, entry: dict[str, str], location: str) -> bool:
+    return _normalize_entry_text(path.read_text(encoding="utf-8")) == _normalize_entry_text(_render_entry(entry, location))
+
+
+def _normalize_entry_text(text: str) -> str:
+    return "\n".join(line.rstrip() for line in text.strip().splitlines())
+
+
 def _render_entry(entry: dict[str, str], location: str) -> str:
     title = entry.get("标题", "Untitled Context Entry").strip() or "Untitled Context Entry"
     return "\n".join(
@@ -252,15 +267,15 @@ def _append_evolution_log(library_dir: Path, project_name: str, applied: list[tu
         handle.write("\n".join(lines))
 
 
-def _append_conflict_queue(library_dir: Path, project_name: str, conflicts: list[tuple[dict[str, str], Path]]) -> None:
+def _append_conflict_queue(library_dir: Path, project_name: str, conflicts: list[tuple[dict[str, str], Path]]) -> bool:
     path = library_dir / "review_queue" / "conflicts.md"
     if not path.exists():
         path.write_text("# Context Library Conflict Queue\n\n", encoding="utf-8")
 
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    lines = [f"## {timestamp}｜{project_name}", ""]
+    body_lines = []
     for entry, existing_path in conflicts:
-        lines.extend(
+        body_lines.extend(
             [
                 f"### {entry.get('Entry ID', '')}｜{entry.get('标题', '')}",
                 "",
@@ -280,24 +295,28 @@ def _append_conflict_queue(library_dir: Path, project_name: str, conflicts: list
                 "",
             ]
         )
+    if _queue_body_exists(path, body_lines):
+        return False
+    lines = [f"## {timestamp}｜{project_name}", "", *body_lines]
     with path.open("a", encoding="utf-8") as handle:
         handle.write("\n".join(lines))
+    return True
 
 
-def _append_update_queue(library_dir: Path, project_name: str, updates: list[dict[str, str]]) -> None:
+def _append_update_queue(library_dir: Path, project_name: str, updates: list[dict[str, str]]) -> bool:
     path = library_dir / "review_queue" / "updates.md"
     if not path.exists():
         path.write_text("# 旧知识更新队列\n\n", encoding="utf-8")
 
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    lines = [f"## {timestamp}｜{project_name}", ""]
+    body_lines = []
     for update in updates:
         target = update.get("可能影响的已有条目", "").strip() or "待检索"
         method = update.get("更新方式", "").strip() or "待判断"
         new_info = update.get("新信息", "").strip()
         conflict = update.get("冲突或风险", "").strip()
         version_basis = update.get("版本判断依据", "").strip() or "待确认"
-        lines.extend(
+        body_lines.extend(
             [
                 f"### {target}",
                 "",
@@ -315,28 +334,49 @@ def _append_update_queue(library_dir: Path, project_name: str, updates: list[dic
                 "",
             ]
         )
+    if _queue_body_exists(path, body_lines):
+        return False
+    lines = [f"## {timestamp}｜{project_name}", "", *body_lines]
     with path.open("a", encoding="utf-8") as handle:
         handle.write("\n".join(lines))
+    return True
 
 
-def _append_do_not_promote_queue(library_dir: Path, project_name: str, content: str) -> None:
+def _append_do_not_promote_queue(library_dir: Path, project_name: str, content: str) -> bool:
     path = library_dir / "review_queue" / "do_not_promote.md"
     if not path.exists():
         path.write_text("# Do Not Promote Queue\n\n", encoding="utf-8")
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    lines = [f"## {timestamp}｜{project_name}", "", _clean_section_content(content), ""]
+    body_lines = [_clean_section_content(content), ""]
+    if _queue_body_exists(path, body_lines):
+        return False
+    lines = [f"## {timestamp}｜{project_name}", "", *body_lines]
     with path.open("a", encoding="utf-8") as handle:
         handle.write("\n".join(lines))
+    return True
 
 
-def _append_retrieval_notes(library_dir: Path, project_name: str, content: str) -> None:
+def _append_retrieval_notes(library_dir: Path, project_name: str, content: str) -> bool:
     path = library_dir / "retrieval_maps" / "source_packages.md"
     if not path.exists():
         path.write_text("# Source Package Retrieval Notes\n\n", encoding="utf-8")
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    lines = [f"## {timestamp}｜{project_name}", "", _clean_section_content(content), ""]
+    body_lines = [_clean_section_content(content), ""]
+    if _queue_body_exists(path, body_lines):
+        return False
+    lines = [f"## {timestamp}｜{project_name}", "", *body_lines]
     with path.open("a", encoding="utf-8") as handle:
         handle.write("\n".join(lines))
+    return True
+
+
+def _queue_body_exists(path: Path, body_lines: list[str]) -> bool:
+    body = "\n".join(body_lines).strip()
+    if not body:
+        return True
+    if not path.exists():
+        return False
+    return body in path.read_text(encoding="utf-8")
 
 
 def _refresh_library_index(library_dir: Path) -> None:
