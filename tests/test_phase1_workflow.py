@@ -728,8 +728,11 @@ class Phase1WorkflowTests(unittest.TestCase):
                 sys.argv = argv
 
             report_path = converted / "source_engine_eval_results.md"
+            report_text = report_path.read_text(encoding="utf-8")
             self.assertTrue(report_path.exists())
-            self.assertIn("Source Engine Evaluation Results", report_path.read_text(encoding="utf-8"))
+            self.assertIn("Source Engine Evaluation Results", report_text)
+            self.assertIn("sample.html", report_text)
+            self.assertIn("MarkItDown / pymupdf4llm baseline", report_text)
 
     def test_plan_mineru_evaluation_selects_high_value_quality_pages(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

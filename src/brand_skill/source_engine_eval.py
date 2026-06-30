@@ -181,6 +181,8 @@ def _parse_quality_rows(markdown: str) -> list[dict[str, str]]:
 
 def _parse_eval_plan_rows(markdown: str) -> list[dict[str, str]]:
     table_lines = _section_table_lines(markdown, "## 建议小样")
+    if not table_lines:
+        table_lines = [line.strip() for line in markdown.splitlines() if line.strip().startswith("|")]
     rows: list[dict[str, str]] = []
     index = 0
     while index < len(table_lines) - 1:
