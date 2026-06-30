@@ -1606,7 +1606,10 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("文件大纲参考", text)
             self.assertIn("人工修正", text)
             self.assertIn("待处理问题", text)
-            self.assertIn("导出确认意见", text)
+            self.assertIn("导出修正意见", text)
+            self.assertNotIn("确认意见", text)
+            self.assertNotIn("review-controls", text)
+            self.assertNotIn("setDecision", text)
             self.assertNotIn('class="source-anchor"', text)
             self.assertNotIn("来源位置：", text)
             self.assertNotIn("Context Asset Index Review", text)
@@ -1639,6 +1642,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertNotIn("Source Anchor", text)
             self.assertNotIn("Risk Level", text)
             self.assertNotIn('class="source-anchor"', text)
+            self.assertNotIn("review-controls", text)
 
     def test_build_review_pack_auto_passes_without_exceptions(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

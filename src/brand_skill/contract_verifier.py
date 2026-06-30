@@ -379,6 +379,9 @@ def _check_review_pack(project_dir: Path, issues: list[str]) -> None:
         "来源锚点",
         "Risk Level",
         "风险等级",
+        "review-controls",
+        "setDecision",
+        "确认意见",
     ]
     for marker in backend_markers:
         if marker in text:

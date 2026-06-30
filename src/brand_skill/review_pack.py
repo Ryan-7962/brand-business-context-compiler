@@ -368,7 +368,6 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
     display_title = _extract_review_title(sections, title)
     escaped_title = html.escape(display_title)
     js_title = json.dumps(display_title, ensure_ascii=False)
-    initial_decisions = html.escape(json.dumps({"文件": display_title, "确认意见": {}}, ensure_ascii=False))
     profile = sections["02_document_profile.md"]
     transcript = sections["03_marketing_semantic_transcript.md"]
     review_items = sections["06_risk_and_review_items.md"]
@@ -481,14 +480,6 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
     section li {{ margin: 6px 0; }}
     section ul {{ padding-left: 22px; }}
     code {{ background: #f1f5f9; padding: 1px 4px; border-radius: 4px; }}
-    .review-controls {{
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 14px;
-      padding-top: 12px;
-      border-top: 1px solid var(--line);
-    }}
     button {{
       border: 1px solid var(--line);
       background: #fff;
@@ -526,7 +517,7 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
         <span class="metric">待处理问题：{unclear_count}</span>
       </div>
     </div>
-    <button class="download" onclick="downloadDecisions()">导出确认意见</button>
+    <button class="download" onclick="downloadDecisions()">导出修正意见</button>
   </header>
   <div class="layout">
     <nav>{nav}</nav>
@@ -538,7 +529,6 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
           <li>只有图片、表格、小字、漏读、关键业务字段不明确等问题需要你处理。</li>
           <li>如果确实有问题，在底部写明页码、错误点和正确说法。</li>
         </ul>
-        <textarea id="decision-json" readonly>{initial_decisions}</textarea>
       </section>
       {section_html}
       <section id="manual-feedback">
@@ -549,23 +539,10 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
     </main>
   </div>
   <script>
-    const decisions = {{}};
-    function setDecision(section, value) {{
-      decisions[section] = {{
-        "结论": value,
-        "更新时间": new Date().toISOString()
-      }};
-      document.getElementById('decision-json').value = JSON.stringify({{
-        "文件": {js_title},
-        "确认意见": decisions,
-        "人工补充": document.getElementById('manual-note') ? document.getElementById('manual-note').value : ""
-      }}, null, 2);
-    }}
     function downloadDecisions() {{
       const payloadObject = {{
         "文件": {js_title},
-        "确认意见": decisions,
-        "人工补充": document.getElementById('manual-note') ? document.getElementById('manual-note').value : ""
+        "人工修正": document.getElementById('manual-note') ? document.getElementById('manual-note').value : ""
       }};
       const payload = JSON.stringify(payloadObject, null, 2);
       const blob = new Blob([payload], {{ type: 'application/json;charset=utf-8' }});
@@ -583,11 +560,4 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
 
 
 def _render_section(section_id: str, label: str, markdown: str) -> str:
-    controls = f"""
-    <div class="review-controls" data-section="{section_id}">
-      <button onclick="setDecision('{section_id}', '无需处理')">无需处理</button>
-      <button onclick="setDecision('{section_id}', '已补充修正')">已补充修正</button>
-      <button onclick="setDecision('{section_id}', '暂时跳过')">暂时跳过</button>
-    </div>
-    """
-    return f'<section id="{section_id}"><h2>{html.escape(label)}</h2>{_markdown_to_html(markdown)}{controls}</section>'
+    return f'<section id="{section_id}"><h2>{html.escape(label)}</h2>{_markdown_to_html(markdown)}</section>'
