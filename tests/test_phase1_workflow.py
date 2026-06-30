@@ -1407,6 +1407,13 @@ class Phase1WorkflowTests(unittest.TestCase):
                 "复盘 / 优化",
                 "case",
             ),
+            (
+                "campaign_recap",
+                "夏季活动复盘总结了社媒内容表现、转化数据和后续优化动作。",
+                "投放复盘",
+                "复盘 / 优化",
+                "case",
+            ),
         ]
         for project_name, evidence, expected_type, expected_stage, expected_location in cases:
             with self.subTest(project_name=project_name):

@@ -279,20 +279,6 @@ def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:
     text = " ".join(row.get("Evidence Text", "") for row in facts).lower()
     rules = [
         (
-            ["活动", "活动目标", "campaign", "提案", "上市", "big idea", "传播", "社媒", "触点"],
-            {
-                "document_type": "活动方案 / 广告提案",
-                "document_purpose": "组织传播策略、创意主线、触点和内容资产",
-                "audience": "品牌团队、代理商、内容团队、渠道团队",
-                "business_stage": "提案 / 立项 / 执行准备",
-                "library_location": "project",
-                "asset_type": "project",
-                "reuse_scene": "GEO / 种草 / 拍摄 / 活动执行",
-                "focus_points": "- 抽取目标、洞察、创意主线、渠道触点和内容资产。\n- 标出预算、排期、资源和审核边界缺口。",
-                "rationale": "- 命中“活动 / campaign / 提案 / 上市 / 传播 / 社媒 / 触点”等来源词，因此暂判为活动方案 / 广告提案。",
-            },
-        ),
-        (
             ["复盘", "总结", "表现", "转化", "经验教训", "投放"],
             {
                 "document_type": "投放复盘",
@@ -304,6 +290,20 @@ def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:
                 "reuse_scene": "复盘 / 投放优化 / 案例复用",
                 "focus_points": "- 先提炼表现结论和有效做法。\n- 标出失败点、风险和后续优化动作。\n- 不把阶段性表现直接升级为长期品牌口径。",
                 "rationale": "- 命中“复盘 / 表现 / 转化 / 经验教训 / 投放”等来源词，因此暂判为投放复盘。",
+            },
+        ),
+        (
+            ["活动", "活动目标", "campaign", "提案", "上市", "big idea", "传播", "社媒", "触点"],
+            {
+                "document_type": "活动方案 / 广告提案",
+                "document_purpose": "组织传播策略、创意主线、触点和内容资产",
+                "audience": "品牌团队、代理商、内容团队、渠道团队",
+                "business_stage": "提案 / 立项 / 执行准备",
+                "library_location": "project",
+                "asset_type": "project",
+                "reuse_scene": "GEO / 种草 / 拍摄 / 活动执行",
+                "focus_points": "- 抽取目标、洞察、创意主线、渠道触点和内容资产。\n- 标出预算、排期、资源和审核边界缺口。",
+                "rationale": "- 命中“活动 / campaign / 提案 / 上市 / 传播 / 社媒 / 触点”等来源词，因此暂判为活动方案 / 广告提案。",
             },
         ),
         (
