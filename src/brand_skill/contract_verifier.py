@@ -297,7 +297,7 @@ def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
         issues.append("Missing source conversion report: converted_markdown/conversion_report.md")
     else:
         report_text = report.read_text(encoding="utf-8")
-        for marker in ["原始文件创建时间", "原始文件修改时间", "低置信度"]:
+        for marker in ["原始文件创建时间", "原始文件修改时间", "转写时间", "低置信度"]:
             if marker not in report_text:
                 issues.append(f"Source conversion report missing marker: {marker}")
         for marker in ["识别质量摘要", "总页数", "视觉/表格/小字限制", "人工复核建议"]:

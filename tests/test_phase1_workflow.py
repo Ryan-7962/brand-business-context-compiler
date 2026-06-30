@@ -202,6 +202,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("文件修改时间：", transcript_text)
             self.assertIn("原始文件创建时间", report_text)
             self.assertIn("原始文件修改时间", report_text)
+            self.assertIn("转写时间", report_text)
             self.assertIn("识别质量摘要", report_text)
             self.assertIn("总页数", report_text)
             self.assertIn("视觉/表格/小字限制", report_text)
@@ -1239,10 +1240,10 @@ class Phase1WorkflowTests(unittest.TestCase):
                         "",
                         "## Source Files",
                         "",
-                        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 | 外部来源 |",
-                        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
-                        "| S001 | brand_BPM-FINAL0729-FFFFFFFF.pdf | 2026-07-29T09:00:00+08:00 | 2026-07-29T18:00:00+08:00 | source_transcripts/S001.md | pymupdf4llm | PDF | no | pages 1-20 | 待复核 | 截图 | 待复核 | 无明显低置信度 | 否 | ima / 示例库 |",
-                        "| S002 | brand BPM final 0801 copy.pdf | 2026-08-01T09:00:00+08:00 | 2026-08-01T18:00:00+08:00 | source_transcripts/S002.md | pymupdf4llm | PDF | no | pages 1-22 | 待复核 | 截图 | 待复核 | 无明显低置信度 | 否 | ima / 示例库 |",
+                        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 | 外部来源 |",
+                        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+                        "| S001 | category_plan_final0729_a1b2c3d4.pdf | 2026-07-29T09:00:00+08:00 | 2026-07-29T18:00:00+08:00 | 2026-07-29T18:30:00+08:00 | source_transcripts/S001.md | pymupdf4llm | PDF | no | pages 1-20 | 待复核 | 截图 | 待复核 | 无明显低置信度 | 否 | ima / 示例库 |",
+                        "| S002 | category plan final 0801 copy.pdf | 2026-08-01T09:00:00+08:00 | 2026-08-01T18:00:00+08:00 | 2026-08-01T18:30:00+08:00 | source_transcripts/S002.md | pymupdf4llm | PDF | no | pages 1-22 | 待复核 | 截图 | 待复核 | 无明显低置信度 | 否 | ima / 示例库 |",
                     ]
                 ),
                 encoding="utf-8",
@@ -1253,9 +1254,9 @@ class Phase1WorkflowTests(unittest.TestCase):
 
             report_text = (converted / "source_version_report.md").read_text(encoding="utf-8")
             self.assertIn("疑似多版本组数：1", report_text)
-            self.assertIn("### brand_bpm", report_text)
-            self.assertIn("S002 / brand BPM final 0801 copy.pdf / 2026-08-01T18:00:00+08:00", report_text)
-            self.assertIn("brand_BPM-FINAL0729-FFFFFFFF.pdf", report_text)
+            self.assertIn("### category_plan", report_text)
+            self.assertIn("S002 / category plan final 0801 copy.pdf / 2026-08-01T18:00:00+08:00", report_text)
+            self.assertIn("category_plan_final0729_a1b2c3d4.pdf", report_text)
 
     def test_cli_build_source_version_report_command(self) -> None:
         import sys
@@ -2216,7 +2217,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             for filename, content in files.items():
                 (outputs / filename).write_text(content, encoding="utf-8")
             (converted / "conversion_report.md").write_text(
-                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 低置信度区域 |\n|---|---|---|---|\n| 2026 | 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
@@ -2282,7 +2283,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             for filename, content in files.items():
                 (outputs / filename).write_text(content, encoding="utf-8")
             (converted / "conversion_report.md").write_text(
-                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 低置信度区域 |\n|---|---|---|---|\n| 2026 | 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
@@ -2371,7 +2372,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             ]:
                 (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
             (converted / "conversion_report.md").write_text(
-                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 低置信度区域 |\n|---|---|---|---|\n| 2026 | 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
@@ -2523,7 +2524,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             ]:
                 (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
             (converted / "conversion_report.md").write_text(
-                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 低置信度区域 |\n|---|---|---|---|\n| 2026 | 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
@@ -2582,7 +2583,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             ]:
                 (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
             (converted / "conversion_report.md").write_text(
-                "| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                "| 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 低置信度区域 |\n|---|---|---|---|\n| 2026 | 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
             (transcripts / "S001_demo.md").write_text(
@@ -2627,7 +2628,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             ]:
                 (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
             (converted / "conversion_report.md").write_text(
-                "| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                "| 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 低置信度区域 |\n|---|---|---|---|\n| 2026 | 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
             (transcripts / "S001_demo.md").write_text(
@@ -2694,7 +2695,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             ]:
                 (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
             (converted / "conversion_report.md").write_text(
-                "| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                "| 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 低置信度区域 |\n|---|---|---|---|\n| 2026 | 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
             (transcripts / "S001_demo.md").write_text(
@@ -2763,7 +2764,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             ]:
                 (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
             (converted / "conversion_report.md").write_text(
-                "| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                "| 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 低置信度区域 |\n|---|---|---|---|\n| 2026 | 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
             (transcripts / "S001_demo.md").write_text(
@@ -2808,7 +2809,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             ]:
                 (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
             (converted / "conversion_report.md").write_text(
-                "| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                "| 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 低置信度区域 |\n|---|---|---|---|\n| 2026 | 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
             (transcripts / "S001_demo.md").write_text(
@@ -2859,7 +2860,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             ]:
                 (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
             (converted / "conversion_report.md").write_text(
-                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 低置信度区域 |\n|---|---|---|---|\n| 2026 | 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
@@ -2953,7 +2954,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                     content += "\n| 字段 | 内容 | 信息状态 |\n|---|---|---|\n| 品牌口径 | 示例 | 已品牌确认 |\n"
                 (outputs / filename).write_text(content, encoding="utf-8")
             (converted / "conversion_report.md").write_text(
-                "| 原始文件创建时间 | 原始文件修改时间 | 低置信度区域 |\n|---|---|---|\n| 2026 | 2026 | 无 |\n",
+                "| 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 低置信度区域 |\n|---|---|---|---|\n| 2026 | 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
             (transcripts / "S001_demo.md").write_text(

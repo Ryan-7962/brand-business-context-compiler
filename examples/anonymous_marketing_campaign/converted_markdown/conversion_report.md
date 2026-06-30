@@ -9,6 +9,6 @@
 
 ## Source Files
 
-| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 | 外部来源 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| S001 | city_refresh_campaign.md | 2026-06-04T08:45:43Z | 2026-06-04T08:45:43Z | converted_markdown/source_transcripts/S001_campaign_plan.md | pymupdf4llm | Markdown 源稿转写 | 不适用 | 1-6 | 按文本保留 | 不适用 | 不适用 | 无明显低置信度 | 检查 Markdown 源稿是否遗漏原始视觉信息 | 本地 source/ |
+| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 | 外部来源 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| S001 | city_refresh_campaign.md | 2026-06-04T08:45:43Z | 2026-06-04T08:45:43Z | 2026-06-30T12:46:22Z | converted_markdown/source_transcripts/S001_campaign_plan.md | pymupdf4llm | Markdown 源稿转写 | 不适用 | 1-6 | 按文本保留 | 不适用 | 不适用 | 无明显低置信度 | 检查 Markdown 源稿是否遗漏原始视觉信息 | 本地 source/ |
