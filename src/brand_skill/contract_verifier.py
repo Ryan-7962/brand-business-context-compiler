@@ -350,7 +350,7 @@ def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
         issues.append("Missing source engine evaluation results: converted_markdown/source_engine_eval_results.md")
     else:
         results_text = engine_eval_results.read_text(encoding="utf-8")
-        for marker in ["Source Engine Evaluation Results", "pymupdf4llm", "MarkItDown", "MinerU", "是否调整默认链路", "隐私"]:
+        for marker in ["Source Engine Evaluation Results", "pymupdf4llm", "pymupdf4llm baseline 观测", "MarkItDown", "MinerU", "是否调整默认链路", "隐私"]:
             if marker not in results_text:
                 issues.append(f"Source engine evaluation results missing marker: {marker}")
 

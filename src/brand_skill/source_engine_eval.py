@@ -243,7 +243,7 @@ def _render_eval_results(rows: list[dict[str, str]]) -> str:
         "",
         "## 小样级对比记录",
         "",
-        "| Source Anchor | 原始文件 | 推荐对比引擎 | pymupdf4llm 观察 | MarkItDown 观察 | MinerU 观察 | 结论 | 是否调整默认链路 |",
+        "| Source Anchor | 原始文件 | 推荐对比引擎 | pymupdf4llm baseline 观测 | MarkItDown 观察 | MinerU 观察 | 结论 | 是否调整默认链路 |",
         "|---|---|---|---|---|---|---|---|",
     ]
     if rows:
@@ -255,7 +255,7 @@ def _render_eval_results(rows: list[dict[str, str]]) -> str:
                         _cell(row.get("Source Anchor", "")),
                         _cell(row.get("原始文件", "")),
                         _cell(row.get("推荐对比引擎", "")),
-                        "待填写",
+                        _baseline_observation(row),
                         "待填写",
                         "待填写",
                         "待判断",
@@ -265,7 +265,7 @@ def _render_eval_results(rows: list[dict[str, str]]) -> str:
                 + " |"
             )
     else:
-        lines.append("| 待补充 | 待补充 | pymupdf4llm baseline | 待填写 | 待填写 | 待填写 | 待判断 | 否，待证据 |")
+        lines.append("| 待补充 | 待补充 | pymupdf4llm baseline | 暂无候选小样，需先生成 source_quality_report 候选页 | 待填写 | 待填写 | 待判断 | 否，待证据 |")
 
     lines.extend(
         [
@@ -308,8 +308,8 @@ def _render_eval_plan(rows: list[dict[str, str]], max_pages: int) -> str:
         "",
         "## 建议小样",
         "",
-        "| Source Anchor | 原始文件 | 低置信度说明 | 建议动作 | 推荐对比引擎 |",
-        "|---|---|---|---|---|",
+        "| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 | 推荐对比引擎 |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     if rows:
         for row in rows:
@@ -319,6 +319,10 @@ def _render_eval_plan(rows: list[dict[str, str]], max_pages: int) -> str:
                     [
                         _cell(row.get("Source Anchor", "")),
                         _cell(row.get("原始文件", "")),
+                        _cell(row.get("可抽取文字数", "待补充")),
+                        _cell(row.get("图片数", "待补充")),
+                        _cell(row.get("图形数", "待补充")),
+                        _cell(row.get("表格数", "待补充")),
                         _cell(row.get("低置信度说明", "")),
                         _cell(row.get("建议动作", "")),
                         _engine_recommendation(row),
@@ -327,7 +331,7 @@ def _render_eval_plan(rows: list[dict[str, str]], max_pages: int) -> str:
                 + " |"
             )
     else:
-        lines.append("| 待补充 | 待补充 | 当前质量报告没有明显候选页 | 继续默认轻量路径 | pymupdf4llm baseline |")
+        lines.append("| 待补充 | 待补充 | 待补充 | 待补充 | 待补充 | 待补充 | 当前质量报告没有明显候选页 | 继续默认轻量路径 | pymupdf4llm baseline |")
 
     lines.extend(
         [
@@ -364,3 +368,23 @@ def _engine_recommendation(row: dict[str, str]) -> str:
     if any(term in confidence for term in ["表格", "图片", "视觉", "小字", "扫描"]):
         return "MinerU / MarkItDown / pymupdf4llm baseline"
     return "MarkItDown / MinerU / pymupdf4llm baseline"
+
+
+def _baseline_observation(row: dict[str, str]) -> str:
+    parts = []
+    for key, label in [
+        ("可抽取文字数", "文字数"),
+        ("图片数", "图片"),
+        ("图形数", "图形"),
+        ("表格数", "表格"),
+    ]:
+        value = row.get(key, "").strip()
+        if value:
+            parts.append(f"{label} {value}")
+    confidence = row.get("低置信度说明", "").strip()
+    if confidence:
+        parts.append(f"低置信度：{confidence}")
+    action = row.get("建议动作", "").strip()
+    if action:
+        parts.append(f"建议：{action}")
+    return _cell("；".join(parts) if parts else "待填写")

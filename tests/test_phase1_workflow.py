@@ -75,9 +75,9 @@ class Phase1WorkflowTests(unittest.TestCase):
             "- Baseline：pymupdf4llm。\n"
             "- 候选：MarkItDown / MinerU。\n"
             "- 隐私：真实品牌资料只在私有目录评估。\n\n"
-            "| Source Anchor | 是否调整默认链路 |\n"
-            "|---|---|\n"
-            "| S001#page=1 | 否，待证据 |\n",
+            "| Source Anchor | pymupdf4llm baseline 观测 | 是否调整默认链路 |\n"
+            "|---|---|---|\n"
+            "| S001#page=1 | baseline 可观测证据 | 否，待证据 |\n",
             encoding="utf-8",
         )
 
@@ -620,11 +620,11 @@ class Phase1WorkflowTests(unittest.TestCase):
                     [
                         "# Source Quality Report",
                         "",
-                        "| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 低置信度说明 | 建议动作 |",
-                        "|---|---|---|---|---|---|---|",
-                        "| S001#page=1 | deck.pptx | 20 | 待复核 | 待复核 | PPTX 轻量路径未保留版式 | MinerU / 原 PPT 人工复核 |",
-                        "| S002#page=3 | report.pdf | 80 | 0 | 0 | 表格结构需复核 | MinerU / 人工复核 |",
-                        "| S003#page=1 | clean.pdf | 120 | 0 | 0 | 无明显低置信度 | 继续后续编译 |",
+                        "| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |",
+                        "|---|---|---|---|---|---|---|---|",
+                        "| S001#page=1 | deck.pptx | 20 | 待复核 | 待复核 | 待复核 | PPTX 轻量路径未保留版式 | MinerU / 原 PPT 人工复核 |",
+                        "| S002#page=3 | report.pdf | 80 | 0 | 0 | 1 | 表格结构需复核 | MinerU / 人工复核 |",
+                        "| S003#page=1 | clean.pdf | 120 | 0 | 0 | 0 | 无明显低置信度 | 继续后续编译 |",
                     ]
                 ),
                 encoding="utf-8",
@@ -638,6 +638,8 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Microsoft MarkItDown", report_text)
             self.assertIn("MinerU", report_text)
             self.assertIn("pymupdf4llm baseline", report_text)
+            self.assertIn("可抽取文字数", report_text)
+            self.assertIn("表格数", report_text)
             self.assertIn("| S001#page=1 | deck.pptx", report_text)
             self.assertIn("MarkItDown / pymupdf4llm baseline", report_text)
             self.assertIn("| S002#page=3 | report.pdf", report_text)
@@ -678,10 +680,10 @@ class Phase1WorkflowTests(unittest.TestCase):
                         "",
                         "## 建议小样",
                         "",
-                        "| Source Anchor | 原始文件 | 低置信度说明 | 建议动作 | 推荐对比引擎 |",
-                        "|---|---|---|---|---|",
-                        "| S001#page=1 | deck.pptx | PPTX 轻量路径未保留版式 | 原 PPT 人工复核 | MarkItDown / pymupdf4llm baseline |",
-                        "| S002#page=3 | report.pdf | 表格结构需复核 | MinerU / 人工复核 | MinerU / MarkItDown / pymupdf4llm baseline |",
+                        "| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 | 推荐对比引擎 |",
+                        "|---|---|---|---|---|---|---|---|---|",
+                        "| S001#page=1 | deck.pptx | 20 | 待复核 | 待复核 | 待复核 | PPTX 轻量路径未保留版式 | 原 PPT 人工复核 | MarkItDown / pymupdf4llm baseline |",
+                        "| S002#page=3 | report.pdf | 80 | 0 | 0 | 1 | 表格结构需复核 | MinerU / 人工复核 | MinerU / MarkItDown / pymupdf4llm baseline |",
                         "",
                         "## 对比记录模板",
                         "",
@@ -699,8 +701,9 @@ class Phase1WorkflowTests(unittest.TestCase):
             report_text = report_path.read_text(encoding="utf-8")
             self.assertIn("# Source Engine Evaluation Results", report_text)
             self.assertIn("真实品牌资料只能在 `_private_test_runs/`", report_text)
-            self.assertIn("| S001#page=1 | deck.pptx | MarkItDown / pymupdf4llm baseline | 待填写 | 待填写 | 待填写 | 待判断 | 否，待证据 |", report_text)
-            self.assertIn("| S002#page=3 | report.pdf | MinerU / MarkItDown / pymupdf4llm baseline | 待填写 | 待填写 | 待填写 | 待判断 | 否，待证据 |", report_text)
+            self.assertIn("pymupdf4llm baseline 观测", report_text)
+            self.assertIn("| S001#page=1 | deck.pptx | MarkItDown / pymupdf4llm baseline | 文字数 20；图片 待复核；图形 待复核；表格 待复核；低置信度：PPTX 轻量路径未保留版式；建议：原 PPT 人工复核 | 待填写 | 待填写 | 待判断 | 否，待证据 |", report_text)
+            self.assertIn("| S002#page=3 | report.pdf | MinerU / MarkItDown / pymupdf4llm baseline | 文字数 80；图片 0；图形 0；表格 1；低置信度：表格结构需复核；建议：MinerU / 人工复核 | 待填写 | 待填写 | 待判断 | 否，待证据 |", report_text)
             self.assertNotIn("| 文字覆盖率 | 待记录", report_text)
             self.assertIn("是否调整默认链路", report_text)
             self.assertIn("隐私和外部服务风险", report_text)
