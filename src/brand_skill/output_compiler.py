@@ -279,6 +279,20 @@ def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:
     text = " ".join(row.get("Evidence Text", "") for row in facts).lower()
     rules = [
         (
+            ["竞品", "竞对", "竞争", "对标", "battlecard", "benchmark"],
+            {
+                "document_type": "竞品 / 市场对标资料",
+                "document_purpose": "沉淀竞品动态、对标维度和市场参考",
+                "audience": "品牌团队、市场团队、销售团队、内容团队",
+                "business_stage": "市场观察 / 竞品研究",
+                "library_location": "network",
+                "asset_type": "market_signal",
+                "reuse_scene": "竞品分析 / 销售话术 / 内容策略 / 市场观察",
+                "focus_points": "- 抽取可证实的竞品事实、渠道表现、价格带和传播打法。\n- 区分公开事实、内部判断和待确认推断。\n- 不把竞品攻击表达直接变成可外发口径。",
+                "rationale": "- 命中“竞品 / 竞对 / 竞争 / 对标 / battlecard / benchmark”等来源词，因此暂判为竞品 / 市场对标资料。",
+            },
+        ),
+        (
             ["复盘", "总结", "表现", "转化", "经验教训", "投放"],
             {
                 "document_type": "投放复盘",

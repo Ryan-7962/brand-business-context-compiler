@@ -1414,6 +1414,13 @@ class Phase1WorkflowTests(unittest.TestCase):
                 "复盘 / 优化",
                 "case",
             ),
+            (
+                "competitor_scan",
+                "竞品详情页对标分析包含价格带、渠道表现、传播打法和可借鉴内容结构。",
+                "竞品 / 市场对标资料",
+                "市场观察 / 竞品研究",
+                "network",
+            ),
         ]
         for project_name, evidence, expected_type, expected_stage, expected_location in cases:
             with self.subTest(project_name=project_name):
