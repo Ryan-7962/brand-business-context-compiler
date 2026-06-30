@@ -1421,6 +1421,13 @@ class Phase1WorkflowTests(unittest.TestCase):
                 "市场观察 / 竞品研究",
                 "network",
             ),
+            (
+                "launch_plan",
+                "新品上市方案明确首发节奏、核心卖点、渠道动作和销售承接。",
+                "新品上市 / GTM 方案",
+                "上市准备 / GTM 执行",
+                "project",
+            ),
         ]
         for project_name, evidence, expected_type, expected_stage, expected_location in cases:
             with self.subTest(project_name=project_name):

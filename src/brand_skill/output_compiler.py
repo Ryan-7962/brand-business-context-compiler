@@ -307,7 +307,21 @@ def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:
             },
         ),
         (
-            ["活动", "活动目标", "campaign", "提案", "上市", "big idea", "传播", "社媒", "触点"],
+            ["新品", "上市", "首发", "上新", "launch", "gtm", "go-to-market"],
+            {
+                "document_type": "新品上市 / GTM 方案",
+                "document_purpose": "组织新品上市节奏、核心信息、渠道动作和内容承接",
+                "audience": "品牌团队、销售团队、渠道团队、内容团队、代理商",
+                "business_stage": "上市准备 / GTM 执行",
+                "library_location": "project",
+                "asset_type": "project",
+                "reuse_scene": "上市 brief / PDP / GEO / 种草 / 销售沟通",
+                "focus_points": "- 抽取上市目标、核心信息、渠道节奏、内容资产和销售承接。\n- 标出未确认的卖点证据、排期、渠道资源和审核边界。\n- 不把未确认新品 claim 写成已品牌确认。",
+                "rationale": "- 命中“新品 / 上市 / 首发 / 上新 / launch / GTM”等来源词，因此暂判为新品上市 / GTM 方案。",
+            },
+        ),
+        (
+            ["活动", "活动目标", "campaign", "提案", "big idea", "传播", "社媒", "触点"],
             {
                 "document_type": "活动方案 / 广告提案",
                 "document_purpose": "组织传播策略、创意主线、触点和内容资产",
@@ -317,7 +331,7 @@ def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:
                 "asset_type": "project",
                 "reuse_scene": "GEO / 种草 / 拍摄 / 活动执行",
                 "focus_points": "- 抽取目标、洞察、创意主线、渠道触点和内容资产。\n- 标出预算、排期、资源和审核边界缺口。",
-                "rationale": "- 命中“活动 / campaign / 提案 / 上市 / 传播 / 社媒 / 触点”等来源词，因此暂判为活动方案 / 广告提案。",
+                "rationale": "- 命中“活动 / campaign / 提案 / 传播 / 社媒 / 触点”等来源词，因此暂判为活动方案 / 广告提案。",
             },
         ),
         (
