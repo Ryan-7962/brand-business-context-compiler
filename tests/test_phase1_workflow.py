@@ -2634,7 +2634,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             ]:
                 (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
             (converted / "conversion_report.md").write_text(
-                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：1\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 低置信度区域 |\n|---|---|---|---|\n| 2026 | 2026 | 2026 | 无 |\n",
+                "# Source Conversion Report\n\n## 识别质量摘要\n\n- 总页数：2\n- 视觉/表格/小字限制：复杂版式需复核。\n- 人工复核建议：检查低置信度区域。\n\n| 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 低置信度区域 |\n|---|---|---|---|\n| 2026 | 2026 | 2026 | 无 |\n",
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
@@ -2676,6 +2676,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Missing value benchmark", output)
             self.assertIn("Missing required output: outputs/00_source_index.md", output)
             self.assertIn("Structured output missing marker in outputs/11_context_library_update_plan.md: 优先读取", output)
+            self.assertIn("Source total page mismatch: conversion_report.md=2, source_quality_report.md=1", output)
 
     def test_verify_project_contract_fails_without_exception_review_page(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

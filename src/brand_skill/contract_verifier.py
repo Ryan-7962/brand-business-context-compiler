@@ -295,6 +295,8 @@ def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
     engine_eval_plan = converted_dir / "source_engine_eval_plan.md"
     engine_eval_results = converted_dir / "source_engine_eval_results.md"
     transcripts_dir = converted_dir / "source_transcripts"
+    report_text = ""
+    quality_text = ""
     if not report.exists():
         issues.append("Missing source conversion report: converted_markdown/conversion_report.md")
     else:
@@ -323,6 +325,10 @@ def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
         for marker in ["识别质量总览", "总页数", "需要复核页数", "表格数", "OCR", "建议动作"]:
             if marker not in quality_text:
                 issues.append(f"Source quality report missing marker: {marker}")
+    conversion_total = _extract_total_pages(report_text)
+    quality_total = _extract_total_pages(quality_text)
+    if conversion_total is not None and quality_total is not None and conversion_total != quality_total:
+        issues.append(f"Source total page mismatch: conversion_report.md={conversion_total}, source_quality_report.md={quality_total}")
 
     if not version_report.exists():
         issues.append("Missing source version report: converted_markdown/source_version_report.md")
@@ -465,3 +471,8 @@ def _check_library_report_version_review(library_dir: Path, report_text: str, is
     for marker in ["待处理事项", "建议动作", "最新修改时间线索"]:
         if marker not in report_text:
             issues.append(f"Library report missing version-review marker: {marker}")
+
+
+def _extract_total_pages(text: str) -> int | None:
+    match = re.search(r"总页数[：:]\s*(\d+)", text)
+    return int(match.group(1)) if match else None
