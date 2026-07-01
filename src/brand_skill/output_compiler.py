@@ -394,7 +394,8 @@ def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:
         ),
     ]
     for keywords, profile in rules:
-        if any(keyword in text for keyword in keywords):
+        minimum_hits = 2 if profile["document_type"] == "竞品 / 市场对标资料" else 1
+        if _keyword_hit_count(text, keywords) >= minimum_hits:
             return profile
     return {
         "document_type": "综合营销资料",
@@ -407,6 +408,10 @@ def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:
         "focus_points": "- 先保留来源事实和页面锚点。\n- 再由人工或模型进一步判断资料类型、业务阶段和长期复用价值。",
         "rationale": "- 未命中明确资料类型关键词，因此暂判为综合营销资料。",
     }
+
+
+def _keyword_hit_count(text: str, keywords: list[str]) -> int:
+    return sum(1 for keyword in keywords if keyword in text)
 
 
 def _build_marketing_outline(facts: list[dict[str, str]]) -> dict[str, list[dict[str, str]]]:

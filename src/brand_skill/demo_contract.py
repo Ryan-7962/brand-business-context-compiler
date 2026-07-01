@@ -22,7 +22,7 @@ def run_demo_contract(project_dir: Path, library_dir: Path | None = None) -> Non
     plan_source_engine_evaluation(project_dir)
     scaffold_source_engine_evaluation_results(project_dir)
     build_source_version_report(project_dir)
-    compile_structured_outputs(project_dir, keep_existing=True)
+    compile_structured_outputs(project_dir)
     build_review_pack(project_dir)
     apply_context_library_update(project_dir, library_dir=target_library)
     build_library_report(target_library)

@@ -1464,6 +1464,33 @@ class Phase1WorkflowTests(unittest.TestCase):
                     self.assertIn(f"## {expected_type} 结构化转述重点", strategy)
                     self.assertIn(f"| LCE001 | {expected_location} |", plan)
 
+    def test_compile_structured_outputs_does_not_classify_campaign_as_competitor_from_one_compliance_note(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            facts = project_dir / "converted_markdown" / "source_facts"
+            facts.mkdir(parents=True)
+            (facts / "S001_source_facts.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Facts",
+                        "",
+                        "| Fact ID | Source Anchor | Evidence Text | 信息状态 | 低置信度说明 |",
+                        "|---|---|---|---|---|",
+                        "| SF001-001 | S001#page=1 | 活动目标：建立夏季品牌联想。 | 已从来源资料提取 | 无明显低置信度。 |",
+                        "| SF001-002 | S001#page=2 | 触点规划：社媒、线下和电商承接。 | 已从来源资料提取 | 无明显低置信度。 |",
+                        "| SF001-003 | S001#page=3 | 审核要求：竞品相关表达仅允许品类层描述。 | 已从来源资料提取 | 无明显低置信度。 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                compile_structured_outputs(project_dir)
+
+            profile = (project_dir / "outputs" / "02_document_profile.md").read_text(encoding="utf-8")
+            self.assertIn("活动方案 / 广告提案", profile)
+            self.assertNotIn("竞品 / 市场对标资料", profile)
+
     def test_compile_structured_outputs_groups_facts_into_marketing_outline(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir)
@@ -2579,6 +2606,10 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Contract verification passed", output)
             self.assertTrue((library_dir / "library_report.html").exists())
             self.assertTrue((project_dir / "evaluation" / "direct_vs_skill_benchmark.md").exists())
+            source_index = (project_dir / "outputs" / "00_source_index.md").read_text(encoding="utf-8")
+            self.assertIn("转写 Markdown", source_index)
+            self.assertIn("Source Facts", source_index)
+            self.assertIn("converted_markdown/source_facts/S001_campaign_plan_source_facts.md", source_index)
             self.assertIn("Status: passed", report_path.read_text(encoding="utf-8"))
             report_path.unlink()
 
