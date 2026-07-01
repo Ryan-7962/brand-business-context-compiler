@@ -1378,6 +1378,8 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertTrue((outputs / "02_document_profile.md").exists())
             source_index = (outputs / "00_source_index.md").read_text(encoding="utf-8")
             self.assertIn("campaign.md", source_index)
+            self.assertIn("内容概述", source_index)
+            self.assertIn("品牌希望建立城市清爽的活动联想", source_index)
             self.assertIn("converted_markdown/source_facts/S001_source_facts.md", source_index)
             self.assertIn("品牌希望建立城市清爽", (outputs / "03_marketing_semantic_transcript.md").read_text(encoding="utf-8"))
             self.assertIn("SF001-001", (outputs / "04_key_facts_and_claims.md").read_text(encoding="utf-8"))
@@ -2323,7 +2325,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             transcripts.mkdir(parents=True)
             outputs.mkdir(parents=True)
             files = {
-                "00_source_index.md": "# Source Index\n\n| Source ID | 文件名 | 转写 Markdown | Source Facts |\n|---|---|---|---|\n| S001 | demo.pdf | converted_markdown/source_transcripts/S001_demo.md | converted_markdown/source_facts/S001_demo_source_facts.md |\n",
+                "00_source_index.md": "# Source Index\n\n| Source ID | 文件名 | 内容概述 | 转写 Markdown | Source Facts |\n|---|---|---|---|---|\n| S001 | demo.pdf | 活动方案提出提升品牌声量 | converted_markdown/source_transcripts/S001_demo.md | converted_markdown/source_facts/S001_demo_source_facts.md |\n",
                 "02_document_profile.md": "# Document Profile\n\n| 字段 | 内容 | 信息状态 | 待确认 |\n|---|---|---|---|\n| 文件类型 | 活动方案 | AI 结构化转述，待确认 | 是 |\n| 文件目的 | 对齐传播策略 | AI 结构化转述，待确认 | 是 |\n",
                 "03_marketing_semantic_transcript.md": "# Marketing Semantic Transcript\n\n## Page / Slide 1\n\n- Source Anchor：S001#page=1\n\n### 原页核心内容转述\n\n活动方案提出提升品牌声量。\n",
                 "04_key_facts_and_claims.md": "# Key Facts\n\n| Fact ID | 事实 | 信息状态 | 待确认 |\n|---|---|---|---|\n| SF001 | 活动目标为提升品牌声量 | 已从来源资料提取 | 否 |\n",
@@ -2390,7 +2392,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             transcripts.mkdir(parents=True)
             outputs.mkdir(parents=True)
             files = {
-                "00_source_index.md": "# Source Index\n\n| Source ID | 文件名 | 转写 Markdown | Source Facts |\n|---|---|---|---|\n| S001 | demo.pdf | converted_markdown/source_transcripts/S001_demo.md | converted_markdown/source_facts/S001_demo_source_facts.md |\n",
+                "00_source_index.md": "# Source Index\n\n| Source ID | 文件名 | 内容概述 | 转写 Markdown | Source Facts |\n|---|---|---|---|---|\n| S001 | demo.pdf | 活动方案提出提升品牌声量 | converted_markdown/source_transcripts/S001_demo.md | converted_markdown/source_facts/S001_demo_source_facts.md |\n",
                 "02_document_profile.md": "# Document Profile\n\n| 字段 | 内容 | 信息状态 | 待确认 |\n|---|---|---|---|\n| 文件类型 | 活动方案 | AI 结构化转述，待确认 | 是 |\n| 文件目的 | 对齐传播策略 | AI 结构化转述，待确认 | 是 |\n",
                 "03_marketing_semantic_transcript.md": "# Marketing Semantic Transcript\n\n## Page / Slide 1\n\n- Source Anchor：S001#page=1\n\n### 原页核心内容转述\n\n活动方案提出提升品牌声量。\n",
                 "04_key_facts_and_claims.md": "# Key Facts\n\n| Fact ID | 事实 | 信息状态 | 待确认 |\n|---|---|---|---|\n| SF001 | 活动目标为提升品牌声量 | 已从来源资料提取 | 否 |\n",

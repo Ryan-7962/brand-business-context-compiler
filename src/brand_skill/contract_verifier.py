@@ -239,7 +239,7 @@ def _check_outputs(project_dir: Path, issues: list[str]) -> None:
 
 def _check_structured_output_markers(outputs_dir: Path, issues: list[str]) -> None:
     required_markers = {
-        "00_source_index.md": ["转写 Markdown", "Source Facts"],
+        "00_source_index.md": ["内容概述", "转写 Markdown", "Source Facts"],
         "02_document_profile.md": ["文件类型", "文件目的", "信息状态", "待确认"],
         "03_marketing_semantic_transcript.md": ["Marketing Semantic Transcript", "Source Anchor", "原页核心内容转述"],
         "04_key_facts_and_claims.md": ["Key Facts", "信息状态", "待确认"],

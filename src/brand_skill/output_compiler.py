@@ -163,7 +163,7 @@ def _build_documents(
         for row in fact_rows
     )
     source_table = "\n".join(
-        f"| {row.get('来源编号', '')} | {_cell(row.get('原始文件', ''))} | {row.get('原始文件创建时间', '待补充')} | {row.get('原始文件修改时间', '待补充')} | {row.get('转写 Markdown', '待补充')} | {_source_facts_path(row)} | {row.get('页码/Slide 范围', '待补充')} |"
+        f"| {row.get('来源编号', '')} | {_cell(row.get('原始文件', ''))} | {_source_summary(row, fact_rows)} | {row.get('原始文件创建时间', '待补充')} | {row.get('原始文件修改时间', '待补充')} | {row.get('转写 Markdown', '待补充')} | {_source_facts_path(row)} | {row.get('页码/Slide 范围', '待补充')} |"
         for row in source_rows
     )
     retrieval_table = _retrieval_table(source_rows, profile["reuse_scene"])
@@ -200,7 +200,7 @@ def _build_documents(
     ) or "- 暂未发现明显低置信度事项。"
 
     return {
-        "00_source_index.md": f"# Source Index｜{title}\n\n| Source ID | 文件名 | 创建时间 | 修改时间 | 转写 Markdown | Source Facts | 页/Slide 范围 |\n|---|---|---|---|---|---|---|\n{source_table}\n",
+        "00_source_index.md": f"# Source Index｜{title}\n\n| Source ID | 文件名 | 内容概述 | 创建时间 | 修改时间 | 转写 Markdown | Source Facts | 页/Slide 范围 |\n|---|---|---|---|---|---|---|---|\n{source_table}\n",
         "01_source_conversion_report.md": f"# Source Conversion Report｜{title}\n\n## 转换证据\n\n请参见 `converted_markdown/conversion_report.md`、`source_quality_report.md` 和 `source_version_report.md`。\n\n## 版本线索\n\n{_version_excerpt(version_summary)}\n",
         "02_document_profile.md": f"# Document Profile｜{title}\n\n## 0. 基础信息\n\n| 字段 | 内容 | 信息状态 | 来源/依据 | 待确认 |\n|---|---|---|---|---|\n| 文件类型 | {profile['document_type']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 文件目的 | {profile['document_purpose']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 目标读者 | {profile['audience']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 业务阶段 | {profile['business_stage']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 核心内容 | {_cell(first_fact.get('Evidence Text', '待补充'))} | 已从来源资料提取 | {first_fact.get('Source Anchor', '待补充')} | 否 |\n\n## 1. 类型识别依据\n\n{profile['rationale']}\n\n## 待人工确认问题\n\n{missing_lines}\n",
         "03_marketing_semantic_transcript.md": f"# Marketing Semantic Transcript｜{title}\n\n{page_sections}\n",
@@ -221,6 +221,18 @@ def _source_facts_path(row: dict[str, str]) -> str:
         return "converted_markdown/source_facts/"
     transcript = Path(transcript_path)
     return f"converted_markdown/source_facts/{transcript.stem}_source_facts.md"
+
+
+def _source_summary(source_row: dict[str, str], fact_rows: list[dict[str, str]]) -> str:
+    source_id = source_row.get("来源编号", "")
+    evidence = [
+        row.get("Evidence Text", "").strip()
+        for row in fact_rows
+        if row.get("Source Anchor", "").startswith(f"{source_id}#") and row.get("Evidence Text", "").strip()
+    ]
+    if not evidence:
+        return "待补充"
+    return _cell("；".join(evidence[:2]))
 
 
 def _retrieval_table(source_rows: list[dict[str, str]], reuse_scene: str) -> str:
