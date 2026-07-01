@@ -362,7 +362,7 @@ def _check_review_pack(project_dir: Path, issues: list[str]) -> None:
         return
 
     text = review_page.read_text(encoding="utf-8")
-    required_markers = ["识别问题待处理", "整个文件概述", "文件大纲参考"]
+    required_markers = ["内容读取报告", "读取覆盖状态", "整个文件概述", "文件大纲参考"]
     for marker in required_markers:
         if marker not in text:
             issues.append(f"Review page missing exception-review marker: {marker}")

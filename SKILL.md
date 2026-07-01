@@ -7,9 +7,18 @@ description: Use when converting brand, marketing, sales, product, meeting, camp
 
 ## What This Skill Is
 
-Use this skill to turn human-facing brand and business materials into a local, source-traceable Markdown context library for AI agents.
+Use this skill to turn human-facing brand and business materials into a local, source-traceable Markdown Wiki for AI agents.
 
-The first-stage deliverable is not a PDF/PPT summary, not a SaaS app, and not enterprise RAG. It is a local skill pack plus CLI workflow that produces structured evidence files and a static HTML knowledge report.
+The core model is:
+
+```text
+Raw Sources
+-> Compiler Skill
+-> Structured Wiki
+-> Work Buddy / Agent outputs
+```
+
+The first-stage deliverable is not a PDF/PPT summary, not a SaaS app, and not enterprise RAG. It is a local skill pack plus CLI workflow that compiles raw files into a structured Markdown Wiki, source indexes, exception reports, and a static HTML knowledge report.
 
 ## First-Stage Boundary
 
@@ -48,9 +57,11 @@ The full first-stage loop is:
 ```text
 source/
 -> converted_markdown/source_transcripts/
+-> converted_markdown/conversion_report.md
 -> converted_markdown/source_quality_report.md
 -> converted_markdown/source_version_report.md
 -> converted_markdown/source_facts/
+-> outputs/00_source_index.md
 -> outputs/02_document_profile.md
 -> outputs/03_marketing_semantic_transcript.md
 -> outputs/04_key_facts_and_claims.md
@@ -93,12 +104,12 @@ Use `_private_test_runs/` for real brand samples. Public examples must stay anon
 
 The user should review only:
 
-- Whether the file outline and core meaning are correct.
+- Which files were read, their page / slide coverage, and whether the outline is obviously wrong.
 - Low-confidence OCR, image, chart, small-print, table, or page-boundary areas.
 - Missing business information such as budget, timing, channel list, owner, evidence source, or conflicting versions.
 - Key facts that would become risky if reused downstream.
 
-Do not expose backend-heavy source-anchor tables, risk taxonomies, or asset IDs as the main review experience. Those remain machine-readable evidence.
+Do not ask the user to inspect every extracted fact. The review page should answer: what was read, what the outline is, what was not read clearly, and how to fix it. Backend-heavy source-anchor tables, risk taxonomies, or asset IDs remain machine-readable evidence.
 
 ## Verification Before Completion
 

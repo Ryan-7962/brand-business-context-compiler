@@ -16,6 +16,7 @@ REQUIRED_OUTPUTS = [
 
 
 SECTION_CONFIG = [
+    ("source-status", "读取覆盖状态"),
     ("overview", "整个文件概述"),
     ("context", "文件大纲参考"),
     ("exceptions", "需要处理的问题"),
@@ -71,7 +72,7 @@ def build_review_pack(project_dir: Path) -> None:
 
     review_dir = project_dir / "review"
     review_dir.mkdir(parents=True, exist_ok=True)
-    sections = _read_sections(outputs_dir)
+    sections = _read_sections(project_dir)
     title = project_dir.name or "Marketing Review"
     html_text = _render_html(title, sections)
     output_path = review_dir / "brand_review.html"
@@ -79,8 +80,14 @@ def build_review_pack(project_dir: Path) -> None:
     print(f"Review pack created: {output_path}")
 
 
-def _read_sections(outputs_dir: Path) -> dict[str, str]:
-    return {filename: (outputs_dir / filename).read_text(encoding="utf-8") for filename in REQUIRED_OUTPUTS}
+def _read_sections(project_dir: Path) -> dict[str, str]:
+    outputs_dir = project_dir / "outputs"
+    sections = {filename: (outputs_dir / filename).read_text(encoding="utf-8") for filename in REQUIRED_OUTPUTS}
+    converted_dir = project_dir / "converted_markdown"
+    for filename in ["conversion_report.md", "source_quality_report.md"]:
+        path = converted_dir / filename
+        sections[filename] = path.read_text(encoding="utf-8") if path.exists() else ""
+    return sections
 
 
 def _extract_review_title(sections: dict[str, str], fallback: str) -> str:
@@ -104,7 +111,7 @@ def _display_text(text: str) -> str:
 
 
 def _extract_heading_section(markdown: str, heading_text: str) -> str:
-    pattern = re.compile(rf"^##\s+\d*\.\s*{re.escape(heading_text)}\s*$", re.MULTILINE)
+    pattern = re.compile(rf"^##\s+(?:\d+\.\s*)?{re.escape(heading_text)}\s*$", re.MULTILINE)
     match = pattern.search(markdown)
     if not match:
         return ""
@@ -164,6 +171,65 @@ def _extract_main_content(transcript: str) -> str:
     if not main_content:
         main_content = transcript
     return _remove_source_noise(main_content)
+
+
+def _extract_source_status(conversion_report: str, quality_report: str) -> str:
+    rows = _parse_markdown_table(conversion_report)
+    overview = _extract_heading_section(quality_report, "识别质量总览") or _extract_heading_section(conversion_report, "识别质量摘要")
+    parts = []
+    if overview:
+        parts.append(_remove_source_noise(overview))
+    else:
+        parts.append("- 未生成读取质量总览。")
+
+    source_rows = [
+        row
+        for row in rows
+        if row.get("来源编号") and row.get("原始文件")
+    ]
+    if source_rows:
+        lines = [
+            "| 文件 | 页/Slide 范围 | 转写引擎 | 转写稿 | Source Facts |",
+            "|---|---|---|---|---|",
+        ]
+        for row in source_rows:
+            transcript_path = row.get("转写 Markdown", "未生成")
+            lines.append(
+                "| "
+                + " | ".join(
+                    [
+                        row.get("原始文件", "未识别文件名"),
+                        row.get("页码/Slide 范围", "未记录"),
+                        row.get("转写引擎", "未记录"),
+                        transcript_path,
+                        _source_facts_path(transcript_path),
+                    ]
+                )
+                + " |"
+            )
+        parts.append("\n".join(lines))
+    else:
+        parts.append("- 未生成来源文件清单。")
+
+    unclear_rows = [
+        row
+        for row in _parse_markdown_table(quality_report)
+        if row.get("低置信度说明") and not row.get("低置信度说明", "").startswith("无明显低置信度")
+    ]
+    if unclear_rows:
+        parts.append(
+            "\n".join(
+                f"- {row.get('原始文件', '未识别文件')}：{row.get('低置信度说明')}。建议：{row.get('建议动作', '人工复核')}"
+                for row in unclear_rows
+            )
+        )
+    return "\n\n".join(parts)
+
+
+def _source_facts_path(transcript_path: str) -> str:
+    if not transcript_path.endswith(".md"):
+        return "未生成"
+    return f"converted_markdown/source_facts/{Path(transcript_path).stem}_source_facts.md"
 
 
 def _extract_unclear_items(transcript: str, review_items: str) -> str:
@@ -371,10 +437,13 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
     profile = sections["02_document_profile.md"]
     transcript = sections["03_marketing_semantic_transcript.md"]
     review_items = sections["06_risk_and_review_items.md"]
+    conversion_report = sections.get("conversion_report.md", "")
+    quality_report = sections.get("source_quality_report.md", "")
     outline = _extract_outline(transcript)
     exceptions = _extract_unclear_items(transcript, review_items)
     has_exceptions = _has_exception_items(exceptions)
     review_content = {
+        "source-status": _extract_source_status(conversion_report, quality_report),
         "overview": _extract_profile_summary(profile),
         "exceptions": exceptions if has_exceptions else "这份文件当前没有识别异常需要人工处理，可以先进入结构化知识库。",
         "context": outline,
@@ -389,7 +458,7 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{escaped_title}｜识别问题待处理</title>
+  <title>{escaped_title}｜内容读取报告</title>
   <style>
     :root {{
       --bg: #f6f7f9;
@@ -511,7 +580,7 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
 <body>
   <header>
     <div>
-      <h1>{escaped_title}｜识别问题待处理</h1>
+      <h1>{escaped_title}｜内容读取报告</h1>
       <div class="summary">
         <span class="metric">{'需要人工处理' if has_exceptions else '自动通过，无需人工处理'}</span>
         <span class="metric">待处理问题：{unclear_count}</span>
@@ -525,9 +594,10 @@ def _render_html(title: str, sections: dict[str, str]) -> str:
       <section id="how-to-review">
         <h2>处理规则</h2>
         <ul>
-          <li>没有识别异常的文件默认自动进入结构化知识库，不需要逐项确认。</li>
+          <li>先看读取覆盖状态和文件大纲，确认系统是否读完整个资料包。</li>
+          <li>没有识别异常的文件默认进入结构化 Wiki，不需要逐项确认。</li>
           <li>只有图片、表格、小字、漏读、关键业务字段不明确等问题需要你处理。</li>
-          <li>如果确实有问题，在底部写明页码、错误点和正确说法。</li>
+          <li>如果确实有问题，在底部写明页码、错误点和正确说法，或重新提供截图 / 原文件。</li>
         </ul>
       </section>
       {section_html}

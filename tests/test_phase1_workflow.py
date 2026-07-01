@@ -1625,6 +1625,41 @@ class Phase1WorkflowTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir)
             self._write_minimum_marketing_outputs(project_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir()
+            (converted / "conversion_report.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Conversion Report",
+                        "",
+                        "## Source Files",
+                        "",
+                        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 | 外部来源 |",
+                        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+                        "| S001 | campaign.pdf | 2026-01-01T00:00:00Z | 2026-01-02T00:00:00Z | 2026-01-03T00:00:00Z | converted_markdown/source_transcripts/S001_campaign.md | pymupdf4llm | PDF 文本解析 | 否 | 1-18 | 中 | 部分 | 部分 | 第 9 页小字需复核 | 是 | 本地 source/ |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (converted / "source_quality_report.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Quality Report",
+                        "",
+                        "## 识别质量总览",
+                        "",
+                        "- 总页数：18",
+                        "- 需要复核页数：1",
+                        "",
+                        "## 需要复核的页面",
+                        "",
+                        "| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |",
+                        "|---|---|---|---|---|---|---|---|",
+                        "| S001#page=9 | campaign.pdf | 30 | 1 | 0 | 0 | 第 9 页小字没有读清楚 | 重新提供截图或启用 OCR |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
 
             with redirect_stdout(StringIO()):
                 build_review_pack(project_dir)
@@ -1632,7 +1667,13 @@ class Phase1WorkflowTests(unittest.TestCase):
             html = project_dir / "review" / "brand_review.html"
             text = html.read_text(encoding="utf-8")
             self.assertTrue(html.exists())
-            self.assertIn("识别问题待处理", text)
+            self.assertIn("内容读取报告", text)
+            self.assertIn("读取覆盖状态", text)
+            self.assertIn("总页数：18", text)
+            self.assertIn("campaign.pdf", text)
+            self.assertIn("1-18", text)
+            self.assertIn("converted_markdown/source_facts/S001_campaign_source_facts.md", text)
+            self.assertIn("重新提供截图或启用 OCR", text)
             self.assertIn("整个文件概述", text)
             self.assertIn("需要处理的问题", text)
             self.assertIn("文件大纲参考", text)
@@ -2272,7 +2313,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             review_dir = project_dir / "review"
             review_dir.mkdir()
             (review_dir / "brand_review.html").write_text(
-                "识别问题待处理 整个文件概述 需要处理的问题 文件大纲参考 自动通过，无需人工处理",
+                "内容读取报告 读取覆盖状态 整个文件概述 需要处理的问题 文件大纲参考 自动通过，无需人工处理",
                 encoding="utf-8",
             )
             evaluation_dir = project_dir / "evaluation"
@@ -2338,7 +2379,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             review_dir = project_dir / "review"
             review_dir.mkdir()
             (review_dir / "brand_review.html").write_text(
-                "识别问题待处理 整个文件概述 需要处理的问题 文件大纲参考",
+                "内容读取报告 读取覆盖状态 整个文件概述 需要处理的问题 文件大纲参考",
                 encoding="utf-8",
             )
             evaluation_dir = project_dir / "evaluation"
@@ -2578,7 +2619,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             review_dir = project_dir / "review"
             review_dir.mkdir()
             (review_dir / "brand_review.html").write_text(
-                "识别问题待处理 整个文件概述 需要处理的问题 文件大纲参考",
+                "内容读取报告 读取覆盖状态 整个文件概述 需要处理的问题 文件大纲参考",
                 encoding="utf-8",
             )
             library_dir = Path(temp_dir) / "brand_context_library"
@@ -2855,7 +2896,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             review_dir = project_dir / "review"
             review_dir.mkdir()
             (review_dir / "brand_review.html").write_text(
-                "识别问题待处理 整个文件概述 需要处理的问题 文件大纲参考",
+                "内容读取报告 读取覆盖状态 整个文件概述 需要处理的问题 文件大纲参考",
                 encoding="utf-8",
             )
             library_dir = Path(temp_dir) / "brand_context_library"
@@ -2914,7 +2955,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             review_dir = project_dir / "review"
             review_dir.mkdir()
             (review_dir / "brand_review.html").write_text(
-                "识别问题待处理 整个文件概述 需要处理的问题 文件大纲参考",
+                "内容读取报告 读取覆盖状态 整个文件概述 需要处理的问题 文件大纲参考",
                 encoding="utf-8",
             )
             library_dir = Path(temp_dir) / "brand_context_library"

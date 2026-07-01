@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>anonymous_marketing_campaign｜识别问题待处理</title>
+  <title>anonymous_marketing_campaign｜内容读取报告</title>
   <style>
     :root {
       --bg: #f6f7f9;
@@ -125,7 +125,7 @@
 <body>
   <header>
     <div>
-      <h1>anonymous_marketing_campaign｜识别问题待处理</h1>
+      <h1>anonymous_marketing_campaign｜内容读取报告</h1>
       <div class="summary">
         <span class="metric">需要人工处理</span>
         <span class="metric">待处理问题：2</span>
@@ -134,19 +134,23 @@
     <button class="download" onclick="downloadDecisions()">导出修正意见</button>
   </header>
   <div class="layout">
-    <nav><a href="#overview">整个文件概述</a>
+    <nav><a href="#source-status">读取覆盖状态</a>
+<a href="#overview">整个文件概述</a>
 <a href="#context">文件大纲参考</a>
 <a href="#exceptions">需要处理的问题</a></nav>
     <main>
       <section id="how-to-review">
         <h2>处理规则</h2>
         <ul>
-          <li>没有识别异常的文件默认自动进入结构化知识库，不需要逐项确认。</li>
+          <li>先看读取覆盖状态和文件大纲，确认系统是否读完整个资料包。</li>
+          <li>没有识别异常的文件默认进入结构化 Wiki，不需要逐项确认。</li>
           <li>只有图片、表格、小字、漏读、关键业务字段不明确等问题需要你处理。</li>
-          <li>如果确实有问题，在底部写明页码、错误点和正确说法。</li>
+          <li>如果确实有问题，在底部写明页码、错误点和正确说法，或重新提供截图 / 原文件。</li>
         </ul>
       </section>
-      <section id="overview"><h2>整个文件概述</h2><ul><li>文件类型：活动方案 / 广告提案</li><li>文件目的：组织传播策略、创意主线、触点和内容资产</li><li>业务阶段：提案 / 立项 / 执行准备</li></ul></section>
+      <section id="source-status"><h2>读取覆盖状态</h2><ul><li>总页数：6</li><li>需要复核页数：0</li><li>复核原则：优先处理含图片、低文字量、表格或小字页面；关键品牌口径和关键数字必须回到原始页面确认。</li></ul>
+<div class="table-wrap"><table><thead><tr><th>文件</th><th>页/Slide 范围</th><th>转写引擎</th><th>转写稿</th><th>Source Facts</th></tr></thead><tbody><tr><td>city_refresh_campaign.md</td><td>1-6</td><td>pymupdf4llm</td><td>converted_markdown/source_transcripts/S001_campaign_plan.md</td><td>converted_markdown/source_facts/S001_campaign_plan_source_facts.md</td></tr></tbody></table></div></section>
+<section id="overview"><h2>整个文件概述</h2><ul><li>文件类型：活动方案 / 广告提案</li><li>文件目的：组织传播策略、创意主线、触点和内容资产</li><li>业务阶段：提案 / 立项 / 执行准备</li></ul></section>
 <section id="context"><h2>文件大纲参考</h2><ul><li>项目背景</li><li>活动目标</li><li>目标人群</li><li>策略主线</li><li>触点规划</li><li>审核要求</li></ul></section>
 <section id="exceptions"><h2>需要处理的问题</h2><ul><li>目标人群：主要人群为 24-35 岁城市通勤人群，关注夏季出行、办公、运动后的体感舒适。资料没有提供定量消费者调研，需要品牌经理补充。</li><li>审核要求：预算、人员分工、渠道合作名单暂未提供。</li></ul></section>
       <section id="manual-feedback">
