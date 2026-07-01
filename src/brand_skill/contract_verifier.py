@@ -443,6 +443,12 @@ def _check_library(library_dir: Path, issues: list[str]) -> None:
     for path in required_files:
         if not path.exists():
             issues.append(f"Missing library evidence file: {path.relative_to(library_dir)}")
+    retrieval_map = library_dir / "retrieval_maps" / "source_packages.md"
+    if retrieval_map.exists():
+        retrieval_text = retrieval_map.read_text(encoding="utf-8")
+        for marker in ["优先读取", "精读文件", "回看原文"]:
+            if marker not in retrieval_text:
+                issues.append(f"Library retrieval map missing marker: {marker}")
 
     report = library_dir / "library_report.html"
     if report.exists():

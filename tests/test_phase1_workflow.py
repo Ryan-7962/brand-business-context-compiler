@@ -2372,7 +2372,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             (library_dir / "review_queue" / "conflicts.md").write_text("# Context Library Conflict Queue\n", encoding="utf-8")
             (library_dir / "review_queue" / "updates.md").write_text("# 旧知识更新队列\n", encoding="utf-8")
             (library_dir / "review_queue" / "do_not_promote.md").write_text("# Do Not Promote Queue\n", encoding="utf-8")
-            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n\n| 使用场景 | 优先读取 | 精读文件 | 回看原文 |\n|---|---|---|---|\n| Campaign brief | outputs/10_context_asset_index.md | converted_markdown/source_facts/S001_demo_source_facts.md | converted_markdown/source_transcripts/S001_demo.md |\n", encoding="utf-8")
             (library_dir / "library_report.html").write_text(
                 "Brand Context Map Knowledge Explorer categoryFilter statusFilter 条目详情",
                 encoding="utf-8",
@@ -2439,7 +2439,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             (library_dir / "review_queue" / "conflicts.md").write_text("# Context Library Conflict Queue\n", encoding="utf-8")
             (library_dir / "review_queue" / "updates.md").write_text("# 旧知识更新队列\n", encoding="utf-8")
             (library_dir / "review_queue" / "do_not_promote.md").write_text("# Do Not Promote Queue\n", encoding="utf-8")
-            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n\n| 使用场景 | 优先读取 | 精读文件 | 回看原文 |\n|---|---|---|---|\n| Campaign brief | outputs/10_context_asset_index.md | converted_markdown/source_facts/S001_demo_source_facts.md | converted_markdown/source_transcripts/S001_demo.md |\n", encoding="utf-8")
             (library_dir / "library_report.html").write_text(
                 "Brand Context Map Knowledge Explorer categoryFilter statusFilter 条目详情",
                 encoding="utf-8",
@@ -2677,7 +2677,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             (library_dir / "review_queue" / "conflicts.md").write_text("# Context Library Conflict Queue\n", encoding="utf-8")
             (library_dir / "review_queue" / "updates.md").write_text("# 旧知识更新队列\n", encoding="utf-8")
             (library_dir / "review_queue" / "do_not_promote.md").write_text("# Do Not Promote Queue\n", encoding="utf-8")
-            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n\n| 使用场景 | 优先读取 | 精读文件 | 回看原文 |\n|---|---|---|---|\n| Campaign brief | outputs/10_context_asset_index.md | converted_markdown/source_facts/S001_demo_source_facts.md | converted_markdown/source_transcripts/S001_demo.md |\n", encoding="utf-8")
             (library_dir / "library_report.html").write_text(
                 "Brand Context Map Knowledge Explorer categoryFilter statusFilter 条目详情",
                 encoding="utf-8",
@@ -2726,7 +2726,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             (library_dir / "review_queue" / "conflicts.md").write_text("# Context Library Conflict Queue\n", encoding="utf-8")
             (library_dir / "review_queue" / "updates.md").write_text("# 旧知识更新队列\n", encoding="utf-8")
             (library_dir / "review_queue" / "do_not_promote.md").write_text("# Do Not Promote Queue\n", encoding="utf-8")
-            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n\n| 使用场景 | 优先读取 | 精读文件 | 回看原文 |\n|---|---|---|---|\n| Campaign brief | outputs/10_context_asset_index.md | converted_markdown/source_facts/S001_demo_source_facts.md | converted_markdown/source_transcripts/S001_demo.md |\n", encoding="utf-8")
             (library_dir / "library_report.html").write_text(
                 "Brand Context Map Knowledge Explorer categoryFilter statusFilter 条目详情",
                 encoding="utf-8",
@@ -2777,7 +2777,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             (library_dir / "review_queue" / "conflicts.md").write_text("# Context Library Conflict Queue\n", encoding="utf-8")
             (library_dir / "review_queue" / "updates.md").write_text("# 旧知识更新队列\n", encoding="utf-8")
             (library_dir / "review_queue" / "do_not_promote.md").write_text("# Do Not Promote Queue\n", encoding="utf-8")
-            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n\n| 使用场景 | 优先读取 | 精读文件 | 回看原文 |\n|---|---|---|---|\n| Campaign brief | outputs/10_context_asset_index.md | converted_markdown/source_facts/S001_demo_source_facts.md | converted_markdown/source_transcripts/S001_demo.md |\n", encoding="utf-8")
             (library_dir / "library_report.html").write_text(
                 "Brand Context Map Knowledge Explorer categoryFilter statusFilter 条目详情",
                 encoding="utf-8",
@@ -2907,7 +2907,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             (library_dir / "review_queue" / "conflicts.md").write_text("# Context Library Conflict Queue\n", encoding="utf-8")
             (library_dir / "review_queue" / "updates.md").write_text("# 旧知识更新队列\n", encoding="utf-8")
             (library_dir / "review_queue" / "do_not_promote.md").write_text("# Do Not Promote Queue\n", encoding="utf-8")
-            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n\n| 使用场景 | 优先读取 | 精读文件 | 回看原文 |\n|---|---|---|---|\n| Campaign brief | outputs/10_context_asset_index.md | converted_markdown/source_facts/S001_demo_source_facts.md | converted_markdown/source_transcripts/S001_demo.md |\n", encoding="utf-8")
             (library_dir / "library_report.html").write_text(
                 "Brand Context Map Knowledge Explorer categoryFilter statusFilter 条目详情 <script src=\"https://cdn.example.com/app.js\"></script>",
                 encoding="utf-8",
@@ -2958,7 +2958,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             (library_dir / "review_queue" / "conflicts.md").write_text("# Context Library Conflict Queue\n", encoding="utf-8")
             (library_dir / "review_queue" / "updates.md").write_text("# 旧知识更新队列\n", encoding="utf-8")
             (library_dir / "review_queue" / "do_not_promote.md").write_text("# Do Not Promote Queue\n", encoding="utf-8")
-            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n\n| 使用场景 | 优先读取 | 精读文件 | 回看原文 |\n|---|---|---|---|\n| Campaign brief | outputs/10_context_asset_index.md | converted_markdown/source_facts/S001_demo_source_facts.md | converted_markdown/source_transcripts/S001_demo.md |\n", encoding="utf-8")
             (library_dir / "library_report.html").write_text(
                 "Brand Context Map Knowledge Explorer categoryFilter statusFilter 条目详情 Source Anchor Risk Level 来源锚点 风险等级",
                 encoding="utf-8",
@@ -3020,7 +3020,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (library_dir / "review_queue" / "do_not_promote.md").write_text("# Do Not Promote Queue\n", encoding="utf-8")
-            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n\n| 使用场景 | 优先读取 | 精读文件 | 回看原文 |\n|---|---|---|---|\n| Campaign brief | outputs/10_context_asset_index.md | converted_markdown/source_facts/S001_demo_source_facts.md | converted_markdown/source_transcripts/S001_demo.md |\n", encoding="utf-8")
             (library_dir / "library_report.html").write_text(
                 "Brand Context Map Knowledge Explorer categoryFilter statusFilter 条目详情 待处理事项 source_version_report.md",
                 encoding="utf-8",
@@ -3097,7 +3097,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             (library_dir / "review_queue" / "conflicts.md").write_text("# Context Library Conflict Queue\n", encoding="utf-8")
             (library_dir / "review_queue" / "updates.md").write_text("# 旧知识更新队列\n", encoding="utf-8")
             (library_dir / "review_queue" / "do_not_promote.md").write_text("# Do Not Promote Queue\n", encoding="utf-8")
-            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n\n| 使用场景 | 优先读取 | 精读文件 | 回看原文 |\n|---|---|---|---|\n| Campaign brief | outputs/10_context_asset_index.md | converted_markdown/source_facts/S001_demo_source_facts.md | converted_markdown/source_transcripts/S001_demo.md |\n", encoding="utf-8")
             (library_dir / "library_report.html").write_text(
                 "Brand Context Map Knowledge Explorer categoryFilter statusFilter 条目详情",
                 encoding="utf-8",
