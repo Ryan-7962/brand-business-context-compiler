@@ -157,7 +157,7 @@ def _render_report(page_rows: list[dict[str, str | int]], review_rows: list[dict
         "",
         f"- 总页数：{len(page_rows)}",
         f"- 需要复核页数：{len(review_rows)}",
-        "- 复核原则：优先处理含图片、低文字量、表格或小字页面；关键品牌口径和关键数字必须回到原始页面确认。",
+        "- 复核原则：优先处理含图片、低文字量、表格、小字或 OCR 不确定页面；关键品牌口径和关键数字必须回到原始页面确认。",
         "",
         "## 需要复核的页面",
         "",

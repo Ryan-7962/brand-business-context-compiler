@@ -1198,7 +1198,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("- 需要复核页数：2", report_text)
             self.assertIn("| S001#page=2 | sample.pdf | 8 | 3 | 2 | 0 | 可抽取文字较少；含图片/视觉信息 | OCR / MinerU / 人工复核 |", report_text)
             self.assertIn("| S001#page=3 | sample.pdf | 120 | 0 | 0 | 1 | 无明显低置信度。 | MinerU / MarkItDown / 人工复核 |", report_text)
-            self.assertIn("优先处理含图片、低文字量、表格或小字页面", report_text)
+            self.assertIn("优先处理含图片、低文字量、表格、小字或 OCR 不确定页面", report_text)
 
     def test_build_source_version_report_groups_likely_versions_by_modified_time(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -2326,7 +2326,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
-                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 总页数：1\n- 需要复核页数：0\n- 复核原则：优先处理含图片、低文字量、表格、小字或 OCR 不确定页面；关键品牌口径和关键数字必须回到原始页面确认。\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
                 encoding="utf-8",
             )
             (converted / "source_version_report.md").write_text(
@@ -2393,7 +2393,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
-                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 总页数：1\n- 需要复核页数：0\n- 复核原则：优先处理含图片、低文字量、表格、小字或 OCR 不确定页面；关键品牌口径和关键数字必须回到原始页面确认。\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
                 encoding="utf-8",
             )
             (converted / "source_version_report.md").write_text(
@@ -2482,7 +2482,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
-                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 总页数：1\n- 需要复核页数：0\n- 复核原则：优先处理含图片、低文字量、表格、小字或 OCR 不确定页面；关键品牌口径和关键数字必须回到原始页面确认。\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
                 encoding="utf-8",
             )
             (converted / "source_version_report.md").write_text(
@@ -2638,7 +2638,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
-                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 总页数：1\n- 需要复核页数：0\n- 复核原则：优先处理含图片、低文字量、表格、小字或 OCR 不确定页面；关键品牌口径和关键数字必须回到原始页面确认。\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
                 encoding="utf-8",
             )
             (converted / "source_version_report.md").write_text(
@@ -2977,7 +2977,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (converted / "source_quality_report.md").write_text(
-                "# Source Quality Report\n\n## 识别质量总览\n\n- 需要复核页数：0\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
+                "# Source Quality Report\n\n## 识别质量总览\n\n- 总页数：1\n- 需要复核页数：0\n- 复核原则：优先处理含图片、低文字量、表格、小字或 OCR 不确定页面；关键品牌口径和关键数字必须回到原始页面确认。\n\n| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |\n|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |\n",
                 encoding="utf-8",
             )
             (converted / "source_version_report.md").write_text(
