@@ -9,6 +9,7 @@ from pathlib import Path
 
 
 REQUIRED_OUTPUTS = [
+    "00_source_index.md",
     "02_document_profile.md",
     "03_marketing_semantic_transcript.md",
     "04_key_facts_and_claims.md",
@@ -238,11 +239,12 @@ def _check_outputs(project_dir: Path, issues: list[str]) -> None:
 
 def _check_structured_output_markers(outputs_dir: Path, issues: list[str]) -> None:
     required_markers = {
+        "00_source_index.md": ["转写 Markdown", "Source Facts"],
         "02_document_profile.md": ["文件类型", "文件目的", "信息状态", "待确认"],
         "03_marketing_semantic_transcript.md": ["Marketing Semantic Transcript", "Source Anchor", "原页核心内容转述"],
         "04_key_facts_and_claims.md": ["Key Facts", "信息状态", "待确认"],
         "10_context_asset_index.md": ["Context Asset Index", "适用场景", "信息状态"],
-        "11_context_library_update_plan.md": ["Context Library Update Plan", "New Context Entries", "Do Not Promote"],
+        "11_context_library_update_plan.md": ["Context Library Update Plan", "New Context Entries", "Do Not Promote", "Retrieval Notes", "优先读取", "精读文件", "回看原文"],
     }
     for filename, markers in required_markers.items():
         path = outputs_dir / filename

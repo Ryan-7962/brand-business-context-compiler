@@ -2310,13 +2310,14 @@ class Phase1WorkflowTests(unittest.TestCase):
             transcripts.mkdir(parents=True)
             outputs.mkdir(parents=True)
             files = {
+                "00_source_index.md": "# Source Index\n\n| Source ID | 文件名 | 转写 Markdown | Source Facts |\n|---|---|---|---|\n| S001 | demo.pdf | converted_markdown/source_transcripts/S001_demo.md | converted_markdown/source_facts/S001_demo_source_facts.md |\n",
                 "02_document_profile.md": "# Document Profile\n\n| 字段 | 内容 | 信息状态 | 待确认 |\n|---|---|---|---|\n| 文件类型 | 活动方案 | AI 结构化转述，待确认 | 是 |\n| 文件目的 | 对齐传播策略 | AI 结构化转述，待确认 | 是 |\n",
                 "03_marketing_semantic_transcript.md": "# Marketing Semantic Transcript\n\n## Page / Slide 1\n\n- Source Anchor：S001#page=1\n\n### 原页核心内容转述\n\n活动方案提出提升品牌声量。\n",
                 "04_key_facts_and_claims.md": "# Key Facts\n\n| Fact ID | 事实 | 信息状态 | 待确认 |\n|---|---|---|---|\n| SF001 | 活动目标为提升品牌声量 | 已从来源资料提取 | 否 |\n",
                 "05_strategy_and_execution_map.md": "# Strategy and Execution Map\n\n## 自动识别的大纲\n\n- 活动目标\n",
                 "06_risk_and_review_items.md": "# Risk and Review Items\n\n| Review ID | 审核项 | 建议 |\n|---|---|---|\n| R000 | 暂无明显风险 | 继续后续编译 |\n",
                 "10_context_asset_index.md": "# Context Asset Index\n\n| Asset ID | 可复用资产 | 适用场景 | 信息状态 |\n|---|---|---|---|\n| CA001 | 活动目标为提升品牌声量 | Campaign brief | 已从来源资料提取 |\n",
-                "11_context_library_update_plan.md": "# Context Library Update Plan\n\n## 2. New Context Entries\n\n| Entry ID | 标题 |\n|---|---|\n| LCE001 | 活动目标 |\n\n## 4. Do Not Promote\n\n- 不提升待确认内容。\n",
+                "11_context_library_update_plan.md": "# Context Library Update Plan\n\n## 2. New Context Entries\n\n| Entry ID | 标题 |\n|---|---|\n| LCE001 | 活动目标 |\n\n## 4. Do Not Promote\n\n- 不提升待确认内容。\n\n## 6. Retrieval Notes\n\n| 使用场景 | 优先读取 | 精读文件 | 回看原文 |\n|---|---|---|---|\n| Campaign brief | outputs/10_context_asset_index.md | converted_markdown/source_facts/S001_demo_source_facts.md | converted_markdown/source_transcripts/S001_demo.md |\n",
             }
             for filename, content in files.items():
                 (outputs / filename).write_text(content, encoding="utf-8")
@@ -2376,13 +2377,14 @@ class Phase1WorkflowTests(unittest.TestCase):
             transcripts.mkdir(parents=True)
             outputs.mkdir(parents=True)
             files = {
+                "00_source_index.md": "# Source Index\n\n| Source ID | 文件名 | 转写 Markdown | Source Facts |\n|---|---|---|---|\n| S001 | demo.pdf | converted_markdown/source_transcripts/S001_demo.md | converted_markdown/source_facts/S001_demo_source_facts.md |\n",
                 "02_document_profile.md": "# Document Profile\n\n| 字段 | 内容 | 信息状态 | 待确认 |\n|---|---|---|---|\n| 文件类型 | 活动方案 | AI 结构化转述，待确认 | 是 |\n| 文件目的 | 对齐传播策略 | AI 结构化转述，待确认 | 是 |\n",
                 "03_marketing_semantic_transcript.md": "# Marketing Semantic Transcript\n\n## Page / Slide 1\n\n- Source Anchor：S001#page=1\n\n### 原页核心内容转述\n\n活动方案提出提升品牌声量。\n",
                 "04_key_facts_and_claims.md": "# Key Facts\n\n| Fact ID | 事实 | 信息状态 | 待确认 |\n|---|---|---|---|\n| SF001 | 活动目标为提升品牌声量 | 已从来源资料提取 | 否 |\n",
                 "05_strategy_and_execution_map.md": "# Strategy and Execution Map\n\n## 自动识别的大纲\n\n- 活动目标\n",
                 "06_risk_and_review_items.md": "# Risk and Review Items\n\n| Review ID | 审核项 | 建议 |\n|---|---|---|\n| R000 | 暂无明显风险 | 继续后续编译 |\n",
                 "10_context_asset_index.md": "# Context Asset Index\n\n| Asset ID | 可复用资产 | 适用场景 | 信息状态 |\n|---|---|---|---|\n| CA001 | 活动目标为提升品牌声量 | Campaign brief | 已从来源资料提取 |\n",
-                "11_context_library_update_plan.md": "# Context Library Update Plan\n\n## 2. New Context Entries\n\n| Entry ID | 标题 |\n|---|---|\n| LCE001 | 活动目标 |\n\n## 4. Do Not Promote\n\n- 不提升待确认内容。\n",
+                "11_context_library_update_plan.md": "# Context Library Update Plan\n\n## 2. New Context Entries\n\n| Entry ID | 标题 |\n|---|---|\n| LCE001 | 活动目标 |\n\n## 4. Do Not Promote\n\n- 不提升待确认内容。\n\n## 6. Retrieval Notes\n\n| 使用场景 | 优先读取 | 精读文件 | 回看原文 |\n|---|---|---|---|\n| Campaign brief | outputs/10_context_asset_index.md | converted_markdown/source_facts/S001_demo_source_facts.md | converted_markdown/source_transcripts/S001_demo.md |\n",
             }
             for filename, content in files.items():
                 (outputs / filename).write_text(content, encoding="utf-8")
@@ -2670,7 +2672,10 @@ class Phase1WorkflowTests(unittest.TestCase):
                 with self.assertRaises(SystemExit):
                     verify_project_contract(project_dir, library_dir=library_dir)
 
-            self.assertIn("Missing value benchmark", stdout.getvalue())
+            output = stdout.getvalue()
+            self.assertIn("Missing value benchmark", output)
+            self.assertIn("Missing required output: outputs/00_source_index.md", output)
+            self.assertIn("Structured output missing marker in outputs/11_context_library_update_plan.md: 优先读取", output)
 
     def test_verify_project_contract_fails_without_exception_review_page(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
