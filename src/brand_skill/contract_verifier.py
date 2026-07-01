@@ -329,6 +329,7 @@ def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
     quality_total = _extract_total_pages(quality_text)
     if conversion_total is not None and quality_total is not None and conversion_total != quality_total:
         issues.append(f"Source total page mismatch: conversion_report.md={conversion_total}, source_quality_report.md={quality_total}")
+    issues.extend(_source_page_coverage_issues(report_text, transcript_text))
 
     if not version_report.exists():
         issues.append("Missing source version report: converted_markdown/source_version_report.md")
@@ -476,3 +477,41 @@ def _check_library_report_version_review(library_dir: Path, report_text: str, is
 def _extract_total_pages(text: str) -> int | None:
     match = re.search(r"总页数[：:]\s*(\d+)", text)
     return int(match.group(1)) if match else None
+
+
+def _source_page_coverage_issues(report_text: str, transcript_text: str) -> list[str]:
+    expected: dict[str, int] = {}
+    for line in report_text.splitlines():
+        cells = _markdown_cells(line)
+        if len(cells) < 10 or not re.fullmatch(r"S\d{3}", cells[0]):
+            continue
+        expected[cells[0]] = expected.get(cells[0], 0) + _page_count_from_range(cells[9])
+    if not expected:
+        return []
+
+    seen_pages: dict[str, set[int]] = {}
+    for source_id, page_number in re.findall(r"(S\d{3})#page=(\d+)", transcript_text):
+        seen_pages.setdefault(source_id, set()).add(int(page_number))
+
+    issues = []
+    for source_id, expected_pages in expected.items():
+        actual_pages = len(seen_pages.get(source_id, set()))
+        if actual_pages != expected_pages:
+            issues.append(f"Source page coverage mismatch: {source_id} expected {expected_pages}, transcript anchors {actual_pages}")
+    return issues
+
+
+def _markdown_cells(line: str) -> list[str]:
+    stripped = line.strip()
+    if not stripped.startswith("|") or not stripped.endswith("|"):
+        return []
+    return [cell.strip() for cell in stripped.strip("|").split("|")]
+
+
+def _page_count_from_range(page_range: str) -> int:
+    match = re.search(r"(\d+)\s*-\s*(\d+)", page_range)
+    if match:
+        start, end = int(match.group(1)), int(match.group(2))
+        return max(0, end - start + 1)
+    numbers = re.findall(r"\d+", page_range)
+    return len(numbers) if numbers else 1

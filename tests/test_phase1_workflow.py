@@ -10,7 +10,7 @@ from io import StringIO
 from pathlib import Path
 
 from brand_skill.cli import main as cli_main
-from brand_skill.contract_verifier import verify_project_contract
+from brand_skill.contract_verifier import _source_page_coverage_issues, verify_project_contract
 from brand_skill.library_report import build_library_report
 from brand_skill.library_writer import apply_context_library_update
 from brand_skill.ima_importer import import_ima_media
@@ -134,6 +134,19 @@ class Phase1WorkflowTests(unittest.TestCase):
             with redirect_stdout(StringIO()):
                 with self.assertRaises(SystemExit):
                     check_claim_matrix(project_dir)
+
+    def test_source_page_coverage_detects_missing_transcript_anchors(self) -> None:
+        report_text = (
+            "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 |\n"
+            "|---|---|---|---|---|---|---|---|---|---|\n"
+            "| S001 | demo.pdf | 2026 | 2026 | 2026 | transcript.md | pymupdf4llm | PDF | 否 | 1-3 |\n"
+        )
+        transcript_text = "Source Anchor：S001#page=1\nSource Anchor：S001#page=2\n"
+
+        self.assertEqual(
+            _source_page_coverage_issues(report_text, transcript_text),
+            ["Source page coverage mismatch: S001 expected 3, transcript anchors 2"],
+        )
 
     def test_public_safe_text_flags_internal_sensitive_terms(self) -> None:
         risky_terms = check_public_safe_text("外发安全版不应出现竞品弱点、攻击点或必赢这类表达。")
