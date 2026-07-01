@@ -58,4 +58,11 @@
 
 ### 6. Retrieval Notes
 
-写给后续 AI 调用的检索提示：未来在什么任务里应该调用这份资料、不能在什么任务里误用。
+写给后续 AI 调用的检索提示：未来在什么任务里应该调用这份资料、不能在什么任务里误用，并尽量给出可直接读取的索引和精读文件路径。
+
+| 字段 | 要求 |
+|---|---|
+| 使用场景 | GEO brief / PDP brief / 种草 brief / 拍摄 brief / 销售话术 / 复盘 / 竞品分析等 |
+| 优先读取 | 通常指向 `outputs/10_context_asset_index.md` |
+| 精读文件 | 指向 `converted_markdown/source_facts/...` |
+| 回看原文 | 指向 `converted_markdown/source_transcripts/...` |

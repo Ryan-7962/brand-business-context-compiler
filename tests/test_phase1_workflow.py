@@ -1363,12 +1363,17 @@ class Phase1WorkflowTests(unittest.TestCase):
 
             outputs = project_dir / "outputs"
             self.assertTrue((outputs / "02_document_profile.md").exists())
-            self.assertIn("campaign.md", (outputs / "00_source_index.md").read_text(encoding="utf-8"))
+            source_index = (outputs / "00_source_index.md").read_text(encoding="utf-8")
+            self.assertIn("campaign.md", source_index)
+            self.assertIn("converted_markdown/source_facts/S001_source_facts.md", source_index)
             self.assertIn("品牌希望建立城市清爽", (outputs / "03_marketing_semantic_transcript.md").read_text(encoding="utf-8"))
             self.assertIn("SF001-001", (outputs / "04_key_facts_and_claims.md").read_text(encoding="utf-8"))
             self.assertIn("S001#page=2", (outputs / "06_risk_and_review_items.md").read_text(encoding="utf-8"))
             self.assertIn("CA001", (outputs / "10_context_asset_index.md").read_text(encoding="utf-8"))
-            self.assertIn("LCE001", (outputs / "11_context_library_update_plan.md").read_text(encoding="utf-8"))
+            plan = (outputs / "11_context_library_update_plan.md").read_text(encoding="utf-8")
+            self.assertIn("LCE001", plan)
+            self.assertIn("| 使用场景 | 优先读取 | 精读文件 | 回看原文 |", plan)
+            self.assertIn("outputs/10_context_asset_index.md", plan)
 
     def test_cli_compile_outputs_command(self) -> None:
         import sys

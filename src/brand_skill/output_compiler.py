@@ -163,9 +163,10 @@ def _build_documents(
         for row in fact_rows
     )
     source_table = "\n".join(
-        f"| {row.get('来源编号', '')} | {_cell(row.get('原始文件', ''))} | {row.get('原始文件创建时间', '待补充')} | {row.get('原始文件修改时间', '待补充')} | {row.get('页码/Slide 范围', '待补充')} |"
+        f"| {row.get('来源编号', '')} | {_cell(row.get('原始文件', ''))} | {row.get('原始文件创建时间', '待补充')} | {row.get('原始文件修改时间', '待补充')} | {row.get('转写 Markdown', '待补充')} | {_source_facts_path(row)} | {row.get('页码/Slide 范围', '待补充')} |"
         for row in source_rows
     )
+    retrieval_table = _retrieval_table(source_rows, profile["reuse_scene"])
     page_sections = "\n\n".join(
         "\n".join(
             [
@@ -199,7 +200,7 @@ def _build_documents(
     ) or "- 暂未发现明显低置信度事项。"
 
     return {
-        "00_source_index.md": f"# Source Index｜{title}\n\n| Source ID | 文件名 | 创建时间 | 修改时间 | 页/Slide 范围 |\n|---|---|---|---|---|\n{source_table}\n",
+        "00_source_index.md": f"# Source Index｜{title}\n\n| Source ID | 文件名 | 创建时间 | 修改时间 | 转写 Markdown | Source Facts | 页/Slide 范围 |\n|---|---|---|---|---|---|---|\n{source_table}\n",
         "01_source_conversion_report.md": f"# Source Conversion Report｜{title}\n\n## 转换证据\n\n请参见 `converted_markdown/conversion_report.md`、`source_quality_report.md` 和 `source_version_report.md`。\n\n## 版本线索\n\n{_version_excerpt(version_summary)}\n",
         "02_document_profile.md": f"# Document Profile｜{title}\n\n## 0. 基础信息\n\n| 字段 | 内容 | 信息状态 | 来源/依据 | 待确认 |\n|---|---|---|---|---|\n| 文件类型 | {profile['document_type']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 文件目的 | {profile['document_purpose']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 目标读者 | {profile['audience']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 业务阶段 | {profile['business_stage']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 核心内容 | {_cell(first_fact.get('Evidence Text', '待补充'))} | 已从来源资料提取 | {first_fact.get('Source Anchor', '待补充')} | 否 |\n\n## 1. 类型识别依据\n\n{profile['rationale']}\n\n## 待人工确认问题\n\n{missing_lines}\n",
         "03_marketing_semantic_transcript.md": f"# Marketing Semantic Transcript｜{title}\n\n{page_sections}\n",
@@ -210,8 +211,23 @@ def _build_documents(
         "08_review_pack.md": f"# Review Pack｜{title}\n\n## 需要人工处理\n\n{missing_lines}\n",
         "09_quality_check_report.md": f"# Quality Check Report｜{title}\n\n## 自动检查\n\n- Source facts：{len(facts)} 条。\n- Source pages：{len(pages)} 页/段。\n- 待复核事项：{len(review_items)} 项。\n- 大纲分类：{_outline_category_count(outline)} 类。\n\n## 结论\n\n这是确定性初稿，可进入人工复核或模型精修。\n",
         "10_context_asset_index.md": f"# Context Asset Index｜{title}\n\n| Asset ID | 上下文类型 | 可复用资产 | 适用场景 | 来源锚点 | 信息状态 | Review Priority |\n|---|---|---|---|---|---|---|\n{asset_rows}\n",
-        "11_context_library_update_plan.md": f"# Context Library Update Plan｜{title}\n\n## 1. Library Update Summary\n\n| Source Package | Update Type | Recommended Action | Reason |\n|---|---|---|---|\n| {title} | 新增 | 暂存待复核 | 由 source facts 确定性生成，需人工确认后长期沉淀 |\n\n## 2. New Context Entries\n\n| Entry ID | 建议归档位置 | 标题 | 内容摘要 | 来源资产 | 稳定性 | 写入建议 |\n|---|---|---|---|---|---|---|\n{library_rows}\n\n## 3. Existing Context Updates\n\n| 可能影响的已有条目 | 更新方式 | 新信息 | 冲突或风险 | 版本判断依据 |\n|---|---|---|---|---|\n| 待检索 | 补充 | 来源事实可补充长期库 | 需人工判断是否与旧知识冲突 | source_version_report.md |\n\n## 4. Do Not Promote\n\n- 不把待确认、低置信度或临时执行信息直接提升为长期知识。\n\n## 6. Retrieval Notes\n\n后续 brief 可调用本资料中已保留原文定位的事实，但必须回到 source facts 和 transcript 校验。\n",
+        "11_context_library_update_plan.md": f"# Context Library Update Plan｜{title}\n\n## 1. Library Update Summary\n\n| Source Package | Update Type | Recommended Action | Reason |\n|---|---|---|---|\n| {title} | 新增 | 暂存待复核 | 由 source facts 确定性生成，需人工确认后长期沉淀 |\n\n## 2. New Context Entries\n\n| Entry ID | 建议归档位置 | 标题 | 内容摘要 | 来源资产 | 稳定性 | 写入建议 |\n|---|---|---|---|---|---|---|\n{library_rows}\n\n## 3. Existing Context Updates\n\n| 可能影响的已有条目 | 更新方式 | 新信息 | 冲突或风险 | 版本判断依据 |\n|---|---|---|---|---|\n| 待检索 | 补充 | 来源事实可补充长期库 | 需人工判断是否与旧知识冲突 | source_version_report.md |\n\n## 4. Do Not Promote\n\n- 不把待确认、低置信度或临时执行信息直接提升为长期知识。\n\n## 6. Retrieval Notes\n\n后续 brief 可调用本资料中已保留原文定位的事实，但必须回到 source facts 和 transcript 校验。\n\n| 使用场景 | 优先读取 | 精读文件 | 回看原文 |\n|---|---|---|---|\n{retrieval_table}\n",
     }
+
+
+def _source_facts_path(row: dict[str, str]) -> str:
+    transcript_path = row.get("转写 Markdown", "").strip()
+    if not transcript_path.endswith(".md"):
+        return "converted_markdown/source_facts/"
+    transcript = Path(transcript_path)
+    return f"converted_markdown/source_facts/{transcript.stem}_source_facts.md"
+
+
+def _retrieval_table(source_rows: list[dict[str, str]], reuse_scene: str) -> str:
+    return "\n".join(
+        f"| {reuse_scene} | outputs/10_context_asset_index.md | {_source_facts_path(row)} | {row.get('转写 Markdown', 'converted_markdown/source_transcripts/')} |"
+        for row in source_rows
+    )
 
 
 def _needs_review(text: str) -> bool:

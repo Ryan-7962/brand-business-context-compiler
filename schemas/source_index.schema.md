@@ -3,7 +3,7 @@
 ```markdown
 # Source Index｜<产品名>
 
-| 来源编号 | 文件/资料名 | 类型 | 路径/链接 | 日期/版本 | 包含信息 | 可信等级 | 可引用范围 | 备注/限制 |
-|---|---|---|---|---|---|---|---|---|
-| S001 | | 产品培训 / 品牌策略 / 营销 PPT / 电商详情页 / 包装文案 / 检测报告 / 消费者实证 / 竞品资料 / 历史 brief | | | | 高/中/低/待确认 | 内部 / 外发需审核 / 可外发 | |
+| Source ID | 文件名 | 创建时间 | 修改时间 | 转写 Markdown | Source Facts | 页/Slide 范围 |
+|---|---|---|---|---|---|---|
+| S001 | | | | converted_markdown/source_transcripts/... | converted_markdown/source_facts/... | |
 ```
