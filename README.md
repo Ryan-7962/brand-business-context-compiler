@@ -166,6 +166,8 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 14. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
 ```
 
+把 Structured Wiki 交给 Work Buddy 或其他 Agent 使用时，可直接参考 [docs/work_buddy_handoff_guide.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/work_buddy_handoff_guide.md)。里面提供了可复制的任务提示词和不同任务的读取顺序，避免后续 Agent 重新临时总结原始 PDF / PPT。
+
 本地验收 demo 可用一条命令跑完入库、知识库报告页和 contract 验证：
 
 ```bash
@@ -294,5 +296,6 @@ brand-skill import-ima-media _private_test_runs/<run_name> \
 - `docs/source_converter_strategy.md`：资料转写层策略，包含 MinerU 等高保真解析项目可吸收经验。
 - `docs/project_goal.md`：更新后的项目目标、价值边界、Source Engine 策略和第一阶段验收标准。
 - `docs/brand_context_library_architecture.md`：长期品牌上下文知识库结构。
+- `docs/work_buddy_handoff_guide.md`：把 Structured Wiki 交给 Work Buddy / Agent 使用的复制式提示词和读取顺序。
 - `docs/project_success_contract.md`：项目执行准则，定义最终目标、验证证据、限制条件、操作边界、下一步判断规则和阻塞报告格式。
 - `discussion_context/`：本次对话沉淀的开发背景与关键讨论摘录。

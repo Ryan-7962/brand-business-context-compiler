@@ -25,6 +25,8 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 
 如果这些文件能回答“读了哪些资料、每份讲什么、哪些页没读清、后续 Agent 该读哪里”，通常不需要人工逐条打开所有 Markdown。
 
+如果要把结果交给 Work Buddy 使用，直接参考 [Work Buddy Handoff Guide](work_buddy_handoff_guide.md)，复制其中的任务提示词，并按 `retrieval_maps/source_packages.md` 里的读取建议让 Agent 优先读 Wiki 文件。
+
 ## 1. 先看来源资料是否完整
 
 请先检查：
@@ -121,6 +123,8 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 - `outputs/10_context_asset_index.md`
 - `outputs/11_context_library_update_plan.md`
 - `brand_context_library/retrieval_maps/source_packages.md`
+
+可直接复制给 Work Buddy 的通用提示词见 [Work Buddy Handoff Guide](work_buddy_handoff_guide.md)。
 
 项目负责人或 AI 操作者只在需要时复核：
 
