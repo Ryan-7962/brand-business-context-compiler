@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Protocol
@@ -80,7 +81,13 @@ def check_source_engines(
             }
         )
 
-    report_path.write_text(_render_readiness_report(rows), encoding="utf-8")
+    report_text = _render_readiness_report(rows)
+    if report_path.exists():
+        current_text = report_path.read_text(encoding="utf-8")
+        if _strip_checked_at(current_text) == _strip_checked_at(report_text):
+            print(f"Source engine readiness report unchanged: {report_path}")
+            return report_path
+    report_path.write_text(report_text, encoding="utf-8")
     print(f"Source engine readiness report created: {report_path}")
     return report_path
 
@@ -159,6 +166,10 @@ def _render_readiness_report(rows: list[dict[str, str]]) -> str:
         ]
     )
     return "\n".join(lines)
+
+
+def _strip_checked_at(text: str) -> str:
+    return re.sub(r"^- 检查时间：.+$", "- 检查时间：<checked-at>", text, flags=re.MULTILINE)
 
 
 def _parse_quality_rows(markdown: str) -> list[dict[str, str]]:

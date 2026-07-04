@@ -635,6 +635,19 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("未检测到 CLI", report_text)
             self.assertIn("不上传真实品牌资料", report_text)
 
+    def test_check_source_engines_does_not_rewrite_unchanged_report_timestamp(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+
+            with redirect_stdout(StringIO()):
+                report_path = check_source_engines(project_dir, which=lambda _name: None)
+            original = report_path.read_text(encoding="utf-8")
+
+            with redirect_stdout(StringIO()):
+                check_source_engines(project_dir, which=lambda _name: None)
+
+            self.assertEqual(report_path.read_text(encoding="utf-8"), original)
+
     def test_plan_source_engine_evaluation_creates_multiengine_plan(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir)
