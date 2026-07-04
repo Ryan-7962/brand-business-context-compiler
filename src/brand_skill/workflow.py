@@ -45,7 +45,8 @@ def init_project(project_dir: Path) -> None:
             "# Brand Input\n\n"
             "可选：如果已有人工审核结果，请放入 `review_decisions.json`。\n\n"
             "如果没有审核结果，Skill 会先根据来源资料生成 "
-            "`outputs/<project_slug>/08_review_pack.md`，供品牌经理确认。\n",
+            "`outputs/08_review_pack.md` 和 `review/brand_review.html`；"
+            "默认只处理识别异常，不要求逐条确认所有 Markdown。\n",
             encoding="utf-8",
         )
     print(f"Initialized project at {project_dir}")

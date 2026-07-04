@@ -28,7 +28,7 @@ from brand_skill.validators import (
     check_claim_matrix,
     check_public_safe_text,
 )
-from brand_skill.workflow import OUTPUT_FILES, build_prompt_pack, scaffold_output
+from brand_skill.workflow import OUTPUT_FILES, build_prompt_pack, init_project, scaffold_output
 
 
 class Phase1WorkflowTests(unittest.TestCase):
@@ -98,6 +98,18 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("11_context_library_update_plan.md", output_files)
             self.assertNotIn("04_product_knowledge_base_internal.md", output_files)
             self.assertNotIn("10_geo_activation_pack.md", output_files)
+
+    def test_init_project_guide_uses_current_output_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "demo_project"
+
+            with redirect_stdout(StringIO()):
+                init_project(project_dir)
+
+            guide = (project_dir / "brand_input" / "README.md").read_text(encoding="utf-8")
+            self.assertIn("outputs/08_review_pack.md", guide)
+            self.assertIn("review/brand_review.html", guide)
+            self.assertNotIn("outputs/<project_slug>", guide)
 
     def test_brand_lock_sheet_draft_requires_information_status(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
