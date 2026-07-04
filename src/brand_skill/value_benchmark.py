@@ -171,6 +171,6 @@ def _path_status(path: Path, project_dir: Path, library_dir: Path) -> str:
     except ValueError:
         pass
     try:
-        return str(Path(library_dir.name) / path.relative_to(library_dir))
+        return str(Path("brand_context_library") / path.relative_to(library_dir))
     except ValueError:
         return str(path)

@@ -1054,6 +1054,31 @@ class Phase1WorkflowTests(unittest.TestCase):
 
             self.assertTrue((project_dir / "evaluation" / "direct_vs_skill_benchmark.md").exists())
 
+    def test_build_value_benchmark_uses_stable_external_library_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir) / "project"
+            converted = project_dir / "converted_markdown"
+            outputs = project_dir / "outputs"
+            converted.mkdir(parents=True)
+            outputs.mkdir(parents=True)
+            (converted / "source_quality_report.md").write_text("# Source Quality Report\n", encoding="utf-8")
+            first_library = Path(temp_dir) / "first_temp_library"
+            second_library = Path(temp_dir) / "second_temp_library"
+            for library_dir in [first_library, second_library]:
+                (library_dir / "retrieval_maps").mkdir(parents=True)
+                (library_dir / "library_report.html").write_text("<html></html>", encoding="utf-8")
+                (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Retrieval\n", encoding="utf-8")
+
+            with redirect_stdout(StringIO()):
+                first_report = build_value_benchmark(project_dir, library_dir=first_library).read_text(encoding="utf-8")
+                second_report = build_value_benchmark(project_dir, library_dir=second_library).read_text(encoding="utf-8")
+
+            self.assertEqual(first_report, second_report)
+            self.assertIn("Library Report：brand_context_library/library_report.html", first_report)
+            self.assertIn("Retrieval Map：brand_context_library/retrieval_maps/source_packages.md", first_report)
+            self.assertNotIn("first_temp_library", first_report)
+            self.assertNotIn("second_temp_library", first_report)
+
     def test_cli_run_phase1_executes_full_local_loop_from_source(self) -> None:
         import sys
 
