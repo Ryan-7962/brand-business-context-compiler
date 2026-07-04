@@ -196,6 +196,8 @@ def _check_repo_privacy(repo_dir: Path, issues: list[str]) -> None:
     for tracked_path in result.stdout.splitlines():
         if tracked_path.startswith("_private_test_runs/"):
             issues.append(f"Tracked private test file: {tracked_path}")
+        elif tracked_path.endswith("/source/source_manifest.json") or tracked_path == "source/source_manifest.json":
+            issues.append(f"Tracked public source manifest: {tracked_path}")
     _check_privacy_terms(repo_dir, result.stdout.splitlines(), issues)
 
 

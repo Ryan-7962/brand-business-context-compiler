@@ -2993,6 +2993,25 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Tracked private test file", output)
             self.assertIn("_private_test_runs/sample.md", output)
 
+    def test_verify_contract_fails_when_public_source_manifest_is_tracked(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_dir = Path(temp_dir)
+            subprocess.run(["git", "init"], cwd=repo_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            manifest = repo_dir / "examples" / "demo" / "source" / "source_manifest.json"
+            manifest.parent.mkdir(parents=True)
+            manifest.write_text('{"sources":[{"source_platform":"ima","media_id":"private_media"}]}', encoding="utf-8")
+            subprocess.run(["git", "add", str(manifest)], cwd=repo_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+            project_dir = repo_dir / "demo_project"
+            project_dir.mkdir()
+            with redirect_stdout(StringIO()) as stdout:
+                with self.assertRaises(SystemExit):
+                    verify_project_contract(project_dir, library_dir=repo_dir / "missing_library", repo_dir=repo_dir)
+
+            output = stdout.getvalue()
+            self.assertIn("Tracked public source manifest", output)
+            self.assertIn("examples/demo/source/source_manifest.json", output)
+
     def test_verify_contract_fails_when_library_report_uses_remote_resources(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir) / "demo_project"
