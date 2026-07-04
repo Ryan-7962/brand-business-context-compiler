@@ -21,6 +21,7 @@ def _render_report(project_dir: Path, library_dir: Path | None) -> str:
     review_page = project_dir / "review" / "brand_review.html"
     resolved_library = library_dir or (project_dir / "brand_context_library")
     library_report = resolved_library / "library_report.html"
+    retrieval_map = resolved_library / "retrieval_maps" / "source_packages.md"
 
     facts_count = _count_fact_rows(converted / "source_facts")
     output_count = len(list(outputs.glob("*.md"))) if outputs.exists() else 0
@@ -60,6 +61,17 @@ def _render_report(project_dir: Path, library_dir: Path | None) -> str:
             f"- 结构化输出文件数：{output_count}",
             f"- 异常确认页：{review_status}",
             f"- 知识库报告页：{library_status}",
+            "",
+            "## Skill 链路证据路径",
+            "",
+            f"- Source Index：{_path_status(outputs / '00_source_index.md', project_dir, resolved_library)}",
+            f"- Context Asset Index：{_path_status(outputs / '10_context_asset_index.md', project_dir, resolved_library)}",
+            f"- Library Update Plan：{_path_status(outputs / '11_context_library_update_plan.md', project_dir, resolved_library)}",
+            f"- Source Quality Report：{_path_status(converted / 'source_quality_report.md', project_dir, resolved_library)}",
+            f"- Source Version Report：{_path_status(converted / 'source_version_report.md', project_dir, resolved_library)}",
+            f"- Review Report：{_path_status(review_page, project_dir, resolved_library)}",
+            f"- Library Report：{_path_status(library_report, project_dir, resolved_library)}",
+            f"- Retrieval Map：{_path_status(retrieval_map, project_dir, resolved_library)}",
             "",
             "## 对比评分表",
             "",
@@ -149,3 +161,16 @@ def _count_fact_rows(facts_dir: Path) -> int:
             if stripped.startswith("| SF") and "Source Anchor" not in stripped:
                 count += 1
     return count
+
+
+def _path_status(path: Path, project_dir: Path, library_dir: Path) -> str:
+    if not path.exists():
+        return "缺失"
+    try:
+        return str(path.relative_to(project_dir))
+    except ValueError:
+        pass
+    try:
+        return str(Path(library_dir.name) / path.relative_to(library_dir))
+    except ValueError:
+        return str(path)

@@ -958,12 +958,14 @@ class Phase1WorkflowTests(unittest.TestCase):
                 "# Source Facts\n\n| Fact ID | Source Anchor | Fact Candidate | 信息状态 | 低置信度说明 |\n|---|---|---|---|---|\n| SF001-001 | S001#page=1 | 活动目标是提升品牌声量。 | 已从来源资料提取 | 无明显低置信度 |\n",
                 encoding="utf-8",
             )
-            for filename in ["02_document_profile.md", "03_marketing_semantic_transcript.md", "10_context_asset_index.md", "11_context_library_update_plan.md"]:
+            for filename in ["00_source_index.md", "02_document_profile.md", "03_marketing_semantic_transcript.md", "10_context_asset_index.md", "11_context_library_update_plan.md"]:
                 (outputs / filename).write_text(f"# {filename}\n", encoding="utf-8")
             (review_dir / "brand_review.html").write_text("<html>EXCEPTION_REVIEW</html>", encoding="utf-8")
             library_dir = Path(temp_dir) / "brand_context_library"
             library_dir.mkdir()
+            (library_dir / "retrieval_maps").mkdir()
             (library_dir / "library_report.html").write_text("<html>品牌知识库概览</html>", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
 
             with redirect_stdout(StringIO()):
                 report_path = build_value_benchmark(project_dir, library_dir=library_dir)
@@ -976,8 +978,12 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("哪些事实来自原文，来源在哪里？", report_text)
             self.assertIn("来源转写质量报告：存在", report_text)
             self.assertIn("事实候选数：1", report_text)
-            self.assertIn("结构化输出文件数：4", report_text)
+            self.assertIn("结构化输出文件数：5", report_text)
             self.assertIn("知识库报告页：存在", report_text)
+            self.assertIn("## Skill 链路证据路径", report_text)
+            self.assertIn("Source Index：outputs/00_source_index.md", report_text)
+            self.assertIn("Retrieval Map：brand_context_library/retrieval_maps/source_packages.md", report_text)
+            self.assertNotIn(temp_dir, report_text)
             self.assertIn("| 覆盖率 | 待记录 | 待记录 | 待判断 |", report_text)
             self.assertIn("这份 benchmark 不证明 Skill 一定更好", report_text)
             self.assertIn("## A/B 评估提示词", report_text)

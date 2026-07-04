@@ -28,6 +28,17 @@
 - 异常确认页：存在
 - 知识库报告页：存在
 
+## Skill 链路证据路径
+
+- Source Index：outputs/00_source_index.md
+- Context Asset Index：outputs/10_context_asset_index.md
+- Library Update Plan：outputs/11_context_library_update_plan.md
+- Source Quality Report：converted_markdown/source_quality_report.md
+- Source Version Report：converted_markdown/source_version_report.md
+- Review Report：review/brand_review.html
+- Library Report：brand_context_library/library_report.html
+- Retrieval Map：brand_context_library/retrieval_maps/source_packages.md
+
 ## 对比评分表
 
 | 维度 | 直接读 PDF/PPT | Skill 链路 | 胜出方 | 证据 |
