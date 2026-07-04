@@ -2381,6 +2381,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("生成夏季活动方案时可以调用本资料", text)
             self.assertIn("夏季关键词", text)
             self.assertIn("Brand Context Map", text)
+            self.assertIn("知识库地图", text)
             self.assertIn('class="context-map"', text)
             self.assertIn('data-node-type="category"', text)
             self.assertIn('data-node-type="entry"', text)
@@ -2397,6 +2398,36 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("暂无摘要", text)
             self.assertNotIn("Source Anchor", text)
             self.assertNotIn("Risk Level", text)
+
+    def test_build_library_report_turns_retrieval_map_into_agent_reading_advice(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            library_dir = Path(temp_dir) / "brand_context_library"
+            (library_dir / "project").mkdir(parents=True)
+            (library_dir / "review_queue").mkdir()
+            (library_dir / "retrieval_maps").mkdir()
+            (library_dir / "project" / "launch-plan.md").write_text("# 上市计划\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Package Retrieval Notes",
+                        "",
+                        "| 使用场景 | 优先读取 | 精读文件 | 回看原文 |",
+                        "|---|---|---|---|",
+                        "| GEO / PDP / 种草 brief | outputs/10_context_asset_index.md | converted_markdown/source_facts/S001_source_facts.md | converted_markdown/source_transcripts/S001.md |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_library_report(library_dir)
+
+            text = (library_dir / "library_report.html").read_text(encoding="utf-8")
+            self.assertIn("做 GEO / PDP / 种草 / 拍摄 / 销售 / 复盘等任务时", text)
+            self.assertIn("使用场景：GEO / PDP / 种草 brief", text)
+            self.assertIn("优先读取：outputs/10_context_asset_index.md", text)
+            self.assertIn("精读文件：converted_markdown/source_facts/S001_source_facts.md", text)
+            self.assertIn("回看原文：converted_markdown/source_transcripts/S001.md", text)
 
     def test_build_library_report_uses_taxonomy_for_dynamic_categories(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -224,10 +224,26 @@ def _recent_evolution(path: Path) -> list[str]:
 def _retrieval_notes(path: Path) -> list[str]:
     if not path.exists():
         return []
+    text = path.read_text(encoding="utf-8")
+    table_lines = [line.strip() for line in text.splitlines() if line.strip().startswith("|")]
+    rows = _parse_markdown_table(table_lines)
+    if rows:
+        return [
+            "；".join(
+                [
+                    f"使用场景：{row.get('使用场景', '待补充')}",
+                    f"优先读取：{row.get('优先读取', '待补充')}",
+                    f"精读文件：{row.get('精读文件', '待补充')}",
+                    f"回看原文：{row.get('回看原文', '待补充')}",
+                ]
+            )
+            for row in rows[-6:]
+        ]
+
     notes = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in text.splitlines():
         stripped = line.strip()
-        if not stripped or stripped.startswith("#") or stripped.startswith("##"):
+        if not stripped or stripped.startswith("#") or stripped.startswith("##") or stripped.startswith("|"):
             continue
         notes.append(_friendly_display_line(stripped.lstrip("- ").strip()))
     return notes[-6:]
@@ -583,6 +599,7 @@ def _render_report(
     </section>
     <section>
       <h2>后续可直接复用的场景</h2>
+      <p class="muted">做 GEO / PDP / 种草 / 拍摄 / 销售 / 复盘等任务时，先看这里决定让 Agent 优先读哪份 Wiki 文件。</p>
       {reusable}
     </section>
     <section>
@@ -657,7 +674,7 @@ def _render_context_map(categories: list[dict[str, str | int]], entries: list[di
         )
     return f"""
     <section class="context-map" aria-label="Brand Context Map">
-      <h2>Brand Context Map｜知识地图</h2>
+      <h2>Brand Context Map｜知识库地图</h2>
       <div class="map-canvas">
         <div class="map-center">品牌知识库</div>
         <div class="map-branches">{''.join(branches)}</div>
