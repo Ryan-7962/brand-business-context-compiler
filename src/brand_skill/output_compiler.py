@@ -70,9 +70,10 @@ def _load_sources(report_path: Path) -> list[dict[str, str]]:
 def _load_quality_rows(report_path: Path) -> list[dict[str, str]]:
     if not report_path.exists():
         return []
+    review_section = _heading_section(report_path.read_text(encoding="utf-8"), "需要复核的页面")
     return [
         row
-        for row in _parse_table_rows(report_path.read_text(encoding="utf-8"))
+        for row in _parse_table_rows(review_section)
         if row.get("Source Anchor") and row.get("低置信度说明")
     ]
 
@@ -123,6 +124,15 @@ def _section_after_heading(markdown: str, heading: str) -> str:
     if not match:
         return ""
     next_heading = re.search(r"^###\s+", markdown[match.end() :], flags=re.MULTILINE)
+    end = match.end() + next_heading.start() if next_heading else len(markdown)
+    return markdown[match.end() : end].strip()
+
+
+def _heading_section(markdown: str, heading: str) -> str:
+    match = re.search(rf"^##\s+{re.escape(heading)}\s*$", markdown, flags=re.MULTILINE)
+    if not match:
+        return ""
+    next_heading = re.search(r"^##\s+", markdown[match.end() :], flags=re.MULTILINE)
     end = match.end() + next_heading.start() if next_heading else len(markdown)
     return markdown[match.end() : end].strip()
 

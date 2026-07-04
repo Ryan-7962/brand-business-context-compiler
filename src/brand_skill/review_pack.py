@@ -211,9 +211,10 @@ def _extract_source_status(conversion_report: str, quality_report: str) -> str:
     else:
         parts.append("- 未生成来源文件清单。")
 
+    review_table = _extract_heading_section(quality_report, "需要复核的页面")
     unclear_rows = [
         row
-        for row in _parse_markdown_table(quality_report)
+        for row in _parse_markdown_table(review_table)
         if row.get("低置信度说明") and not row.get("低置信度说明", "").startswith("无明显低置信度")
     ]
     if unclear_rows:

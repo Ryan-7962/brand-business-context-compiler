@@ -159,11 +159,37 @@ def _render_report(page_rows: list[dict[str, str | int]], review_rows: list[dict
         f"- 需要复核页数：{len(review_rows)}",
         "- 复核原则：优先处理含图片、低文字量、表格、小字或 OCR 不确定页面；关键品牌口径和关键数字必须回到原始页面确认。",
         "",
-        "## 需要复核的页面",
+        "## 全部页面读取状态",
         "",
-        "| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |",
+        "| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 读取状态 | 低置信度说明 |",
         "|---|---|---|---|---|---|---|---|",
     ]
+    for row in page_rows:
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    _cell(str(row["anchor"])),
+                    _cell(str(row["source_name"])),
+                    str(row["text_chars"]),
+                    str(row["image_count"]),
+                    str(row["drawing_count"]),
+                    str(row["table_count"]),
+                    "需要复核" if _needs_review(row) else "可进入后续编译",
+                    _cell(str(row["low_confidence"])),
+                ]
+            )
+            + " |"
+        )
+    lines.extend(
+        [
+            "",
+            "## 需要复核的页面",
+            "",
+            "| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |",
+            "|---|---|---|---|---|---|---|---|",
+        ]
+    )
     if not review_rows:
         lines.append("| - | - | - | - | - | - | 无明显低置信度页面 | 继续后续语义编译 |")
     else:
