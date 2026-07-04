@@ -16,10 +16,10 @@ REQUIRED_OUTPUTS = [
 
 
 SECTION_CONFIG = [
-    ("source-status", "读取覆盖状态"),
+    ("source-status", "读取覆盖状态：读了哪些文件、每份大概讲什么"),
     ("overview", "整个文件概述"),
-    ("context", "文件大纲参考"),
-    ("exceptions", "需要处理的问题"),
+    ("context", "文件大纲参考：识别出来的索引大纲"),
+    ("exceptions", "需要处理的问题：哪些内容没读清"),
 ]
 
 
@@ -187,6 +187,7 @@ def _extract_source_status(conversion_report: str, quality_report: str) -> str:
         for row in rows
         if row.get("来源编号") and row.get("原始文件")
     ]
+    source_rows = _collapse_source_rows(source_rows)
     if source_rows:
         lines = [
             "| 文件 | 页/Slide 范围 | 转写引擎 | 转写稿 | Source Facts |",
@@ -218,13 +219,72 @@ def _extract_source_status(conversion_report: str, quality_report: str) -> str:
         if row.get("低置信度说明") and not row.get("低置信度说明", "").startswith("无明显低置信度")
     ]
     if unclear_rows:
-        parts.append(
-            "\n".join(
-                f"- {row.get('原始文件', '未识别文件')}：{row.get('低置信度说明')}。建议：{row.get('建议动作', '人工复核')}"
-                for row in unclear_rows
-            )
-        )
+        parts.append(_summarize_unclear_rows(unclear_rows))
     return "\n\n".join(parts)
+
+
+def _collapse_source_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    collapsed: dict[tuple[str, str, str], dict[str, str]] = {}
+    pages: dict[tuple[str, str, str], list[str]] = {}
+    for row in rows:
+        key = (row.get("来源编号", ""), row.get("原始文件", ""), row.get("转写 Markdown", ""))
+        if key not in collapsed:
+            collapsed[key] = dict(row)
+            pages[key] = []
+        pages[key].append(row.get("页码/Slide 范围", ""))
+    for key, row in collapsed.items():
+        row["页码/Slide 范围"] = _compact_page_ranges(pages[key])
+    return list(collapsed.values())
+
+
+def _summarize_unclear_rows(rows: list[dict[str, str]]) -> str:
+    grouped: dict[str, dict[str, object]] = {}
+    for row in rows:
+        filename = row.get("原始文件", "未识别文件")
+        item = grouped.setdefault(filename, {"pages": [], "reasons": set(), "actions": set()})
+        page = _page_from_anchor(row.get("Source Anchor", ""))
+        if page:
+            item["pages"].append(page)  # type: ignore[index, union-attr]
+        item["reasons"].add(row.get("低置信度说明", "待复核"))  # type: ignore[index, union-attr]
+        item["actions"].add(row.get("建议动作", "人工复核"))  # type: ignore[index, union-attr]
+    lines = []
+    for filename, item in grouped.items():
+        pages = _compact_page_ranges([str(page) for page in item["pages"]])  # type: ignore[index]
+        reasons = "；".join(sorted(item["reasons"]))  # type: ignore[arg-type, index]
+        actions = "；".join(sorted(item["actions"]))  # type: ignore[arg-type, index]
+        count = len(item["pages"])  # type: ignore[arg-type, index]
+        lines.append(f"- {filename}：{count} 页需要复核，页码 {pages}。原因：{reasons}。建议：{actions}")
+    return "\n".join(lines)
+
+
+def _page_from_anchor(anchor: str) -> int | None:
+    match = re.search(r"#page=(\d+)", anchor)
+    return int(match.group(1)) if match else None
+
+
+def _compact_page_ranges(ranges: list[str]) -> str:
+    numbers: list[int] = []
+    for page_range in ranges:
+        match = re.fullmatch(r"\s*(\d+)\s*-\s*(\d+)\s*", page_range)
+        if match:
+            start, end = int(match.group(1)), int(match.group(2))
+            numbers.extend(range(start, end + 1))
+            continue
+        if page_range.strip().isdigit():
+            numbers.append(int(page_range.strip()))
+    if not numbers:
+        return "未记录"
+    unique = sorted(set(numbers))
+    groups: list[str] = []
+    start = previous = unique[0]
+    for number in unique[1:]:
+        if number == previous + 1:
+            previous = number
+            continue
+        groups.append(str(start) if start == previous else f"{start}-{previous}")
+        start = previous = number
+    groups.append(str(start) if start == previous else f"{start}-{previous}")
+    return "、".join(groups)
 
 
 def _source_facts_path(transcript_path: str) -> str:

@@ -1975,6 +1975,62 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertNotIn("来源位置：", text)
             self.assertNotIn("Context Asset Index Review", text)
 
+    def test_build_review_pack_collapses_multi_page_source_status(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            self._write_minimum_marketing_outputs(project_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir()
+            (converted / "conversion_report.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Conversion Report",
+                        "",
+                        "## Source Files",
+                        "",
+                        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 | 外部来源 |",
+                        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+                        "| S001 | deck.pdf | 2026-01-01T00:00:00Z | 2026-01-02T00:00:00Z | 2026-01-03T00:00:00Z | converted_markdown/source_transcripts/S001_deck.md | pymupdf4llm | PDF 文本解析 | 否 | 1 | 中 | 部分 | 部分 | 小字需复核 | 是 | 本地 source/ |",
+                        "| S001 | deck.pdf | 2026-01-01T00:00:00Z | 2026-01-02T00:00:00Z | 2026-01-03T00:00:00Z | converted_markdown/source_transcripts/S001_deck.md | pymupdf4llm | PDF 文本解析 | 否 | 2 | 中 | 部分 | 部分 | 小字需复核 | 是 | 本地 source/ |",
+                        "| S002 | training.pdf | 2026-01-01T00:00:00Z | 2026-01-02T00:00:00Z | 2026-01-03T00:00:00Z | converted_markdown/source_transcripts/S002_training.md | pymupdf4llm | PDF 文本解析 | 否 | 1 | 中 | 部分 | 部分 | 图片需复核 | 是 | 本地 source/ |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (converted / "source_quality_report.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Quality Report",
+                        "",
+                        "## 识别质量总览",
+                        "",
+                        "- 总页数：3",
+                        "- 需要复核页数：3",
+                        "",
+                        "## 需要复核的页面",
+                        "",
+                        "| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 低置信度说明 | 建议动作 |",
+                        "|---|---|---|---|---|---|---|---|",
+                        "| S001#page=1 | deck.pdf | 30 | 1 | 0 | 0 | 小字没有读清楚 | 重新提供截图或启用 OCR |",
+                        "| S001#page=2 | deck.pdf | 20 | 1 | 0 | 0 | 小字没有读清楚 | 重新提供截图或启用 OCR |",
+                        "| S002#page=1 | training.pdf | 10 | 2 | 0 | 0 | 图片中文字需要复核 | MinerU / MarkItDown / 人工复核 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_review_pack(project_dir)
+
+            text = (project_dir / "review" / "brand_review.html").read_text(encoding="utf-8")
+            self.assertIn("读取覆盖状态：读了哪些文件、每份大概讲什么", text)
+            self.assertIn("文件大纲参考：识别出来的索引大纲", text)
+            self.assertIn("需要处理的问题：哪些内容没读清", text)
+            self.assertEqual(text.count("converted_markdown/source_facts/S001_deck_source_facts.md"), 1)
+            self.assertEqual(text.count("converted_markdown/source_facts/S002_training_source_facts.md"), 1)
+            self.assertIn("deck.pdf：2 页需要复核，页码 1-2", text)
+            self.assertIn("training.pdf：1 页需要复核，页码 1", text)
+
     def test_build_review_pack_shows_missing_context_without_backend_fields(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir)
