@@ -2368,7 +2368,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             evaluation_dir = project_dir / "evaluation"
             evaluation_dir.mkdir()
             (evaluation_dir / "direct_vs_skill_benchmark.md").write_text(
-                "# Direct PDF/PPT vs Skill Benchmark\n\n## 固定问题集\n\n## 对比评分表\n\n## A/B 评估提示词\n\n### A. 直接读 PDF/PPT 的提示词\n\n### B. Skill 链路回答提示词\n\n## 答案记录模板\n\n覆盖率 来源追溯 长期知识沉淀\n",
+                "# Direct PDF/PPT vs Skill Benchmark\n\n## 固定问题集\n\n## 对比评分表\n\n## A/B 评估提示词\n\n### A. 直接读 PDF/PPT 的提示词\n\n### B. Skill 链路回答提示词\n\n## 答案记录模板\n\n## Skill 链路证据路径\n\n- Source Index：outputs/00_source_index.md\n- Context Asset Index：outputs/10_context_asset_index.md\n- Library Update Plan：outputs/11_context_library_update_plan.md\n- Retrieval Map：brand_context_library/retrieval_maps/source_packages.md\n\n覆盖率 来源追溯 长期知识沉淀\n",
                 encoding="utf-8",
             )
             library_dir = Path(temp_dir) / "brand_context_library"
@@ -2435,7 +2435,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             evaluation_dir = project_dir / "evaluation"
             evaluation_dir.mkdir()
             (evaluation_dir / "direct_vs_skill_benchmark.md").write_text(
-                "# Direct PDF/PPT vs Skill Benchmark\n\n## 固定问题集\n\n## 对比评分表\n\n## A/B 评估提示词\n\n### A. 直接读 PDF/PPT 的提示词\n\n### B. Skill 链路回答提示词\n\n## 答案记录模板\n\n覆盖率 来源追溯 长期知识沉淀\n",
+                "# Direct PDF/PPT vs Skill Benchmark\n\n## 固定问题集\n\n## 对比评分表\n\n## A/B 评估提示词\n\n### A. 直接读 PDF/PPT 的提示词\n\n### B. Skill 链路回答提示词\n\n## 答案记录模板\n\n## Skill 链路证据路径\n\n- Source Index：outputs/00_source_index.md\n- Context Asset Index：outputs/10_context_asset_index.md\n- Library Update Plan：outputs/11_context_library_update_plan.md\n- Retrieval Map：brand_context_library/retrieval_maps/source_packages.md\n\n覆盖率 来源追溯 长期知识沉淀\n",
                 encoding="utf-8",
             )
             library_dir = Path(temp_dir) / "brand_context_library"
