@@ -188,7 +188,7 @@ def _build_documents(
                 "",
                 "### 原页核心内容转述",
                 "",
-                page.get("text", "").strip() or "待补充。",
+                _clean_block(page.get("text", "")) or "待补充。",
             ]
         )
         for index, page in enumerate(page_rows, start=1)
@@ -206,7 +206,7 @@ def _build_documents(
         for index, row in enumerate(promotable_fact_rows[:5], start=1)
     )
     missing_lines = "\n".join(
-        f"- {row.get('Source Anchor', '待补充')}：{row.get('低置信度说明', '待复核')}"
+        f"- {row.get('Source Anchor', '待补充')}：{_clean_block(row.get('低置信度说明', '待复核'))}"
         for row in review_items
     ) or "- 暂未发现明显低置信度事项。"
 
@@ -355,7 +355,7 @@ def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:
                 "library_location": "project",
                 "asset_type": "project",
                 "reuse_scene": "上市 brief / PDP / GEO / 种草 / 销售沟通",
-                "focus_points": "- 抽取上市目标、核心信息、渠道节奏、内容资产和销售承接。\n- 标出未确认的卖点证据、排期、渠道资源和审核边界。\n- 不把未确认新品 claim 写成已品牌确认。",
+                "focus_points": "- 抽取上市目标、核心信息、渠道节奏、内容资产和销售承接。\n- 标出未确认的卖点证据、排期、渠道资源和审核边界。\n- 不把未确认新品 claim 写成品牌方已确认口径。",
                 "rationale": "- 命中“新品 / 上市 / 首发 / 上新 / launch / GTM”等来源词，因此暂判为新品上市 / GTM 方案。",
             },
         ),
@@ -383,7 +383,7 @@ def _infer_document_profile(facts: list[dict[str, str]]) -> dict[str, str]:
                 "library_location": "decision",
                 "asset_type": "decision",
                 "reuse_scene": "决策追踪 / 项目推进 / 会议复盘",
-                "focus_points": "- 优先抽取决策、被否方向、责任人和下一步动作。\n- 区分已决定事项、待确认事项和讨论信息。\n- 不把会议讨论直接写成已品牌确认。",
+                "focus_points": "- 优先抽取决策、被否方向、责任人和下一步动作。\n- 区分已决定事项、待确认事项和讨论信息。\n- 不把会议讨论直接写成品牌方已确认口径。",
                 "rationale": "- 命中“会议 / 纪要 / 决策 / 负责人 / 下周动作”等来源词，因此暂判为会议纪要。",
             },
         ),
@@ -485,7 +485,15 @@ def _cell(text: str) -> str:
 
 
 def _clean_inline(text: str) -> str:
-    return " ".join(str(text).split()).strip()
+    return _neutralize_confirmed_status(" ".join(str(text).split()).strip())
+
+
+def _clean_block(text: str) -> str:
+    return _neutralize_confirmed_status(str(text).strip())
+
+
+def _neutralize_confirmed_status(text: str) -> str:
+    return text.replace("已品牌确认", "来源文本包含确认字样，待人工核验")
 
 
 def _short_title(text: str, index: int) -> str:
@@ -494,7 +502,7 @@ def _short_title(text: str, index: int) -> str:
 
 
 def _bullet_facts(facts: list[dict[str, str]]) -> str:
-    return "\n".join(f"- {row.get('Evidence Text', '待补充')}（来源：{row.get('Source Anchor', '待补充')}）" for row in facts) or "- 待补充。"
+    return "\n".join(f"- {_clean_block(row.get('Evidence Text', '待补充'))}（来源：{row.get('Source Anchor', '待补充')}）" for row in facts) or "- 待补充。"
 
 
 def _asset_type_for_fact(row: dict[str, str], default: str) -> str:

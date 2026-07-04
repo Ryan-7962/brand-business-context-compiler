@@ -1664,6 +1664,48 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("自动识别的大纲", brief)
             self.assertIn("大纲分类：4 类", quality)
 
+    def test_compile_structured_outputs_neutralizes_source_confirmed_status(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            transcripts = converted / "source_transcripts"
+            facts = converted / "source_facts"
+            transcripts.mkdir(parents=True)
+            facts.mkdir()
+            (transcripts / "S001.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Transcript｜training.pdf",
+                        "",
+                        "## Page 1",
+                        "- Source Anchor：S001#page=1",
+                        "",
+                        "### Text",
+                        "来源页脚写着已品牌确认，但这只是来源文本。",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (facts / "S001_source_facts.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Facts",
+                        "",
+                        "| Fact ID | Source Anchor | Evidence Text | 信息状态 | 低置信度说明 |",
+                        "|---|---|---|---|---|",
+                        "| SF001-001 | S001#page=1 | 来源页脚写着已品牌确认，但这只是来源文本。 | 已从来源资料提取 | 无明显低置信度。 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                compile_structured_outputs(project_dir)
+
+            combined_outputs = "\n".join(path.read_text(encoding="utf-8") for path in (project_dir / "outputs").glob("*.md"))
+            self.assertNotIn("已品牌确认", combined_outputs)
+            self.assertIn("来源文本包含确认字样，待人工核验", combined_outputs)
+
     def test_compile_structured_outputs_flags_missing_context_even_when_extraction_confidence_is_ok(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir)
