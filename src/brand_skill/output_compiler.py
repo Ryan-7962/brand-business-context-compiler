@@ -60,11 +60,45 @@ def _load_pages(transcripts_dir: Path) -> list[dict[str, str]]:
 def _load_sources(report_path: Path) -> list[dict[str, str]]:
     if not report_path.exists():
         return []
-    return [
-        row
-        for row in _parse_table_rows(report_path.read_text(encoding="utf-8"))
-        if row.get("来源编号") and row.get("原始文件")
-    ]
+    return _collapse_source_rows(
+        [
+            row
+            for row in _parse_table_rows(report_path.read_text(encoding="utf-8"))
+            if row.get("来源编号") and row.get("原始文件")
+        ]
+    )
+
+
+def _collapse_source_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    collapsed: dict[tuple[str, str, str], dict[str, str]] = {}
+    pages: dict[tuple[str, str, str], list[str]] = {}
+    for row in rows:
+        key = (row.get("来源编号", ""), row.get("原始文件", ""), row.get("转写 Markdown", ""))
+        if key not in collapsed:
+            collapsed[key] = dict(row)
+            pages[key] = []
+        pages[key].append(row.get("页码/Slide 范围", ""))
+    for key, row in collapsed.items():
+        row["页码/Slide 范围"] = _compact_page_ranges(pages[key])
+    return list(collapsed.values())
+
+
+def _compact_page_ranges(ranges: list[str]) -> str:
+    numbers: list[int] = []
+    for page_range in ranges:
+        match = re.fullmatch(r"\s*(\d+)\s*-\s*(\d+)\s*", page_range)
+        if match:
+            start, end = int(match.group(1)), int(match.group(2))
+            numbers.extend(range(start, end + 1))
+            continue
+        if page_range.strip().isdigit():
+            numbers.append(int(page_range.strip()))
+    if not numbers:
+        return "待补充"
+    unique = sorted(set(numbers))
+    if unique == list(range(unique[0], unique[-1] + 1)):
+        return str(unique[0]) if len(unique) == 1 else f"{unique[0]}-{unique[-1]}"
+    return "、".join(str(number) for number in unique)
 
 
 def _load_quality_rows(report_path: Path) -> list[dict[str, str]]:
@@ -174,7 +208,7 @@ def _build_documents(
         for row in fact_rows
     )
     source_table = "\n".join(
-        f"| {row.get('来源编号', '')} | {_cell(row.get('原始文件', ''))} | {_source_summary(row, fact_rows)} | {row.get('原始文件创建时间', '待补充')} | {row.get('原始文件修改时间', '待补充')} | {row.get('转写 Markdown', '待补充')} | {_source_facts_path(row)} | {row.get('页码/Slide 范围', '待补充')} |"
+        f"| {row.get('来源编号', '')} | {_cell(row.get('原始文件', ''))} | {_source_summary(row, promotable_fact_rows)} | {row.get('原始文件创建时间', '待补充')} | {row.get('原始文件修改时间', '待补充')} | {row.get('转写 Markdown', '待补充')} | {_source_facts_path(row)} | {row.get('页码/Slide 范围', '待补充')} |"
         for row in source_rows
     )
     retrieval_table = _retrieval_table(source_rows, profile["reuse_scene"])

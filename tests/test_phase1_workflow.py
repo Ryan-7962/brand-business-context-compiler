@@ -1509,6 +1509,59 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("| 使用场景 | 优先读取 | 精读文件 | 回看原文 |", plan)
             self.assertIn("outputs/10_context_asset_index.md", plan)
 
+    def test_compile_structured_outputs_collapses_source_index_by_file(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            facts = converted / "source_facts"
+            facts.mkdir(parents=True)
+            (converted / "conversion_report.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Conversion Report",
+                        "",
+                        "## Source Files",
+                        "",
+                        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 | 外部来源 |",
+                        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+                        "| S001 | deck.pdf | 2026-01-01T09:00:00+08:00 | 2026-01-02T09:00:00+08:00 | converted_markdown/source_transcripts/S001_deck.md | pymupdf4llm | 文本解析 | 否 | 1 | 待复核 | 是 | 待复核 | 含图片 | 人工复核 | 本地 source/ |",
+                        "| S001 | deck.pdf | 2026-01-01T09:00:00+08:00 | 2026-01-02T09:00:00+08:00 | converted_markdown/source_transcripts/S001_deck.md | pymupdf4llm | 文本解析 | 否 | 2 | 待复核 | 是 | 待复核 | 含图片 | 人工复核 | 本地 source/ |",
+                        "| S002 | training.pdf | 2026-01-03T09:00:00+08:00 | 2026-01-04T09:00:00+08:00 | converted_markdown/source_transcripts/S002_training.md | pymupdf4llm | 文本解析 | 否 | 1 | 待复核 | 是 | 待复核 | 含图片 | 人工复核 | 本地 source/ |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (facts / "S001_deck_source_facts.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Facts",
+                        "",
+                        "| Fact ID | Source Anchor | Evidence Text | 信息状态 | 低置信度说明 |",
+                        "|---|---|---|---|---|",
+                        "| SF001-001 | S001#page=1 | -----START OF PICTURE----- | 已从来源资料提取 | 无明显低置信度。 |",
+                        "| SF001-002 | S001#page=2 | 品牌会议资料提出渠道复盘和后续动作。 | 已从来源资料提取 | 无明显低置信度。 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (facts / "S002_training_source_facts.md").write_text(
+                "# Source Facts\n\n| Fact ID | Source Anchor | Evidence Text | 信息状态 | 低置信度说明 |\n|---|---|---|---|---|\n| SF002-001 | S002#page=1 | 产品培训资料说明核心卖点。 | 已从来源资料提取 | 无明显低置信度。 |\n",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                compile_structured_outputs(project_dir)
+
+            source_index = (project_dir / "outputs" / "00_source_index.md").read_text(encoding="utf-8")
+            plan = (project_dir / "outputs" / "11_context_library_update_plan.md").read_text(encoding="utf-8")
+            self.assertEqual(source_index.count("| S001 | deck.pdf |"), 1)
+            self.assertEqual(source_index.count("| S002 | training.pdf |"), 1)
+            self.assertIn("| S001 | deck.pdf | 品牌会议资料提出渠道复盘和后续动作。", source_index)
+            self.assertIn("| 1-2 |", source_index)
+            self.assertNotIn("START OF PICTURE", source_index)
+            self.assertEqual(plan.count("converted_markdown/source_facts/S001_deck_source_facts.md"), 1)
+            self.assertEqual(plan.count("converted_markdown/source_facts/S002_training_source_facts.md"), 1)
+
     def test_cli_compile_outputs_command(self) -> None:
         import sys
 
