@@ -1047,6 +1047,14 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertTrue((project_dir / "review" / "brand_review.html").exists())
             self.assertTrue((library_dir / "library_report.html").exists())
             self.assertTrue((project_dir / "evaluation" / "direct_vs_skill_benchmark.md").exists())
+            source_index = (project_dir / "outputs" / "00_source_index.md").read_text(encoding="utf-8")
+            self.assertIn("内容概述", source_index)
+            self.assertIn("本月重点是渠道复盘", source_index)
+            retrieval_map = (library_dir / "retrieval_maps" / "source_packages.md").read_text(encoding="utf-8")
+            self.assertIn("| 使用场景 | 优先读取 | 精读文件 | 回看原文 |", retrieval_map)
+            benchmark = (project_dir / "evaluation" / "direct_vs_skill_benchmark.md").read_text(encoding="utf-8")
+            self.assertIn("## Skill 链路证据路径", benchmark)
+            self.assertIn("Retrieval Map：brand_context_library/retrieval_maps/source_packages.md", benchmark)
             self.assertIn("Status: passed", (project_dir / "contract_verification_report.md").read_text(encoding="utf-8"))
 
     def test_convert_source_preserves_external_source_manifest_metadata(self) -> None:
