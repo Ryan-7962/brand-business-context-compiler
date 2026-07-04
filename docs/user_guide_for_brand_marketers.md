@@ -107,7 +107,7 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 - AI 没识别清楚或不确定的点，哪些需要人工矫正、补充或删除。
 - 资料是否缺页、漏页，或总页数与实际文件不一致。
 
-它不展示后台 8 类 Context Asset 分类，也不要求品牌经理逐项审核下游 AI 调用索引。
+它不展示后台 Context Asset 分类，也不要求品牌经理逐项审核下游 AI 调用索引。
 
 注意：如果 Review Pack 来自真实测试 PDF，它只属于本地私有测试结果，不应作为正式 Skill 内置 demo 或公开示例发布。
 
@@ -124,7 +124,7 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 
 项目负责人或 AI 操作者只在需要时复核：
 
-- 8 类上下文资产是否归类正确：品牌、商品、素材、项目、话术、人设、网络、案例。
+- 上下文资产归类是否正确；内置分类只是建议，真实项目可由模型和业务语境调整。
 - 是否把活动方案、投放复盘、广告提案错误归成产品资料。
 - 每个 Context Asset 是否有来源锚点。
 - 每个 Context Asset 的信息状态是否正确。

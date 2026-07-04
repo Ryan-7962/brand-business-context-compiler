@@ -32,7 +32,7 @@ Raw Sources：同事直接丢进来的 PDF / PPT / DOCX / MD / TXT 等资料
 |---|---|
 | Source Conversion Skill | 将 PDF / PPT / 长图 / 文档尽量保真转为 Markdown 中间稿 |
 | Marketing Semantic Compiler Skill | 生成文件画像、完整语义转述、事实、策略、执行和风险底稿 |
-| Context Asset Classifier Skill | 将底稿归入品牌、商品、素材、项目、话术、人设、网络、案例 8 类上下文资产 |
+| Context Asset Classifier Skill | 将底稿归入建议分类，例如 brand / product / project / asset / language / persona / network / case / decision；真实项目可由模型和业务语境调整 |
 | Exception Review Queue Skill | 输出 Markdown 和静态 HTML 异常队列，只处理识别问题 |
 | Context Asset Indexer Skill | 输出 `10_context_asset_index.md`，作为后续派生 Skill 的调用索引 |
 | Context Library Planner Skill | 输出 `11_context_library_update_plan.md`，说明如何更新长期品牌知识库 |
@@ -59,7 +59,7 @@ Raw Sources：同事直接丢进来的 PDF / PPT / DOCX / MD / TXT 等资料
 ## 第一阶段默认产物
 
 ```text
-outputs/<project_slug>/
+outputs/
 ├── 00_source_index.md
 ├── 01_source_conversion_report.md
 ├── 02_document_profile.md
@@ -77,7 +77,7 @@ outputs/<project_slug>/
 产品资料可选模块可输出：
 
 ```text
-outputs/<project_slug>/optional_product_module/
+outputs/optional_product_module/
 ├── product_knowledge_base_internal.md
 ├── product_knowledge_base_public_safe.md
 ├── claim_matrix.md
@@ -88,7 +88,7 @@ outputs/<project_slug>/optional_product_module/
 第二阶段派生产物可预留在：
 
 ```text
-outputs/<project_slug>/derived_briefs/
+outputs/derived_briefs/
 ├── geo_brief.md
 ├── pdp_brief.md
 ├── shooting_brief.md
