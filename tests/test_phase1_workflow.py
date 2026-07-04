@@ -465,6 +465,22 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("campaign/long_image.png", output)
             self.assertFalse((project_dir / "converted_markdown" / "conversion_report.md").exists())
 
+    def test_convert_source_explains_legacy_ppt_boundary(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            source_dir = project_dir / "source"
+            source_dir.mkdir(parents=True)
+            (source_dir / "brand_training.ppt").write_bytes(b"legacy-ppt")
+
+            with redirect_stdout(StringIO()) as stdout:
+                with self.assertRaises(SystemExit):
+                    convert_source(project_dir, engine="pymupdf4llm")
+
+            output = stdout.getvalue()
+            self.assertIn("brand_training.ppt", output)
+            self.assertIn("旧版 PPT 请先转成 PPTX 或 PDF", output)
+            self.assertFalse((project_dir / "converted_markdown" / "conversion_report.md").exists())
+
     def test_convert_source_markitdown_adapter_accepts_html_source(self) -> None:
         class FakeMarkItDownResult:
             text_content = "# 活动复盘\n\n核心内容：渠道打法和投放总结。"

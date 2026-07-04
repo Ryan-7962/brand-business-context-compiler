@@ -148,6 +148,12 @@ def _iter_supported_sources(project_dir: Path, supported_suffixes: set[str]) -> 
     )
 
 
+def _unsupported_source_hint(path: Path) -> str:
+    if path.suffix.lower() == ".ppt":
+        return "；旧版 PPT 请先转成 PPTX 或 PDF"
+    return ""
+
+
 def _clear_generated_markdown_files(directory: Path) -> None:
     if not directory.exists():
         return
@@ -319,7 +325,7 @@ def convert_source(
                 label = source_file.relative_to(source_dir)
             except ValueError:
                 label = source_file
-            print(f"- {label}")
+            print(f"- {label}{_unsupported_source_hint(source_file)}")
         raise SystemExit(1)
 
     if engine == SUPPORTED_MARKITDOWN_ENGINE:
