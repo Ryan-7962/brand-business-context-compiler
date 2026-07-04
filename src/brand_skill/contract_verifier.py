@@ -452,9 +452,7 @@ def _check_library(library_dir: Path, issues: list[str]) -> None:
     retrieval_map = library_dir / "retrieval_maps" / "source_packages.md"
     if retrieval_map.exists():
         retrieval_text = retrieval_map.read_text(encoding="utf-8")
-        for marker in ["优先读取", "精读文件", "回看原文"]:
-            if marker not in retrieval_text:
-                issues.append(f"Library retrieval map missing marker: {marker}")
+        issues.extend(_retrieval_map_issues(retrieval_text))
 
     report = library_dir / "library_report.html"
     if report.exists():
@@ -523,6 +521,18 @@ def _source_quality_anchor_coverage_issues(quality_text: str, transcript_text: s
     if not missing:
         return []
     return [f"Source quality coverage missing anchors: {', '.join(missing)}"]
+
+
+def _retrieval_map_issues(retrieval_text: str) -> list[str]:
+    issues = []
+    for marker in ["优先读取", "精读文件", "回看原文"]:
+        if marker not in retrieval_text:
+            issues.append(f"Library retrieval map missing marker: {marker}")
+    if "converted_markdown/source_facts/" not in retrieval_text:
+        issues.append("Library retrieval map missing source facts path: converted_markdown/source_facts/")
+    if "converted_markdown/source_transcripts/" not in retrieval_text:
+        issues.append("Library retrieval map missing transcript path: converted_markdown/source_transcripts/")
+    return issues
 
 
 def _heading_section(markdown: str, heading: str) -> str:

@@ -10,7 +10,12 @@ from io import StringIO
 from pathlib import Path
 
 from brand_skill.cli import main as cli_main
-from brand_skill.contract_verifier import _source_page_coverage_issues, _source_quality_anchor_coverage_issues, verify_project_contract
+from brand_skill.contract_verifier import (
+    _retrieval_map_issues,
+    _source_page_coverage_issues,
+    _source_quality_anchor_coverage_issues,
+    verify_project_contract,
+)
 from brand_skill.library_report import build_library_report
 from brand_skill.library_writer import apply_context_library_update
 from brand_skill.ima_importer import import_ima_media
@@ -173,6 +178,22 @@ class Phase1WorkflowTests(unittest.TestCase):
         self.assertEqual(
             _source_quality_anchor_coverage_issues(quality_text, transcript_text),
             ["Source quality coverage missing anchors: S001#page=2"],
+        )
+
+    def test_retrieval_map_requires_source_fact_and_transcript_paths(self) -> None:
+        retrieval_text = (
+            "# Source Package Retrieval Notes\n\n"
+            "| 使用场景 | 优先读取 | 精读文件 | 回看原文 |\n"
+            "|---|---|---|---|\n"
+            "| Campaign brief | outputs/10_context_asset_index.md | outputs/10_context_asset_index.md | outputs/03_marketing_semantic_transcript.md |\n"
+        )
+
+        self.assertEqual(
+            _retrieval_map_issues(retrieval_text),
+            [
+                "Library retrieval map missing source facts path: converted_markdown/source_facts/",
+                "Library retrieval map missing transcript path: converted_markdown/source_transcripts/",
+            ],
         )
 
     def test_public_safe_text_flags_internal_sensitive_terms(self) -> None:
