@@ -150,6 +150,7 @@ def _build_documents(
     version_summary: str,
 ) -> dict[str, str]:
     fact_rows = facts or [{"Fact ID": "SF000-001", "Source Anchor": "待补充", "Evidence Text": "待补充", "信息状态": "待补充", "低置信度说明": "待补充"}]
+    promotable_fact_rows = _promotable_fact_rows(fact_rows) or fact_rows
     page_rows = pages or [{"anchor": row.get("Source Anchor", "待补充"), "text": row.get("Evidence Text", ""), "low_confidence": row.get("低置信度说明", "")} for row in fact_rows]
     source_rows = sources or [{"来源编号": "S001", "原始文件": "待补充", "原始文件创建时间": "待补充", "原始文件修改时间": "待补充", "页码/Slide 范围": "待补充"}]
     review_items = _merge_review_items(
@@ -164,10 +165,10 @@ def _build_documents(
             if _row_needs_review(row)
         ],
     )
-    first_fact = fact_rows[0]
+    first_fact = promotable_fact_rows[0]
     title = project_name
-    profile = _infer_document_profile(fact_rows)
-    outline = _build_marketing_outline(fact_rows)
+    profile = _infer_document_profile(promotable_fact_rows)
+    outline = _build_marketing_outline(promotable_fact_rows)
     facts_table = "\n".join(
         f"| {row.get('Fact ID', '')} | {_cell(row.get('Evidence Text', ''))} | {row.get('Source Anchor', '')} | {row.get('信息状态', '已从来源资料提取')} | {'是' if _row_needs_review(row) else '否'} |"
         for row in fact_rows
@@ -198,11 +199,11 @@ def _build_documents(
     )
     asset_rows = "\n".join(
         f"| CA{index:03d} | {_asset_type_for_fact(row, profile['asset_type'])} | {_cell(row.get('Evidence Text', ''))} | {profile['reuse_scene']} | {row.get('Source Anchor', '')} | {row.get('信息状态', '已从来源资料提取')} | {'高' if _row_needs_review(row) else '中'} |"
-        for index, row in enumerate(fact_rows[:10], start=1)
+        for index, row in enumerate(promotable_fact_rows[:10], start=1)
     )
     library_rows = "\n".join(
         f"| LCE{index:03d} | {_library_location_for_fact(row, profile['library_location'])} | {_short_title(row.get('Evidence Text', ''), index)} | {_cell(row.get('Evidence Text', ''))} | CA{index:03d} | 待验证 | 暂存 |"
-        for index, row in enumerate(fact_rows[:5], start=1)
+        for index, row in enumerate(promotable_fact_rows[:5], start=1)
     )
     missing_lines = "\n".join(
         f"- {row.get('Source Anchor', '待补充')}：{row.get('低置信度说明', '待复核')}"
@@ -215,9 +216,9 @@ def _build_documents(
         "02_document_profile.md": f"# Document Profile｜{title}\n\n## 0. 基础信息\n\n| 字段 | 内容 | 信息状态 | 来源/依据 | 待确认 |\n|---|---|---|---|---|\n| 文件类型 | {profile['document_type']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 文件目的 | {profile['document_purpose']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 目标读者 | {profile['audience']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 业务阶段 | {profile['business_stage']} | AI 结构化转述，待确认 | {first_fact.get('Source Anchor', '待补充')} | 是 |\n| 核心内容 | {_cell(first_fact.get('Evidence Text', '待补充'))} | 已从来源资料提取 | {first_fact.get('Source Anchor', '待补充')} | 否 |\n\n## 1. 类型识别依据\n\n{profile['rationale']}\n\n## 待人工确认问题\n\n{missing_lines}\n",
         "03_marketing_semantic_transcript.md": f"# Marketing Semantic Transcript｜{title}\n\n{page_sections}\n",
         "04_key_facts_and_claims.md": f"# Key Facts and Claims｜{title}\n\n## Key Facts\n\n| Fact ID | 事实 | 来源锚点 | 信息状态 | 待确认 |\n|---|---|---|---|---|\n{facts_table}\n",
-        "05_strategy_and_execution_map.md": f"# Strategy and Execution Map｜{title}\n\n## {profile['document_type']} 结构化转述重点\n\n{profile['focus_points']}\n\n## 自动识别的大纲\n\n{_render_outline(outline)}\n\n## 来源事实驱动结构\n\n{_bullet_facts(fact_rows)}\n\n## 待补充\n\n{missing_lines}\n",
+        "05_strategy_and_execution_map.md": f"# Strategy and Execution Map｜{title}\n\n## {profile['document_type']} 结构化转述重点\n\n{profile['focus_points']}\n\n## 自动识别的大纲\n\n{_render_outline(outline)}\n\n## 来源事实驱动结构\n\n{_bullet_facts(promotable_fact_rows)}\n\n## 待补充\n\n{missing_lines}\n",
         "06_risk_and_review_items.md": f"# Risk and Review Items｜{title}\n\n| Review ID | 审核项 | 风险等级 | 来源锚点 | 建议 |\n|---|---|---|---|---|\n{review_table or '| R000 | 暂无明显风险 | 低 | 待补充 | 继续后续编译 |'}\n",
-        "07_ai_ready_marketing_brief_base.md": f"# AI Ready Marketing Brief Base｜{title}\n\n## Source-backed Context\n\n{_bullet_facts(fact_rows[:8])}\n\n## 自动识别的大纲\n\n{_render_outline(outline)}\n\n## 使用限制\n\n- 不把待确认内容写成品牌方已经确认的口径。\n- 不补写来源资料中没有的信息。\n",
+        "07_ai_ready_marketing_brief_base.md": f"# AI Ready Marketing Brief Base｜{title}\n\n## Source-backed Context\n\n{_bullet_facts(promotable_fact_rows[:8])}\n\n## 自动识别的大纲\n\n{_render_outline(outline)}\n\n## 使用限制\n\n- 不把待确认内容写成品牌方已经确认的口径。\n- 不补写来源资料中没有的信息。\n",
         "08_review_pack.md": f"# Review Pack｜{title}\n\n## 需要人工处理\n\n{missing_lines}\n",
         "09_quality_check_report.md": f"# Quality Check Report｜{title}\n\n## 自动检查\n\n- Source facts：{len(facts)} 条。\n- Source pages：{len(pages)} 页/段。\n- 待复核事项：{len(review_items)} 项。\n- 大纲分类：{_outline_category_count(outline)} 类。\n\n## 结论\n\n这是确定性初稿，可进入人工复核或模型精修。\n",
         "10_context_asset_index.md": f"# Context Asset Index｜{title}\n\n| Asset ID | 上下文类型 | 可复用资产 | 适用场景 | 来源锚点 | 信息状态 | Review Priority |\n|---|---|---|---|---|---|---|\n{asset_rows}\n",
@@ -506,6 +507,27 @@ def _library_location_for_fact(row: dict[str, str], default: str) -> str:
 
 def _is_table_fact(row: dict[str, str]) -> bool:
     return row.get("Evidence Text", "").strip().startswith("表格行：")
+
+
+def _promotable_fact_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    return [row for row in rows if _is_promotable_fact(row)]
+
+
+def _is_promotable_fact(row: dict[str, str]) -> bool:
+    text = _clean_inline(row.get("Evidence Text", ""))
+    if not text:
+        return False
+    lowered = text.lower()
+    artifact_markers = [
+        "start of picture",
+        "end of picture",
+        "end of page",
+        "page_num",
+        "_private_test_runs/",
+        "converted_markdown/",
+        "/source/",
+    ]
+    return not any(marker in lowered for marker in artifact_markers)
 
 
 def _version_excerpt(markdown: str) -> str:

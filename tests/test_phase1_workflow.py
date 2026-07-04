@@ -1732,6 +1732,38 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertNotIn("无明显低置信度页面 | 中", risks)
             self.assertIn("暂无明显风险", risks)
 
+    def test_compile_structured_outputs_does_not_promote_pdf_artifacts_to_library(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            facts = project_dir / "converted_markdown" / "source_facts"
+            facts.mkdir(parents=True)
+            (facts / "S001_source_facts.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Facts",
+                        "",
+                        "| Fact ID | Source Anchor | Evidence Text | 信息状态 | 低置信度说明 |",
+                        "|---|---|---|---|---|",
+                        "| SF001-001 | S001#page=1 | -----START OF PICTURE----- | 已从来源资料提取 | 无明显低置信度。 |",
+                        "| SF001-002 | S001#page=1 | _private_test_runs/private_brand_bpm_sample/source/brand_strategy/demo.pdf | 已从来源资料提取 | 无明显低置信度。 |",
+                        "| SF001-003 | S001#page=2 | 品牌年度会议资料提出渠道复盘和下一步动作。 | 已从来源资料提取 | 无明显低置信度。 |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                compile_structured_outputs(project_dir)
+
+            assets = (project_dir / "outputs" / "10_context_asset_index.md").read_text(encoding="utf-8")
+            plan = (project_dir / "outputs" / "11_context_library_update_plan.md").read_text(encoding="utf-8")
+            self.assertIn("品牌年度会议资料提出渠道复盘", assets)
+            self.assertIn("品牌年度会议资料提出渠道复盘", plan)
+            self.assertNotIn("START OF PICTURE", assets)
+            self.assertNotIn("_private_test_runs", assets)
+            self.assertNotIn("START OF PICTURE", plan)
+            self.assertNotIn("_private_test_runs", plan)
+
     def test_compile_structured_outputs_keeps_table_facts_as_structured_assets(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir)
