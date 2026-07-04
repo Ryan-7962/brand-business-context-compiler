@@ -10,7 +10,7 @@ from io import StringIO
 from pathlib import Path
 
 from brand_skill.cli import main as cli_main
-from brand_skill.contract_verifier import _source_page_coverage_issues, verify_project_contract
+from brand_skill.contract_verifier import _source_page_coverage_issues, _source_quality_anchor_coverage_issues, verify_project_contract
 from brand_skill.library_report import build_library_report
 from brand_skill.library_writer import apply_context_library_update
 from brand_skill.ima_importer import import_ima_media
@@ -158,6 +158,21 @@ class Phase1WorkflowTests(unittest.TestCase):
         self.assertEqual(
             _source_page_coverage_issues(report_text, transcript_text),
             ["Source page coverage mismatch: S001 expected 3, transcript anchors 2"],
+        )
+
+    def test_source_quality_anchor_coverage_detects_missing_quality_rows(self) -> None:
+        transcript_text = "Source Anchor：S001#page=1\nSource Anchor：S001#page=2\n"
+        quality_text = (
+            "# Source Quality Report\n\n"
+            "## 全部页面读取状态\n\n"
+            "| Source Anchor | 原始文件 | 可抽取文字数 | 图片数 | 图形数 | 表格数 | 读取状态 | 低置信度说明 |\n"
+            "|---|---|---|---|---|---|---|---|\n"
+            "| S001#page=1 | demo.pdf | 120 | 0 | 0 | 0 | 可进入后续编译 | 无明显低置信度 |\n"
+        )
+
+        self.assertEqual(
+            _source_quality_anchor_coverage_issues(quality_text, transcript_text),
+            ["Source quality coverage missing anchors: S001#page=2"],
         )
 
     def test_public_safe_text_flags_internal_sensitive_terms(self) -> None:

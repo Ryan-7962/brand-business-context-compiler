@@ -330,6 +330,7 @@ def _check_source_conversion(project_dir: Path, issues: list[str]) -> None:
     if conversion_total is not None and quality_total is not None and conversion_total != quality_total:
         issues.append(f"Source total page mismatch: conversion_report.md={conversion_total}, source_quality_report.md={quality_total}")
     issues.extend(_source_page_coverage_issues(report_text, transcript_text))
+    issues.extend(_source_quality_anchor_coverage_issues(quality_text, transcript_text))
 
     if not version_report.exists():
         issues.append("Missing source version report: converted_markdown/source_version_report.md")
@@ -510,6 +511,27 @@ def _source_page_coverage_issues(report_text: str, transcript_text: str) -> list
         if actual_pages != expected_pages:
             issues.append(f"Source page coverage mismatch: {source_id} expected {expected_pages}, transcript anchors {actual_pages}")
     return issues
+
+
+def _source_quality_anchor_coverage_issues(quality_text: str, transcript_text: str) -> list[str]:
+    transcript_anchors = set(re.findall(r"S\d{3}#page=\d+", transcript_text))
+    if not transcript_anchors or "全部页面读取状态" not in quality_text:
+        return []
+
+    quality_anchors = set(re.findall(r"S\d{3}#page=\d+", _heading_section(quality_text, "全部页面读取状态")))
+    missing = sorted(transcript_anchors - quality_anchors)
+    if not missing:
+        return []
+    return [f"Source quality coverage missing anchors: {', '.join(missing)}"]
+
+
+def _heading_section(markdown: str, heading: str) -> str:
+    match = re.search(rf"^##\s+{re.escape(heading)}\s*$", markdown, flags=re.MULTILINE)
+    if not match:
+        return ""
+    next_heading = re.search(r"^##\s+", markdown[match.end() :], flags=re.MULTILINE)
+    end = match.end() + next_heading.start() if next_heading else len(markdown)
+    return markdown[match.end() : end].strip()
 
 
 def _markdown_cells(line: str) -> list[str]:
