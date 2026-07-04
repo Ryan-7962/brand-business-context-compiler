@@ -1,15 +1,37 @@
-# 品牌经理审核指南
+# 品牌经理 / Work Buddy 使用指南
 
-本指南面向品牌经理，用于审核 AI 生成的第一阶段 Marketing 语义底稿和 Brand Context Assets。
+本指南面向品牌经理和日常使用 Work Buddy / Agent 的同事，用于把一批品牌、Marketing、销售、会议、复盘或产品资料编译成 AI 可读的本地 Markdown Wiki。
 
-第一阶段的目标不是生成投放 brief 或宣传文案，而是先把 Marketing PDF / PPT / 长图 / 文档编译成 AI 可读、可检索、可引用、可控风险、可被后续 Skill 调用的结构化 Markdown 底稿和上下文资产。
+第一阶段的目标不是让人逐条审核 AI 读得对不对，也不是直接生成投放 brief 或宣传文案。默认流程是先自动完成读取、转写、索引和入库；人只处理例外，例如漏页、OCR 不清、图片/表格/小字无法识别、版本冲突或资料本身缺信息。
+
+## 0. 推荐使用路径
+
+1. 新建一个项目文件夹，把 PDF / PPTX / DOCX / Markdown / TXT 等资料放入 `source/`。
+2. 运行：
+
+```bash
+brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
+```
+
+3. 先看这几个结果：
+
+| 文件 | 用途 |
+|---|---|
+| `outputs/00_source_index.md` | 看本次读了哪些文件、每份文件大概讲什么、转写稿和 source facts 在哪里 |
+| `review/brand_review.html` | 只看识别异常、未读清页面和需要补救的问题 |
+| `converted_markdown/source_quality_report.md` | 看总页数、复核页、表格数、OCR / 图片 / 小字风险 |
+| `brand_context_library/retrieval_maps/source_packages.md` | 告诉 Work Buddy 后续做 GEO / PDP / 种草 / 销售 / 复盘 brief 时优先读什么 |
+| `evaluation/direct_vs_skill_benchmark.md` | 对比“直接丢 PDF/PPT”和“先经 Skill 编译”的价值证据 |
+
+如果这些文件能回答“读了哪些资料、每份讲什么、哪些页没读清、后续 Agent 该读哪里”，通常不需要人工逐条打开所有 Markdown。
 
 ## 1. 先看来源资料是否完整
 
 请先检查：
 
-- `00_source_index.md`：资料是否列全。
-- `01_source_conversion_report.md`：哪些页面、图表、表格或小字被标为低置信度。
+- `outputs/00_source_index.md`：资料是否列全，每份文件的大概内容是否明显正确。
+- `converted_markdown/conversion_report.md`：总页数、文件创建时间、修改时间和转写时间是否存在。
+- `converted_markdown/source_quality_report.md`：哪些页面、图表、表格或小字被标为低置信度。
 - `converted_markdown/source_transcripts/`：关键页面是否保留了页码和截图。
 
 如果某些活动方案、广告提案、销售策略、投放复盘、包装文案或检测报告没有进入来源目录，请先补充资料。
@@ -77,12 +99,13 @@
 
 ## 7. 审核 Review Pack
 
-`08_review_pack.md` 会把最需要人工确认的内容集中列出。品牌经理不需要逐个打开所有 Markdown 文件，可以先从 Review Pack 开始。
+`review/brand_review.html` 和 `08_review_pack.md` 会把最需要人工处理的内容集中列出。品牌经理不需要逐个打开所有 Markdown 文件。
 
 静态 HTML Review Pack 是中文轻量确认页，只要求确认：
 
 - PDF / PPT 输出内容的大概结构、核心观点、核心内容是否和原资料一致。
 - AI 没识别清楚或不确定的点，哪些需要人工矫正、补充或删除。
+- 资料是否缺页、漏页，或总页数与实际文件不一致。
 
 它不展示后台 8 类 Context Asset 分类，也不要求品牌经理逐项审核下游 AI 调用索引。
 
@@ -92,7 +115,14 @@
 
 `10_context_asset_index.md` 是后续 AI 使用这些资料的关键索引。它不是给人看的总结，而是告诉后续 Skill：哪些内容可以调用、哪些必须限制、哪些还缺品牌确认。
 
-如果后续要进入 GEO、PDP、拍摄、种草、销售、客服或复盘派生 Skill，再由项目负责人或 AI 操作者复核：
+如果后续要进入 GEO、PDP、拍摄、种草、销售、客服或复盘派生 Skill，Work Buddy / Agent 应优先读取：
+
+- `outputs/00_source_index.md`
+- `outputs/10_context_asset_index.md`
+- `outputs/11_context_library_update_plan.md`
+- `brand_context_library/retrieval_maps/source_packages.md`
+
+项目负责人或 AI 操作者只在需要时复核：
 
 - 8 类上下文资产是否归类正确：品牌、商品、素材、项目、话术、人设、网络、案例。
 - 是否把活动方案、投放复盘、广告提案错误归成产品资料。
