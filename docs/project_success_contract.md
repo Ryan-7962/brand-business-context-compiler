@@ -54,7 +54,7 @@ Codex 最终应把本项目推进为一个本地优先的 Brand / Business Conte
 - `converted_markdown/source_engine_readiness_report.md` 能告诉使用者当前本机是否具备 pymupdf4llm baseline、MarkItDown 和 MinerU 的评估条件，并明确候选引擎只属于 Source-to-Markdown 层。
 - `converted_markdown/source_engine_eval_plan.md` 能从 source quality report 中挑选最多 5 个高价值小样，对比 pymupdf4llm、MarkItDown、MinerU 在文字覆盖率、页码 / slide 锚点、表格结构、图片 / 图表 / 小字、阅读顺序、Markdown 可读性、部署复杂度和隐私风险上的差异。
 - `converted_markdown/source_engine_eval_results.md` 能记录候选引擎小样级观察、是否调整默认链路和隐私边界；在没有真实小样证据前必须保持“待判断 / 否，待证据”，不能把候选引擎写成默认替代。
-- 如需评估 MinerU，`converted_markdown/mineru_readiness_report.md` 能先证明本机是否具备可选 CLI 评估条件，`converted_markdown/mineru_eval_plan.md` 能列出最多 5 个高价值小样对比页面，`converted_markdown/mineru_eval_results.md` 能记录 baseline 与 MinerU 的 OCR、表格、图片/图表、阅读顺序、Markdown 可读性和部署复杂度对比；这些证据不等于 MinerU 已被设为默认转写引擎。
+- MinerU 独立 readiness / eval 文件只作为可选调试证据，不作为第一阶段默认验收前置条件。真实验收优先看通用 `source_engine_*` 评估链路；只有连续出现图片、表格、小字或扫描件读取缺口时，再用 MinerU 小样证明是否值得增强。
 - 项目价值不能只用“单次 PDF 总结是否顺口”判断。必须能用同一批资料对比“直接把 PDF/PPT 发给 AI”和“先经本 Skill 转写、抽 facts、编译、入库后再回答”的差异，并在覆盖率、来源追溯、多文件版本冲突、长期复用和人工修正成本上拿出证据。
 - `evaluation/direct_vs_skill_benchmark.md` 能把上述对比落实成固定问题集、当前 Skill 证据清单、两套可复制 A/B 评估提示词、答案记录模板和评分表，避免项目价值停留在主观判断。
 - 当资料来自 ima 或其他外部知识库时，`source/source_manifest.json` 能保留来源平台、知识库、路径、media id 等追溯线索，并写入 transcript / conversion report。

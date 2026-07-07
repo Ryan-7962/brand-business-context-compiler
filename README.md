@@ -74,7 +74,7 @@ outputs/
 └── 11_context_library_update_plan.md
 ```
 
-产品资料可选模块可输出：
+产品资料模块属于可选扩展，不是第一阶段默认产物。遇到产品培训、PDP、包装文案、功效报告或 claim 审核资料时，可按需输出：
 
 ```text
 outputs/optional_product_module/
@@ -85,19 +85,7 @@ outputs/optional_product_module/
 └── user_language_map.md
 ```
 
-第二阶段派生产物可预留在：
-
-```text
-outputs/derived_briefs/
-├── geo_brief.md
-├── pdp_brief.md
-├── shooting_brief.md
-├── seeding_brief.md
-├── customer_service_faq.md
-├── sales_enablement_brief.md
-├── campaign_recap_brief.md
-└── competitor_battlecard.md
-```
+GEO / PDP / 拍摄 / 种草 / 销售 / 客服 / 复盘 / 竞品分析等派生产出属于第二阶段。第一阶段只保证 Structured Wiki 能告诉后续 Agent 应该读取哪些资料和来源事实。
 
 ## 信息状态
 
@@ -112,13 +100,21 @@ outputs/derived_briefs/
 | 不适用 | 当前资料类型不涉及该字段 |
 | 已品牌确认 | 品牌经理确认后，才能作为最高优先级依据 |
 
-## CLI 第一版
+## CLI 常用命令
+
+第一阶段默认只需要记住这几条：
 
 ```bash
 brand-skill init <project_name>
 brand-skill validate-input <project_dir>
-brand-skill import-ima-media _private_test_runs/<run_name> --media-id <ima_media_id> --title <file_name>
 brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
+brand-skill demo-contract <project_dir> --library-dir <brand_context_library_dir>
+brand-skill verify-contract <project_dir> --library-dir <brand_context_library_dir> --write-report
+```
+
+分步调试时再使用：
+
+```bash
 brand-skill convert-source <project_dir> --engine pymupdf4llm
 brand-skill build-source-quality-report <project_dir>
 brand-skill build-source-version-report <project_dir>
@@ -133,8 +129,12 @@ brand-skill build-review-pack <project_dir>
 brand-skill apply-library-update <project_dir> --library-dir <brand_context_library_dir>
 brand-skill build-library-report <brand_context_library_dir>
 brand-skill build-value-benchmark <project_dir> --library-dir <brand_context_library_dir>
-brand-skill verify-contract <project_dir> --library-dir <brand_context_library_dir> --write-report
-brand-skill demo-contract <project_dir> --library-dir <brand_context_library_dir>
+```
+
+私有知识库导入只在用户明确授权时使用，默认写入 `_private_test_runs/`：
+
+```bash
+brand-skill import-ima-media _private_test_runs/<run_name> --media-id <ima_media_id> --title <file_name>
 ```
 
 ## 最小使用路径
@@ -202,7 +202,7 @@ brand-skill demo-contract examples/anonymous_marketing_campaign --library-dir /t
 
 如果需要在本机扫描私有测试关键词，可临时设置 `BRAND_SKILL_PRIVACY_TERMS_REGEX` 后再运行 `verify-contract`。不要把真实关键词写入仓库文件。
 
-产品资料可选校验：
+产品资料可选校验只在产品 claim 场景启用，不属于默认 `run-phase1` 路径：
 
 ```bash
 brand-skill check-brand-lock <project_dir>
@@ -211,7 +211,7 @@ brand-skill check-claim-matrix <project_dir>
 
 `convert-source` 当前支持默认轻量引擎 `pymupdf4llm`：PDF 会生成逐页转写和页面截图；PPTX / Markdown / TXT / DOCX 源稿会作为文档类资料进入同一套 source transcript / conversion report 流程。PPTX 轻量路径只抽取 slide 文本，不保留完整版式、图片、图表、动画和备注。多个源文件一起导入时，Source ID 会按 `source/` 下的相对路径稳定分配，避免因为文件类型不同导致引用编号漂移。
 
-`markitdown` 作为多格式 Markdown 转换候选已接入可选 adapter，但尚未设为默认引擎。安装后可运行 `brand-skill convert-source <project_dir> --engine markitdown`；如果本地未安装，CLI 会提示使用 `.venv/bin/python -m pip install 'markitdown[all]'`。Microsoft MarkItDown 适合优先评估 PDF、PPTX、DOCX、XLSX、HTML、ZIP 等多格式输入；DuanYan007/markitdown4j 暂作为 Java、本地 OCR、PaddleOCR 或批量部署方向的后续候选。两者都只属于 Source-to-Markdown 层，不能替代 Context Asset Index、Library Update Plan、版本冲突处理和长期知识库。
+`markitdown` 作为多格式 Markdown 转换候选已接入可选 adapter，但尚未设为默认引擎。安装后可运行 `brand-skill convert-source <project_dir> --engine markitdown`；如果本地未安装，CLI 会提示使用 `.venv/bin/python -m pip install 'markitdown[all]'`。它只属于 Source-to-Markdown 层，不能替代 Context Asset Index、Library Update Plan、版本冲突处理和长期知识库。
 
 MarkItDown 输出会进入同一套 `source_transcripts/` 和 `conversion_report.md` 格式，但它不保证稳定页码 / slide 边界，也不等于高保真 OCR。用于真实品牌资料时，应继续结合 `source_quality_report.md` 和 `source_engine_eval_plan.md` 抽样检查图片、表格、小字、阅读顺序和关键品牌口径。
 
@@ -231,19 +231,7 @@ brand-skill scaffold-source-engine-eval-results <project_dir>
 
 `scaffold-source-engine-eval-results` 会读取 `source_engine_eval_plan.md`，生成 `converted_markdown/source_engine_eval_results.md`。该文件只记录候选引擎小样对比证据，不是品牌确认；在没有真实小样证据前，默认判断仍保持 `pymupdf4llm` baseline。
 
-如需判断本机是否具备 MinerU 小样评估条件，可先运行：
-
-```bash
-brand-skill check-mineru <project_dir>
-brand-skill plan-mineru-eval <project_dir> --max-pages 5
-brand-skill scaffold-mineru-eval-results <project_dir>
-```
-
-该命令会生成 `converted_markdown/mineru_readiness_report.md`，记录是否检测到 MinerU CLI、CLI 路径、版本输出和下一步建议。它只做本地 readiness 检查，不会读取或上传品牌资料，也不代表 `convert-source --engine mineru` 已经完成真实高保真转写接入。
-
-`plan-mineru-eval` 会读取 `converted_markdown/source_quality_report.md`，自动挑选最多 5 个最适合做 MinerU 对比的小样页面，并生成 `converted_markdown/mineru_eval_plan.md`。它只生成本地评估计划，不运行 MinerU，也不上传真实品牌资料。
-
-`scaffold-mineru-eval-results` 会读取 `converted_markdown/mineru_eval_plan.md`，生成 `converted_markdown/mineru_eval_results.md`，用于记录 pymupdf4llm baseline 与 MinerU 小样在 OCR、表格、图片/图表、阅读顺序、Markdown 可读性和部署复杂度上的对比证据。该文件只是评估记录，不是品牌确认，也不表示 MinerU 已被设为默认引擎。
+MinerU 单独 readiness / eval 命令仍可作为本地调试入口保留，但 README 不再把它列为第一阶段默认路径。真实验收优先使用通用 source engine eval；只有连续出现图片、表格、小字或扫描件读取缺口时，再做 MinerU 小样对比。
 
 如果 `source/` 中存在当前不支持的文件类型，`convert-source` 会停止并列出文件路径，不会静默跳过。这是为了避免品牌资料漏转后仍被误认为已经完整入库。
 
