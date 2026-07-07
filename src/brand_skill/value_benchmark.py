@@ -25,6 +25,11 @@ def _render_report(project_dir: Path, library_dir: Path | None) -> str:
 
     facts_count = _count_fact_rows(converted / "source_facts")
     output_count = len(list(outputs.glob("*.md"))) if outputs.exists() else 0
+    quality_text = _read_optional(converted / "source_quality_report.md")
+    total_pages = _metric_value(quality_text, "总页数")
+    review_pages = _metric_value(quality_text, "需要复核页数")
+    library_entries = _count_library_entries(resolved_library)
+    retrieval_notes = _count_retrieval_rows(retrieval_map)
     quality_status = "存在" if (converted / "source_quality_report.md").exists() else "缺失"
     version_status = "存在" if (converted / "source_version_report.md").exists() else "缺失"
     review_status = "存在" if review_page.exists() else "缺失"
@@ -61,6 +66,14 @@ def _render_report(project_dir: Path, library_dir: Path | None) -> str:
             f"- 结构化输出文件数：{output_count}",
             f"- 异常确认页：{review_status}",
             f"- 知识库报告页：{library_status}",
+            "",
+            "## 当前可自动验证的 Skill 价值",
+            "",
+            f"- 页面覆盖证据：source_quality_report.md 记录总页数 {total_pages}，需要复核页数 {review_pages}。",
+            f"- 来源追溯证据：source_facts 中有 {facts_count} 条事实候选，可回到 source transcript / page anchor 核对。",
+            f"- 结构化证据：outputs 中有 {output_count} 个 Markdown 输出，用于索引、事实、风险和后续调用。",
+            f"- 长期沉淀证据：brand_context_library 中有 {library_entries} 个 Markdown 知识条目。",
+            f"- 后续复用证据：retrieval map 中有 {retrieval_notes} 条读取建议，说明后续 brief 应优先读哪些 Wiki 文件。",
             "",
             "## Skill 链路证据路径",
             "",
@@ -161,6 +174,36 @@ def _count_fact_rows(facts_dir: Path) -> int:
             if stripped.startswith("| SF") and "Source Anchor" not in stripped:
                 count += 1
     return count
+
+
+def _read_optional(path: Path) -> str:
+    return path.read_text(encoding="utf-8") if path.exists() else ""
+
+
+def _metric_value(text: str, label: str) -> str:
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith(f"- {label}："):
+            return stripped.split("：", 1)[1].strip()
+    return "缺失"
+
+
+def _count_library_entries(library_dir: Path) -> int:
+    if not library_dir.exists():
+        return 0
+    return sum(
+        1
+        for path in library_dir.rglob("*.md")
+        if "review_queue" not in path.parts
+        and "retrieval_maps" not in path.parts
+        and path.name not in {"00_library_index.md", "evolution_log.md", "taxonomy.md"}
+    )
+
+
+def _count_retrieval_rows(path: Path) -> int:
+    if not path.exists():
+        return 0
+    return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.startswith("|") and "使用场景" not in line and "---" not in line)
 
 
 def _path_status(path: Path, project_dir: Path, library_dir: Path) -> str:

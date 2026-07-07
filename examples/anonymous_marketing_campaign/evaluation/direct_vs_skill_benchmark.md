@@ -28,6 +28,14 @@
 - 异常确认页：存在
 - 知识库报告页：存在
 
+## 当前可自动验证的 Skill 价值
+
+- 页面覆盖证据：source_quality_report.md 记录总页数 6，需要复核页数 0。
+- 来源追溯证据：source_facts 中有 14 条事实候选，可回到 source transcript / page anchor 核对。
+- 结构化证据：outputs 中有 12 个 Markdown 输出，用于索引、事实、风险和后续调用。
+- 长期沉淀证据：brand_context_library 中有 5 个 Markdown 知识条目。
+- 后续复用证据：retrieval map 中有 1 条读取建议，说明后续 brief 应优先读哪些 Wiki 文件。
+
 ## Skill 链路证据路径
 
 - Source Index：outputs/00_source_index.md

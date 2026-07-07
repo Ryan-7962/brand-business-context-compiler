@@ -1024,7 +1024,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             outputs.mkdir(parents=True)
             review_dir.mkdir(parents=True)
             (converted / "source_quality_report.md").write_text(
-                "# Source Quality Report\n\n- 总页数：2\n\n| Source Anchor | 原始文件 | 低置信度说明 | 建议动作 |\n|---|---|---|---|\n| S001#page=2 | sample.pdf | 表格结构需复核 | MinerU / 人工复核 |\n",
+                "# Source Quality Report\n\n- 总页数：2\n- 需要复核页数：1\n\n| Source Anchor | 原始文件 | 低置信度说明 | 建议动作 |\n|---|---|---|---|\n| S001#page=2 | sample.pdf | 表格结构需复核 | MinerU / 人工复核 |\n",
                 encoding="utf-8",
             )
             (converted / "source_version_report.md").write_text(
@@ -1040,9 +1040,14 @@ class Phase1WorkflowTests(unittest.TestCase):
             (review_dir / "brand_review.html").write_text("<html>EXCEPTION_REVIEW</html>", encoding="utf-8")
             library_dir = Path(temp_dir) / "brand_context_library"
             library_dir.mkdir()
+            (library_dir / "project").mkdir()
             (library_dir / "retrieval_maps").mkdir()
+            (library_dir / "project" / "launch-plan.md").write_text("# 上市计划\n", encoding="utf-8")
             (library_dir / "library_report.html").write_text("<html>品牌知识库概览</html>", encoding="utf-8")
-            (library_dir / "retrieval_maps" / "source_packages.md").write_text("# Source Package Retrieval Notes\n", encoding="utf-8")
+            (library_dir / "retrieval_maps" / "source_packages.md").write_text(
+                "# Source Package Retrieval Notes\n\n| 使用场景 | 优先读取 | 精读文件 | 回看原文 |\n|---|---|---|---|\n| GEO brief | outputs/10_context_asset_index.md | converted_markdown/source_facts/S001_source_facts.md | converted_markdown/source_transcripts/S001.md |\n",
+                encoding="utf-8",
+            )
 
             with redirect_stdout(StringIO()):
                 report_path = build_value_benchmark(project_dir, library_dir=library_dir)
@@ -1057,6 +1062,11 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("事实候选数：1", report_text)
             self.assertIn("结构化输出文件数：5", report_text)
             self.assertIn("知识库报告页：存在", report_text)
+            self.assertIn("## 当前可自动验证的 Skill 价值", report_text)
+            self.assertIn("页面覆盖证据：source_quality_report.md 记录总页数 2，需要复核页数 1", report_text)
+            self.assertIn("来源追溯证据：source_facts 中有 1 条事实候选", report_text)
+            self.assertIn("长期沉淀证据：brand_context_library 中有 1 个 Markdown 知识条目", report_text)
+            self.assertIn("后续复用证据：retrieval map 中有 1 条读取建议", report_text)
             self.assertIn("## Skill 链路证据路径", report_text)
             self.assertIn("Source Index：outputs/00_source_index.md", report_text)
             self.assertIn("Retrieval Map：brand_context_library/retrieval_maps/source_packages.md", report_text)
