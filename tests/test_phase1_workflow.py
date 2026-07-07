@@ -1053,6 +1053,8 @@ class Phase1WorkflowTests(unittest.TestCase):
                 report_path = build_value_benchmark(project_dir, library_dir=library_dir)
 
             report_text = report_path.read_text(encoding="utf-8")
+            answer_record = project_dir / "evaluation" / "ab_answer_record.md"
+            answer_text = answer_record.read_text(encoding="utf-8")
             self.assertIn("# Direct PDF/PPT vs Skill Benchmark", report_text)
             self.assertIn("直接把原始 PDF/PPT 发给 AI", report_text)
             self.assertIn("先经 Skill 转写、抽 facts、编译、入库后再回答", report_text)
@@ -1074,6 +1076,8 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("## 质量抽样候选", report_text)
             self.assertIn("| S001#page=2 | sample.pdf | 表格结构需复核 | MinerU / 人工复核 | 待抽样 |", report_text)
             self.assertIn("## 最小 A/B 执行记录", report_text)
+            self.assertTrue(answer_record.exists())
+            self.assertIn("A/B 答案记录文件 | evaluation/ab_answer_record.md", report_text)
             self.assertIn("| 最终判断 | 待判断：直接读更好 / Skill 更好 / 差异不明显 |", report_text)
             self.assertIn("| 覆盖率 | 待记录 | 待记录 | 待判断 |", report_text)
             self.assertIn("这份 benchmark 不证明 Skill 一定更好", report_text)
@@ -1084,6 +1088,9 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("请优先基于 source_facts、outputs 和 brand_context_library 回答", report_text)
             self.assertIn("## 答案记录模板", report_text)
             self.assertIn("| 问题 | 直接读 PDF/PPT 答案摘要 | Skill 链路答案摘要 | 差异 | 证据 |", report_text)
+            self.assertIn("# A/B Answer Record", answer_text)
+            self.assertIn("| 问题 | 直接读原始资料答案摘要 | Structured Wiki 答案摘要 | 胜出方 | 证据 |", answer_text)
+            self.assertIn("没有实际跑过就保持 `待粘贴` / `待评分`", answer_text)
 
     def test_cli_build_value_benchmark_command_writes_report(self) -> None:
         import sys
@@ -2716,9 +2723,10 @@ class Phase1WorkflowTests(unittest.TestCase):
             evaluation_dir = project_dir / "evaluation"
             evaluation_dir.mkdir()
             (evaluation_dir / "direct_vs_skill_benchmark.md").write_text(
-                "# Direct PDF/PPT vs Skill Benchmark\n\n## 固定问题集\n\n## 对比评分表\n\n## A/B 评估提示词\n\n### A. 直接读 PDF/PPT 的提示词\n\n### B. Skill 链路回答提示词\n\n## 答案记录模板\n\n## Skill 链路证据路径\n\n- Source Index：outputs/00_source_index.md\n- Context Asset Index：outputs/10_context_asset_index.md\n- Library Update Plan：outputs/11_context_library_update_plan.md\n- Retrieval Map：brand_context_library/retrieval_maps/source_packages.md\n\n覆盖率 来源追溯 长期知识沉淀\n",
+                "# Direct PDF/PPT vs Skill Benchmark\n\n## 固定问题集\n\n## 对比评分表\n\n## A/B 评估提示词\n\n### A. 直接读 PDF/PPT 的提示词\n\n### B. Skill 链路回答提示词\n\n## 答案记录模板\n\nA/B 答案记录文件：evaluation/ab_answer_record.md\n\n## Skill 链路证据路径\n\n- Source Index：outputs/00_source_index.md\n- Context Asset Index：outputs/10_context_asset_index.md\n- Library Update Plan：outputs/11_context_library_update_plan.md\n- Retrieval Map：brand_context_library/retrieval_maps/source_packages.md\n\n覆盖率 来源追溯 长期知识沉淀\n",
                 encoding="utf-8",
             )
+            (evaluation_dir / "ab_answer_record.md").write_text("# A/B Answer Record\n", encoding="utf-8")
             library_dir = Path(temp_dir) / "brand_context_library"
             for dirname in ["brand", "review_queue", "retrieval_maps"]:
                 (library_dir / dirname).mkdir(parents=True, exist_ok=True)
@@ -2783,9 +2791,10 @@ class Phase1WorkflowTests(unittest.TestCase):
             evaluation_dir = project_dir / "evaluation"
             evaluation_dir.mkdir()
             (evaluation_dir / "direct_vs_skill_benchmark.md").write_text(
-                "# Direct PDF/PPT vs Skill Benchmark\n\n## 固定问题集\n\n## 对比评分表\n\n## A/B 评估提示词\n\n### A. 直接读 PDF/PPT 的提示词\n\n### B. Skill 链路回答提示词\n\n## 答案记录模板\n\n## Skill 链路证据路径\n\n- Source Index：outputs/00_source_index.md\n- Context Asset Index：outputs/10_context_asset_index.md\n- Library Update Plan：outputs/11_context_library_update_plan.md\n- Retrieval Map：brand_context_library/retrieval_maps/source_packages.md\n\n覆盖率 来源追溯 长期知识沉淀\n",
+                "# Direct PDF/PPT vs Skill Benchmark\n\n## 固定问题集\n\n## 对比评分表\n\n## A/B 评估提示词\n\n### A. 直接读 PDF/PPT 的提示词\n\n### B. Skill 链路回答提示词\n\n## 答案记录模板\n\nA/B 答案记录文件：evaluation/ab_answer_record.md\n\n## Skill 链路证据路径\n\n- Source Index：outputs/00_source_index.md\n- Context Asset Index：outputs/10_context_asset_index.md\n- Library Update Plan：outputs/11_context_library_update_plan.md\n- Retrieval Map：brand_context_library/retrieval_maps/source_packages.md\n\n覆盖率 来源追溯 长期知识沉淀\n",
                 encoding="utf-8",
             )
+            (evaluation_dir / "ab_answer_record.md").write_text("# A/B Answer Record\n", encoding="utf-8")
             library_dir = Path(temp_dir) / "brand_context_library"
             for dirname in ["brand", "review_queue", "retrieval_maps"]:
                 (library_dir / dirname).mkdir(parents=True, exist_ok=True)

@@ -402,9 +402,12 @@ def _check_review_pack(project_dir: Path, issues: list[str]) -> None:
 
 def _check_value_benchmark(project_dir: Path, issues: list[str]) -> None:
     benchmark = project_dir / "evaluation" / "direct_vs_skill_benchmark.md"
+    answer_record = project_dir / "evaluation" / "ab_answer_record.md"
     if not benchmark.exists():
         issues.append("Missing value benchmark: evaluation/direct_vs_skill_benchmark.md")
         return
+    if not answer_record.exists():
+        issues.append("Missing A/B answer record: evaluation/ab_answer_record.md")
 
     text = benchmark.read_text(encoding="utf-8")
     for marker in [
@@ -415,6 +418,7 @@ def _check_value_benchmark(project_dir: Path, issues: list[str]) -> None:
         "直接读 PDF/PPT 的提示词",
         "Skill 链路回答提示词",
         "答案记录模板",
+        "A/B 答案记录文件",
         "Skill 链路证据路径",
         "Source Index",
         "Context Asset Index",

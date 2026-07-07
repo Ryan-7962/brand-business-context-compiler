@@ -11,6 +11,9 @@ def build_value_benchmark(project_dir: Path, library_dir: Path | None = None) ->
     evaluation_dir.mkdir(parents=True, exist_ok=True)
     report_path = evaluation_dir / "direct_vs_skill_benchmark.md"
     report_path.write_text(_render_report(project_dir, library_dir), encoding="utf-8")
+    record_path = evaluation_dir / "ab_answer_record.md"
+    if not record_path.exists():
+        record_path.write_text(_render_answer_record(), encoding="utf-8")
     print(f"Direct PDF/PPT vs Skill benchmark created: {report_path}")
     return report_path
 
@@ -101,6 +104,7 @@ def _render_report(project_dir: Path, library_dir: Path | None) -> str:
             "|---|---|",
             "| 原始资料直接回答记录 | 待粘贴或链接到本地记录 |",
             "| Structured Wiki 回答记录 | 待粘贴或链接到本地记录 |",
+            "| A/B 答案记录文件 | evaluation/ab_answer_record.md |",
             "| 评分人 | 待填写 |",
             "| 最终判断 | 待判断：直接读更好 / Skill 更好 / 差异不明显 |",
             "",
@@ -177,6 +181,59 @@ def _render_report(project_dir: Path, library_dir: Path | None) -> str:
             "- 如果只是单份资料的一次性摘要，直接读 PDF/PPT 可以胜出。",
             "- 如果 Skill 在来源追溯、多文件版本冲突、低置信度暴露、长期知识沉淀和后续 brief 复用上没有明显优势，应降低项目复杂度。",
             "- 如果 Skill 能稳定减少重复阅读和人工纠错，并能把资料沉淀为可调用知识资产，才说明继续开发值得。",
+            "",
+        ]
+    )
+
+
+def _render_answer_record() -> str:
+    questions = [
+        "这个资料大概讲什么？",
+        "哪些内容被完整转写了？",
+        "哪些页面/图片/表格/小字识别不可靠？",
+        "哪些事实来自原文，来源在哪里？",
+        "哪些内容可以长期进入品牌知识库？",
+        "哪些内容只是临时政策、阶段判断或敏感信息，不能入库？",
+        "如果未来写 GEO / PDP / 种草 / 销售 / 复盘 brief，应该调用哪些知识资产？",
+    ]
+    rows = [
+        f"| {question} | 待粘贴 | 待粘贴 | 待评分 | 待补充 |"
+        for question in questions
+    ]
+    return "\n".join(
+        [
+            "# A/B Answer Record｜Direct Source vs Structured Wiki",
+            "",
+            "本文件用于记录同一批资料、同一组问题下的两组真实 Agent 回答。不要在这里编造评估结果；没有实际跑过就保持 `待粘贴` / `待评分`。",
+            "",
+            "## 运行信息",
+            "",
+            "| 项目 | 记录 |",
+            "|---|---|",
+            "| 资料包 | 待填写 |",
+            "| 直接读原始资料的 Agent / 模型 | 待填写 |",
+            "| 读取 Structured Wiki 的 Agent / 模型 | 待填写 |",
+            "| 评分人 | 待填写 |",
+            "| 最终判断 | 待判断：直接读更好 / Skill 更好 / 差异不明显 |",
+            "",
+            "## 同题答案记录",
+            "",
+            "| 问题 | 直接读原始资料答案摘要 | Structured Wiki 答案摘要 | 胜出方 | 证据 |",
+            "|---|---|---|---|---|",
+            *rows,
+            "",
+            "## 评分维度",
+            "",
+            "| 维度 | 直接读原始资料 | Structured Wiki | 胜出方 | 证据 |",
+            "|---|---|---|---|---|",
+            "| 覆盖率 | 待评分 | 待评分 | 待判断 | 待补充 |",
+            "| 准确率 | 待评分 | 待评分 | 待判断 | 待补充 |",
+            "| 来源追溯 | 待评分 | 待评分 | 待判断 | 待补充 |",
+            "| 低置信度暴露 | 待评分 | 待评分 | 待判断 | 待补充 |",
+            "| 多文件版本冲突 | 待评分 | 待评分 | 待判断 | 待补充 |",
+            "| 长期知识沉淀 | 待评分 | 待评分 | 待判断 | 待补充 |",
+            "| 后续 brief 复用 | 待评分 | 待评分 | 待判断 | 待补充 |",
+            "| 人工修正成本 | 待评分 | 待评分 | 待判断 | 待补充 |",
             "",
         ]
     )
