@@ -1071,6 +1071,10 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Source Index：outputs/00_source_index.md", report_text)
             self.assertIn("Retrieval Map：brand_context_library/retrieval_maps/source_packages.md", report_text)
             self.assertNotIn(temp_dir, report_text)
+            self.assertIn("## 质量抽样候选", report_text)
+            self.assertIn("| S001#page=2 | sample.pdf | 表格结构需复核 | MinerU / 人工复核 | 待抽样 |", report_text)
+            self.assertIn("## 最小 A/B 执行记录", report_text)
+            self.assertIn("| 最终判断 | 待判断：直接读更好 / Skill 更好 / 差异不明显 |", report_text)
             self.assertIn("| 覆盖率 | 待记录 | 待记录 | 待判断 |", report_text)
             self.assertIn("这份 benchmark 不证明 Skill 一定更好", report_text)
             self.assertIn("## A/B 评估提示词", report_text)
@@ -2424,6 +2428,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                         "| 使用场景 | 优先读取 | 精读文件 | 回看原文 |",
                         "|---|---|---|---|",
                         "| GEO / PDP / 种草 brief | outputs/10_context_asset_index.md | converted_markdown/source_facts/S001_source_facts.md | converted_markdown/source_transcripts/S001.md |",
+                        "| 销售 / 复盘 brief | outputs/07_ai_ready_marketing_brief_base.md | outputs/05_strategy_and_execution_map.md | converted_markdown/source_transcripts/S002.md |",
                     ]
                 ),
                 encoding="utf-8",
@@ -2438,6 +2443,12 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("优先读取：outputs/10_context_asset_index.md", text)
             self.assertIn("精读文件：converted_markdown/source_facts/S001_source_facts.md", text)
             self.assertIn("回看原文：converted_markdown/source_transcripts/S001.md", text)
+            self.assertIn("按任务找资料", text)
+            self.assertIn("<strong>GEO</strong>先读 outputs/10_context_asset_index.md", text)
+            self.assertIn("<strong>PDP</strong>先读 outputs/10_context_asset_index.md", text)
+            self.assertIn("<strong>种草</strong>先读 outputs/10_context_asset_index.md", text)
+            self.assertIn("<strong>销售</strong>先读 outputs/07_ai_ready_marketing_brief_base.md", text)
+            self.assertIn("<strong>复盘</strong>先读 outputs/07_ai_ready_marketing_brief_base.md", text)
 
     def test_build_library_report_uses_taxonomy_for_dynamic_categories(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

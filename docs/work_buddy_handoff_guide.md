@@ -6,7 +6,7 @@
 
 ## 1. 给同事的最小使用方式
 
-1. 把一批资料放入同一个项目目录的 `source/`。
+1. 新建或打开一个项目目录，把本次要处理的 PDF / PPT / DOCX / Markdown / TXT 等资料都放进这个项目目录下的 `source/` 文件夹。
 2. 运行本项目的第一阶段流程：
 
 ```bash
@@ -20,7 +20,8 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 | `review/brand_review.html` | 看本次资料是否读完整、哪些页没读清、是否需要补截图或换转写引擎 |
 | `brand_context_library/library_report.html` | 看当前知识库地图、待处理事项、后续任务应优先读哪些 Wiki 文件 |
 
-4. 如果没有明显识别异常，就把下面的“Work Buddy 任务提示词”复制给 Agent。
+4. 如果 `brand_review.html` 没有明显识别异常，且 `library_report.html` 里没有必须先处理的冲突或待补资料，就把这个项目目录和下面的“Work Buddy 任务提示词”交给 Work Buddy。
+5. Work Buddy 后续优先读 Structured Wiki，不要一上来重新读原始 PDF / PPT。
 
 ## 2. 后续 Agent 优先读取顺序
 
@@ -33,21 +34,29 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 5. 任务相关的 `converted_markdown/source_facts/*.md`
 6. 需要核对原文时，再读 `converted_markdown/source_transcripts/*.md`
 
-不要默认让 Agent 读取全部 PDF / PPT 原文。只有当 source facts 或 review report 标记了识别异常时，才回到原始文件、截图或 transcript。
+把 Structured Wiki 交给 Work Buddy 时，给它项目目录路径，并要求它按上面的顺序读取。不要默认让 Agent 读取全部 PDF / PPT 原文。
+
+只有下面几种情况需要回到原始 PDF / PPT、截图或 transcript：
+
+- `review/brand_review.html` 或 `source_quality_report.md` 标记页面、表格、图片、小字、OCR 区域没读清。
+- source facts 和 transcript 对同一事实说法不一致，或多版本资料互相冲突。
+- 后续任务要外发关键 claim、价格、预算、功效、合规表达、竞品判断等高风险内容。
+- Structured Wiki 里写了“资料未提供”“待补充”“待确认”，但任务必须给出明确结论。
 
 ## 3. Work Buddy 任务提示词
 
 ```text
 你现在不要直接重新总结原始 PDF / PPT。
 
-请优先基于这个项目已经生成的 Structured Wiki 工作：
+我会给你一个已经跑完第一阶段的项目目录。请优先基于这个项目已经生成的 Structured Wiki 工作：
 
 1. 先读取 outputs/00_source_index.md，确认本次资料包包含哪些文件、每份文件大概讲什么、转写稿和 source facts 在哪里。
 2. 再读取 outputs/10_context_asset_index.md，判断哪些上下文资产适合当前任务调用。
 3. 再读取 outputs/11_context_library_update_plan.md 和 brand_context_library/retrieval_maps/source_packages.md，判断后续任务应优先精读哪些 source facts / transcripts。
 4. 当前任务需要事实依据时，优先引用 converted_markdown/source_facts/*.md。
 5. 如果 source facts 不够清楚，再回看 converted_markdown/source_transcripts/*.md 中对应页码 / slide。
-6. 如果 review/brand_review.html 或 source_quality_report.md 标记某些页、表格、图片、小字、OCR 区域没有读清楚，请明确说明“不确定”，不要自行补写。
+6. 只有 review/brand_review.html、source_quality_report.md、source facts 或 transcript 明确提示异常、冲突、缺口，或当前任务涉及高风险外发 claim 时，才回到原始 PDF / PPT、截图或对应 transcript 核对。
+7. 如果某些页、表格、图片、小字、OCR 区域没有读清楚，请明确说明“不确定”，不要自行补写。
 
 输出要求：
 - 只使用 Wiki 或来源中已有的信息。

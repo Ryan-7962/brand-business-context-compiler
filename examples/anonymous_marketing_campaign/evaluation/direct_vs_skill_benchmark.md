@@ -47,6 +47,27 @@
 - Library Report：brand_context_library/library_report.html
 - Retrieval Map：brand_context_library/retrieval_maps/source_packages.md
 
+## 质量抽样候选
+
+优先抽样 source_quality_report.md 中需要复核或可代表读取质量的页面。抽样时只检查原文是否被忠实转写，不要求业务人员逐条审核全部事实。
+
+| Source Anchor | 原始文件 | 风险说明 | 建议动作 | 抽样结论 |
+|---|---|---|---|---|
+| S001#page=1 | city_refresh_campaign.md | 无明显低置信度 | 回看原文 / 人工抽样 | 待抽样 |
+| S001#page=2 | city_refresh_campaign.md | 无明显低置信度 | 回看原文 / 人工抽样 | 待抽样 |
+| S001#page=3 | city_refresh_campaign.md | 无明显低置信度 | 回看原文 / 人工抽样 | 待抽样 |
+| S001#page=4 | city_refresh_campaign.md | 无明显低置信度 | 回看原文 / 人工抽样 | 待抽样 |
+| S001#page=5 | city_refresh_campaign.md | 无明显低置信度 | 回看原文 / 人工抽样 | 待抽样 |
+
+## 最小 A/B 执行记录
+
+| 项目 | 记录 |
+|---|---|
+| 原始资料直接回答记录 | 待粘贴或链接到本地记录 |
+| Structured Wiki 回答记录 | 待粘贴或链接到本地记录 |
+| 评分人 | 待填写 |
+| 最终判断 | 待判断：直接读更好 / Skill 更好 / 差异不明显 |
+
 ## 对比评分表
 
 | 维度 | 直接读 PDF/PPT | Skill 链路 | 胜出方 | 证据 |

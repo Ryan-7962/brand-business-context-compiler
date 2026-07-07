@@ -30,6 +30,7 @@ def _render_report(project_dir: Path, library_dir: Path | None) -> str:
     review_pages = _metric_value(quality_text, "需要复核页数")
     library_entries = _count_library_entries(resolved_library)
     retrieval_notes = _count_retrieval_rows(retrieval_map)
+    quality_samples = _quality_sample_rows(quality_text)
     quality_status = "存在" if (converted / "source_quality_report.md").exists() else "缺失"
     version_status = "存在" if (converted / "source_version_report.md").exists() else "缺失"
     review_status = "存在" if review_page.exists() else "缺失"
@@ -85,6 +86,23 @@ def _render_report(project_dir: Path, library_dir: Path | None) -> str:
             f"- Review Report：{_path_status(review_page, project_dir, resolved_library)}",
             f"- Library Report：{_path_status(library_report, project_dir, resolved_library)}",
             f"- Retrieval Map：{_path_status(retrieval_map, project_dir, resolved_library)}",
+            "",
+            "## 质量抽样候选",
+            "",
+            "优先抽样 source_quality_report.md 中需要复核或可代表读取质量的页面。抽样时只检查原文是否被忠实转写，不要求业务人员逐条审核全部事实。",
+            "",
+            "| Source Anchor | 原始文件 | 风险说明 | 建议动作 | 抽样结论 |",
+            "|---|---|---|---|---|",
+            *quality_samples,
+            "",
+            "## 最小 A/B 执行记录",
+            "",
+            "| 项目 | 记录 |",
+            "|---|---|",
+            "| 原始资料直接回答记录 | 待粘贴或链接到本地记录 |",
+            "| Structured Wiki 回答记录 | 待粘贴或链接到本地记录 |",
+            "| 评分人 | 待填写 |",
+            "| 最终判断 | 待判断：直接读更好 / Skill 更好 / 差异不明显 |",
             "",
             "## 对比评分表",
             "",
@@ -204,6 +222,35 @@ def _count_retrieval_rows(path: Path) -> int:
     if not path.exists():
         return 0
     return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.startswith("|") and "使用场景" not in line and "---" not in line)
+
+
+def _quality_sample_rows(quality_text: str, limit: int = 5) -> list[str]:
+    rows: list[str] = []
+    headers: list[str] = []
+    for line in quality_text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|") or "---" in stripped:
+            continue
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if "Source Anchor" in cells:
+            headers = cells
+            continue
+        if not headers:
+            continue
+        row = {header: cells[index] if index < len(cells) else "" for index, header in enumerate(headers)}
+        status = row.get("读取状态", "")
+        risk = row.get("低置信度说明", "").strip()
+        action = row.get("建议动作", "").strip()
+        if "需要复核" not in status and not risk and not action:
+            continue
+        anchor = row.get("Source Anchor", "待补充")
+        filename = row.get("原始文件", "待补充")
+        risk = risk or "需要复核"
+        action = action or "回看原文 / 人工抽样"
+        rows.append(f"| {anchor} | {filename} | {risk} | {action} | 待抽样 |")
+        if len(rows) >= limit:
+            return rows
+    return rows or ["| 待补充 | 待补充 | 暂无需要复核页面或尚未生成质量报告 | 先生成 source_quality_report.md | 待抽样 |"]
 
 
 def _path_status(path: Path, project_dir: Path, library_dir: Path) -> str:

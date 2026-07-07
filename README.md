@@ -168,6 +168,14 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 
 把 Structured Wiki 交给 Work Buddy 或其他 Agent 使用时，可直接参考 [docs/work_buddy_handoff_guide.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/work_buddy_handoff_guide.md)。里面提供了可复制的任务提示词和不同任务的读取顺序，避免后续 Agent 重新临时总结原始 PDF / PPT。
 
+当前阶段的收敛与验收文档：
+
+- [docs/phase1_completion_audit.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/phase1_completion_audit.md)：第一阶段完成度和证据缺口。
+- [docs/agent_workstream_split.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/agent_workstream_split.md)：45 个可分派 Agent 子板块。
+- [docs/ponytail_simplification_audit.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/ponytail_simplification_audit.md)：哪些能力保留、延后或移出第一阶段。
+- [docs/source_reading_quality_playbook.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/source_reading_quality_playbook.md)：PDF / PPT / 长图读取质量验收。
+- [docs/quality_sampling_protocol.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/quality_sampling_protocol.md)：90% 读取准确性抽样证据协议。
+
 本地验收 demo 可用一条命令跑完入库、知识库报告页和 contract 验证：
 
 ```bash

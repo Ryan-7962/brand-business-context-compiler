@@ -22,6 +22,8 @@ SECTION_LABELS = {
     "decision": "关键决策",
 }
 
+BRIEF_SCENES = ["GEO", "PDP", "种草", "销售", "复盘"]
+
 
 def build_library_report(library_dir: Path) -> Path:
     if not library_dir.exists():
@@ -40,7 +42,9 @@ def build_library_report(library_dir: Path) -> Path:
     }
     pending_count = queue_counts["冲突待判断"] + queue_counts["旧知识待更新"]
     recent_updates = _recent_evolution(library_dir / "evolution_log.md")
-    reusable_notes = _retrieval_notes(library_dir / "retrieval_maps" / "source_packages.md")
+    retrieval_map = library_dir / "retrieval_maps" / "source_packages.md"
+    reusable_notes = _retrieval_notes(retrieval_map)
+    reading_guide = _brief_reading_guide(retrieval_map)
     review_items = _review_queue_items(library_dir)
 
     report_path = library_dir / "library_report.html"
@@ -52,6 +56,7 @@ def build_library_report(library_dir: Path) -> Path:
             queue_counts,
             recent_updates,
             reusable_notes,
+            reading_guide,
             review_items,
             taxonomy,
             entries,
@@ -249,6 +254,38 @@ def _retrieval_notes(path: Path) -> list[str]:
     return notes[-6:]
 
 
+def _brief_reading_guide(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    table_lines = [
+        line.strip()
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip().startswith("|")
+    ]
+    rows = _parse_markdown_table(table_lines)
+    if not rows:
+        return []
+
+    guide = []
+    for scene in BRIEF_SCENES:
+        row = next((item for item in rows if scene.lower() in item.get("使用场景", "").lower()), None)
+        if not row:
+            continue
+        guide.append(
+            {
+                "scene": scene,
+                "advice": "；".join(
+                    [
+                        f"先读 {row.get('优先读取', '待补充')}",
+                        f"精读 {row.get('精读文件', '待补充')}",
+                        f"核对原文 {row.get('回看原文', '待补充')}",
+                    ]
+                ),
+            }
+        )
+    return guide
+
+
 def _review_queue_items(library_dir: Path) -> list[dict[str, str]]:
     return (
         _parse_review_queue(library_dir / "review_queue" / "updates.md", "旧知识待更新")
@@ -314,6 +351,7 @@ def _render_report(
     queue_counts: dict[str, int],
     recent_updates: list[str],
     reusable_notes: list[str],
+    reading_guide: list[dict[str, str]],
     review_items: list[dict[str, str]],
     taxonomy: dict[str, dict[str, str]],
     entries: list[dict[str, str]],
@@ -326,6 +364,7 @@ def _render_report(
         "reviewItems": review_items,
         "recentUpdates": recent_updates,
         "reusableNotes": reusable_notes,
+        "readingGuide": reading_guide,
     }
     embedded_data = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     sections = "\n".join(
@@ -344,6 +383,7 @@ def _render_report(
     )
     recent = _render_list(recent_updates, "还没有入库记录。")
     reusable = _render_list(reusable_notes, "还没有可复用场景说明。")
+    guide = _render_reading_guide(reading_guide)
     review_detail = _render_review_items(review_items)
     context_map = _render_context_map(categories, entries)
     category_options = "\n".join(
@@ -536,6 +576,14 @@ def _render_report(
       margin: 0;
       overflow-wrap: anywhere;
     }}
+    .scene-guide li {{
+      margin-bottom: 8px;
+    }}
+    .scene-guide strong {{
+      display: inline-block;
+      min-width: 44px;
+      color: var(--accent);
+    }}
     @media (max-width: 760px) {{
       header {{ padding: 22px 18px 14px; }}
       main {{ padding: 14px; }}
@@ -600,6 +648,7 @@ def _render_report(
     <section>
       <h2>后续可直接复用的场景</h2>
       <p class="muted">做 GEO / PDP / 种草 / 拍摄 / 销售 / 复盘等任务时，先看这里决定让 Agent 优先读哪份 Wiki 文件。</p>
+      {guide}
       {reusable}
     </section>
     <section>
@@ -646,6 +695,16 @@ def _render_review_items(items: list[dict[str, str]]) -> str:
         )
         + "</ul>"
     )
+
+
+def _render_reading_guide(items: list[dict[str, str]]) -> str:
+    if not items:
+        return ""
+    rendered = "".join(
+        f"<li><strong>{html.escape(item['scene'])}</strong>{html.escape(item['advice'])}</li>"
+        for item in items
+    )
+    return f"<h3>按任务找资料</h3><ul class=\"scene-guide\">{rendered}</ul>"
 
 
 def _render_context_map(categories: list[dict[str, str | int]], entries: list[dict[str, str]]) -> str:
