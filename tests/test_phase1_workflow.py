@@ -11,6 +11,7 @@ from pathlib import Path
 
 from brand_skill.cli import main as cli_main
 from brand_skill.contract_verifier import (
+    _check_value_benchmark,
     _retrieval_map_issues,
     _source_page_coverage_issues,
     _source_quality_anchor_coverage_issues,
@@ -1139,6 +1140,28 @@ class Phase1WorkflowTests(unittest.TestCase):
 
             self.assertTrue((project_dir / "evaluation" / "direct_vs_skill_benchmark.md").exists())
             self.assertTrue((project_dir / "evaluation" / "quality_sampling_log.md").exists())
+
+    def test_value_benchmark_contract_fails_for_empty_quality_sampling_log(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            evaluation_dir = project_dir / "evaluation"
+            evaluation_dir.mkdir()
+            (evaluation_dir / "direct_vs_skill_benchmark.md").write_text(
+                "# Direct PDF/PPT vs Skill Benchmark\n\n固定问题集\n对比评分表\nA/B 评估提示词\n直接读 PDF/PPT 的提示词\nSkill 链路回答提示词\n答案记录模板\nA/B 答案记录文件\nSkill 链路证据路径\nSource Index\nContext Asset Index\nLibrary Update Plan\nRetrieval Map\n覆盖率\n来源追溯\n长期知识沉淀\n",
+                encoding="utf-8",
+            )
+            (evaluation_dir / "ab_answer_record.md").write_text("# A/B Answer Record\n", encoding="utf-8")
+            (evaluation_dir / "quality_sampling_log.md").write_text("# Quality Sampling Log\n", encoding="utf-8")
+
+            issues: list[str] = []
+            _check_value_benchmark(project_dir, issues)
+
+            self.assertIn("Quality sampling log missing marker: Page Sampling Plan", issues)
+            self.assertIn("Quality sampling log missing marker: Pass Rate", issues)
+            self.assertIn(
+                "Quality sampling log missing marker: 未形成 90% 页面级 / 事实级准确率证据",
+                issues,
+            )
 
     def test_build_value_benchmark_uses_stable_external_library_paths(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
