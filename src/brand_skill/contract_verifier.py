@@ -411,6 +411,17 @@ def _check_value_benchmark(project_dir: Path, issues: list[str]) -> None:
         issues.append("Missing A/B answer record: evaluation/ab_answer_record.md")
     if not quality_sampling.exists():
         issues.append("Missing quality sampling log: evaluation/quality_sampling_log.md")
+    else:
+        sampling_text = quality_sampling.read_text(encoding="utf-8")
+        for marker in [
+            "Quality Sampling Log",
+            "Page Sampling Plan",
+            "Pass Rate",
+            "未形成 90% 页面级 / 事实级准确率证据",
+            "未完成原页核对前，不得声明 90% 准确率",
+        ]:
+            if marker not in sampling_text:
+                issues.append(f"Quality sampling log missing marker: {marker}")
 
     text = benchmark.read_text(encoding="utf-8")
     for marker in [

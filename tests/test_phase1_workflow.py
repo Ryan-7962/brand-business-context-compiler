@@ -86,6 +86,21 @@ class Phase1WorkflowTests(unittest.TestCase):
             encoding="utf-8",
         )
 
+    def _quality_sampling_log_text(self) -> str:
+        return (
+            "# Quality Sampling Log\n\n"
+            "| 当前结论 | 未形成 90% 页面级 / 事实级准确率证据 |\n\n"
+            "## Page Sampling Plan\n\n"
+            "| sample_id | source_anchor | sampled_reason | source_state | accuracy_result | correction_needed |\n"
+            "|---|---|---|---|---|---|\n"
+            "| QS001 | S001#page=1 | 抽样 | 待回看原页 | 待抽样 | 人工抽样 |\n\n"
+            "## Pass Rate\n\n"
+            "| 指标 | 数值 |\n"
+            "|---|---:|\n"
+            "| 页面级通过率 | 未形成证据 |\n\n"
+            "- 未完成原页核对前，不得声明 90% 准确率。\n"
+        )
+
     def test_scaffold_output_uses_phase1_marketing_semantic_files(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir)
@@ -2741,7 +2756,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (evaluation_dir / "ab_answer_record.md").write_text("# A/B Answer Record\n", encoding="utf-8")
-            (evaluation_dir / "quality_sampling_log.md").write_text("# Quality Sampling Log\n", encoding="utf-8")
+            (evaluation_dir / "quality_sampling_log.md").write_text(self._quality_sampling_log_text(), encoding="utf-8")
             library_dir = Path(temp_dir) / "brand_context_library"
             for dirname in ["brand", "review_queue", "retrieval_maps"]:
                 (library_dir / dirname).mkdir(parents=True, exist_ok=True)
@@ -2810,7 +2825,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (evaluation_dir / "ab_answer_record.md").write_text("# A/B Answer Record\n", encoding="utf-8")
-            (evaluation_dir / "quality_sampling_log.md").write_text("# Quality Sampling Log\n", encoding="utf-8")
+            (evaluation_dir / "quality_sampling_log.md").write_text(self._quality_sampling_log_text(), encoding="utf-8")
             library_dir = Path(temp_dir) / "brand_context_library"
             for dirname in ["brand", "review_queue", "retrieval_maps"]:
                 (library_dir / dirname).mkdir(parents=True, exist_ok=True)
