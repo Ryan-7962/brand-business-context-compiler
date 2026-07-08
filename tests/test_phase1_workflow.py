@@ -1055,6 +1055,8 @@ class Phase1WorkflowTests(unittest.TestCase):
             report_text = report_path.read_text(encoding="utf-8")
             answer_record = project_dir / "evaluation" / "ab_answer_record.md"
             answer_text = answer_record.read_text(encoding="utf-8")
+            sampling_log = project_dir / "evaluation" / "quality_sampling_log.md"
+            sampling_text = sampling_log.read_text(encoding="utf-8")
             self.assertIn("# Direct PDF/PPT vs Skill Benchmark", report_text)
             self.assertIn("直接把原始 PDF/PPT 发给 AI", report_text)
             self.assertIn("先经 Skill 转写、抽 facts、编译、入库后再回答", report_text)
@@ -1091,6 +1093,17 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("# A/B Answer Record", answer_text)
             self.assertIn("| 问题 | 直接读原始资料答案摘要 | Structured Wiki 答案摘要 | 胜出方 | 证据 |", answer_text)
             self.assertIn("没有实际跑过就保持 `待粘贴` / `待评分`", answer_text)
+            self.assertTrue(sampling_log.exists())
+            self.assertIn("# Quality Sampling Log", sampling_text)
+            self.assertIn("| 总页数 | 2 |", sampling_text)
+            self.assertIn("| 需要复核页数 | 1 |", sampling_text)
+            self.assertIn("| 建议最小抽样页数 | 6 |", sampling_text)
+            self.assertIn(
+                "| QS001 | S001#page=2 | 表格结构需复核 | 待回看原页 | 待抽样 | 人工抽样 / 换引擎小样 |",
+                sampling_text,
+            )
+            self.assertIn("至少人工核对 6 页抽样页面", sampling_text)
+            self.assertIn("未完成原页核对前，不得声明 90% 准确率。", sampling_text)
 
     def test_cli_build_value_benchmark_command_writes_report(self) -> None:
         import sys
@@ -1110,6 +1123,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 sys.argv = argv
 
             self.assertTrue((project_dir / "evaluation" / "direct_vs_skill_benchmark.md").exists())
+            self.assertTrue((project_dir / "evaluation" / "quality_sampling_log.md").exists())
 
     def test_build_value_benchmark_uses_stable_external_library_paths(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -2727,6 +2741,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (evaluation_dir / "ab_answer_record.md").write_text("# A/B Answer Record\n", encoding="utf-8")
+            (evaluation_dir / "quality_sampling_log.md").write_text("# Quality Sampling Log\n", encoding="utf-8")
             library_dir = Path(temp_dir) / "brand_context_library"
             for dirname in ["brand", "review_queue", "retrieval_maps"]:
                 (library_dir / dirname).mkdir(parents=True, exist_ok=True)
@@ -2795,6 +2810,7 @@ class Phase1WorkflowTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (evaluation_dir / "ab_answer_record.md").write_text("# A/B Answer Record\n", encoding="utf-8")
+            (evaluation_dir / "quality_sampling_log.md").write_text("# Quality Sampling Log\n", encoding="utf-8")
             library_dir = Path(temp_dir) / "brand_context_library"
             for dirname in ["brand", "review_queue", "retrieval_maps"]:
                 (library_dir / dirname).mkdir(parents=True, exist_ok=True)

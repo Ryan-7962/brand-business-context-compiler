@@ -403,11 +403,14 @@ def _check_review_pack(project_dir: Path, issues: list[str]) -> None:
 def _check_value_benchmark(project_dir: Path, issues: list[str]) -> None:
     benchmark = project_dir / "evaluation" / "direct_vs_skill_benchmark.md"
     answer_record = project_dir / "evaluation" / "ab_answer_record.md"
+    quality_sampling = project_dir / "evaluation" / "quality_sampling_log.md"
     if not benchmark.exists():
         issues.append("Missing value benchmark: evaluation/direct_vs_skill_benchmark.md")
         return
     if not answer_record.exists():
         issues.append("Missing A/B answer record: evaluation/ab_answer_record.md")
+    if not quality_sampling.exists():
+        issues.append("Missing quality sampling log: evaluation/quality_sampling_log.md")
 
     text = benchmark.read_text(encoding="utf-8")
     for marker in [

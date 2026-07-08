@@ -14,6 +14,8 @@ def build_value_benchmark(project_dir: Path, library_dir: Path | None = None) ->
     record_path = evaluation_dir / "ab_answer_record.md"
     if not record_path.exists():
         record_path.write_text(_render_answer_record(), encoding="utf-8")
+    sampling_path = evaluation_dir / "quality_sampling_log.md"
+    sampling_path.write_text(_render_quality_sampling_log(project_dir), encoding="utf-8")
     print(f"Direct PDF/PPT vs Skill benchmark created: {report_path}")
     return report_path
 
@@ -239,6 +241,57 @@ def _render_answer_record() -> str:
     )
 
 
+def _render_quality_sampling_log(project_dir: Path) -> str:
+    quality_text = _read_optional(project_dir / "converted_markdown" / "source_quality_report.md")
+    facts_count = _count_fact_rows(project_dir / "converted_markdown" / "source_facts")
+    total_pages = _metric_value(quality_text, "总页数")
+    review_pages = _metric_value(quality_text, "需要复核页数")
+    sample_rows = _quality_sampling_rows(quality_text)
+    minimum_sample = _minimum_sample_size(total_pages)
+    return "\n".join(
+        [
+            "# Quality Sampling Log",
+            "",
+            "本文件用于记录页面级 / 事实级抽样结果。生成时不会假装已经人工核对；未回看原页前，默认只作为抽样计划和风险记录。",
+            "",
+            "## Summary",
+            "",
+            "| 项目 | 记录 |",
+            "|---|---|",
+            f"| 总页数 | {total_pages} |",
+            f"| 需要复核页数 | {review_pages} |",
+            f"| source facts 数 | {facts_count} |",
+            f"| 建议最小抽样页数 | {minimum_sample} |",
+            "| 当前结论 | 未形成 90% 页面级 / 事实级准确率证据 |",
+            "",
+            "## Page Sampling Plan",
+            "",
+            "| sample_id | source_anchor | sampled_reason | source_state | accuracy_result | correction_needed |",
+            "|---|---|---|---|---|---|",
+            *sample_rows,
+            "",
+            "## Pass Rate",
+            "",
+            "| 指标 | 数值 |",
+            "|---|---:|",
+            "| 页面级通过数 | 0 |",
+            f"| 页面级待抽样数 | {len(sample_rows)} |",
+            "| 页面级通过率 | 未形成证据 |",
+            "| 事实级抽样数 | 0 |",
+            "| 事实级通过率 | 未形成证据 |",
+            "| P0 | 0 |",
+            "| P1 | 待人工核对后填写 |",
+            "",
+            "## Next Action",
+            "",
+            f"- 至少人工核对 {minimum_sample} 页抽样页面；优先选择低置信度、表格、图片、小字和关键数字页面。",
+            "- 至少抽样 5 条 source facts，回到 transcript / 原页确认。",
+            "- 未完成原页核对前，不得声明 90% 准确率。",
+            "",
+        ]
+    )
+
+
 def _count_fact_rows(facts_dir: Path) -> int:
     if not facts_dir.exists():
         return 0
@@ -308,6 +361,50 @@ def _quality_sample_rows(quality_text: str, limit: int = 5) -> list[str]:
         if len(rows) >= limit:
             return rows
     return rows or ["| 待补充 | 待补充 | 暂无需要复核页面或尚未生成质量报告 | 先生成 source_quality_report.md | 待抽样 |"]
+
+
+def _quality_sampling_rows(quality_text: str, limit: int = 16) -> list[str]:
+    rows = []
+    for index, row in enumerate(_quality_rows(quality_text)[:limit], start=1):
+        risk = row.get("低置信度说明", "").strip() or row.get("读取状态", "").strip() or "待抽样"
+        anchor = row.get("Source Anchor", "待补充")
+        rows.append(
+            f"| QS{index:03d} | {anchor} | {risk} | 待回看原页 | 待抽样 | 人工抽样 / 换引擎小样 |"
+        )
+    return rows or ["| QS001 | 待补充 | 尚未生成质量报告 | 待回看原页 | 待抽样 | 先生成 source_quality_report.md |"]
+
+
+def _quality_rows(quality_text: str) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
+    headers: list[str] = []
+    for line in quality_text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|") or "---" in stripped:
+            continue
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if "Source Anchor" in cells:
+            headers = cells
+            continue
+        if headers:
+            row = {header: cells[index] if index < len(cells) else "" for index, header in enumerate(headers)}
+            if row.get("Source Anchor", "").strip() in {"", "-"}:
+                continue
+            rows.append(row)
+    return rows
+
+
+def _minimum_sample_size(total_pages: str) -> str:
+    try:
+        pages = int(total_pages)
+    except ValueError:
+        return "待计算"
+    if pages <= 20:
+        return str(max(6, (pages * 30 + 99) // 100))
+    if pages <= 80:
+        return str(max(12, (pages * 20 + 99) // 100))
+    if pages <= 200:
+        return str(max(20, (pages * 12 + 99) // 100))
+    return str(max(30, (pages * 8 + 99) // 100))
 
 
 def _path_status(path: Path, project_dir: Path, library_dir: Path) -> str:
