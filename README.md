@@ -161,7 +161,7 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 9. 查看 review/brand_review.html，只处理识别异常
 10. 运行 apply-library-update，把可沉淀内容写入 brand_context_library/
 11. 运行 build-library-report，生成一页中文知识库概览
-12. 运行 build-value-benchmark，生成“直接读 PDF/PPT vs Skill 链路”的对比评估表
+12. 运行 build-value-benchmark，生成“直接读 PDF/PPT vs Skill 链路”的对比评估表和质量抽样日志
 13. 运行 verify-contract --write-report，检查当前产物是否满足项目执行准则里的核心证据，并留下本地验证报告
 14. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
 ```
@@ -198,7 +198,7 @@ brand-skill demo-contract examples/anonymous_marketing_campaign --library-dir /t
 
 `demo-contract` 是给本地开发和匿名 demo 验收用的便捷命令，会依次执行 `build-source-quality-report`、`build-source-version-report`、刷新结构化 outputs、`build-review-pack`、`apply-library-update`、`build-library-report`、`build-value-benchmark` 和 `verify-contract --write-report`。
 
-`build-value-benchmark` 会生成 `evaluation/direct_vs_skill_benchmark.md`，用于对比“直接把 PDF/PPT 发给 AI”和“先经 Skill 转写、抽 facts、编译、入库后再回答”的差异。它内置同一组问题、两套可复制评估提示词、答案记录模板和评分表，要求后续用同一批资料评估覆盖率、准确率、来源追溯、低置信度暴露、多文件版本冲突、长期知识沉淀、后续 brief 复用和人工修正成本。
+`build-value-benchmark` 会生成 `evaluation/direct_vs_skill_benchmark.md`，用于对比“直接把 PDF/PPT 发给 AI”和“先经 Skill 转写、抽 facts、编译、入库后再回答”的差异。它也会生成 `evaluation/quality_sampling_log.md`，把总页数、需复核页数、source facts 数和建议抽样页写清楚。未完成原页核对前，这份日志只作为抽样计划，不能宣称 90% 准确率。
 
 如果需要在本机扫描私有测试关键词，可临时设置 `BRAND_SKILL_PRIVACY_TERMS_REGEX` 后再运行 `verify-contract`。不要把真实关键词写入仓库文件。
 

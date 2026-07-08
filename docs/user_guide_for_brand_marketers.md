@@ -22,6 +22,7 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 | `converted_markdown/source_quality_report.md` | 看总页数、复核页、表格数、OCR / 图片 / 小字风险 |
 | `brand_context_library/retrieval_maps/source_packages.md` | 告诉 Work Buddy 后续做 GEO / PDP / 种草 / 销售 / 复盘 brief 时优先读什么 |
 | `evaluation/direct_vs_skill_benchmark.md` | 对比“直接丢 PDF/PPT”和“先经 Skill 编译”的价值证据 |
+| `evaluation/quality_sampling_log.md` | 看是否已经有人做过页面 / 事实抽样；未核对原页前不能声称 90% 准确 |
 
 如果这些文件能回答“读了哪些资料、每份讲什么、哪些页没读清、后续 Agent 该读哪里”，通常不需要人工逐条打开所有 Markdown。
 
@@ -34,6 +35,7 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 - `outputs/00_source_index.md`：资料是否列全，每份文件的大概内容是否明显正确。
 - `converted_markdown/conversion_report.md`：总页数、文件创建时间、修改时间和转写时间是否存在。
 - `converted_markdown/source_quality_report.md`：哪些页面、图表、表格或小字被标为低置信度。
+- `evaluation/quality_sampling_log.md`：哪些页面建议抽样、是否已有通过率证据。
 - `converted_markdown/source_transcripts/`：关键页面是否保留了页码和截图。
 
 如果某些活动方案、广告提案、销售策略、投放复盘、包装文案或检测报告没有进入来源目录，请先补充资料。
