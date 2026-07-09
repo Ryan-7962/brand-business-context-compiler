@@ -1121,6 +1121,12 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("至少人工核对 6 页抽样页面", sampling_text)
             self.assertIn("未完成原页核对前，不得声明 90% 准确率。", sampling_text)
 
+            manual_sampling = "# Quality Sampling Log\n\n人工已回填页面级通过率。\n"
+            sampling_log.write_text(manual_sampling, encoding="utf-8")
+            with redirect_stdout(StringIO()):
+                build_value_benchmark(project_dir, library_dir=library_dir)
+            self.assertEqual(manual_sampling, sampling_log.read_text(encoding="utf-8"))
+
     def test_cli_build_value_benchmark_command_writes_report(self) -> None:
         import sys
 

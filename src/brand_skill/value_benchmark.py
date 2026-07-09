@@ -15,7 +15,8 @@ def build_value_benchmark(project_dir: Path, library_dir: Path | None = None) ->
     if not record_path.exists():
         record_path.write_text(_render_answer_record(), encoding="utf-8")
     sampling_path = evaluation_dir / "quality_sampling_log.md"
-    sampling_path.write_text(_render_quality_sampling_log(project_dir), encoding="utf-8")
+    if not sampling_path.exists():
+        sampling_path.write_text(_render_quality_sampling_log(project_dir), encoding="utf-8")
     print(f"Direct PDF/PPT vs Skill benchmark created: {report_path}")
     return report_path
 
