@@ -23,6 +23,8 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 | `brand_context_library/retrieval_maps/source_packages.md` | 告诉 Work Buddy 后续做 GEO / PDP / 种草 / 销售 / 复盘 brief 时优先读什么 |
 | `evaluation/direct_vs_skill_benchmark.md` | 对比“直接丢 PDF/PPT”和“先经 Skill 编译”的价值证据 |
 | `evaluation/quality_sampling_log.md` | 看是否已经有人做过页面 / 事实抽样；未核对原页前不能声称 90% 准确 |
+| `evaluation/human_validation_packet.md/html` | 如果存在，优先从这里做人工页面 / facts 抽样，并回填 `quality_sampling_log.md` |
+| `evaluation/agent_ab_packet.md` | 如果存在，优先复制这里的提示词做真实 Agent A/B 对照 |
 
 如果这些文件能回答“读了哪些资料、每份讲什么、哪些页没读清、后续 Agent 该读哪里”，通常不需要人工逐条打开所有 Markdown。
 
