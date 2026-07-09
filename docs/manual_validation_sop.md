@@ -42,6 +42,8 @@
 
 只在私有目录的 `evaluation/quality_sampling_log.md` 里记录结果。公开文档只写匿名汇总。
 
+AI 视觉预检或 source facts 可追溯性预检只能作为旁证，不能填入页面级 / 事实级通过率；通过率必须来自人工回看原页、截图或 transcript 后的判断。
+
 最小汇总格式：
 
 ```text
