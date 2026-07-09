@@ -4,6 +4,18 @@
 
 核心原则：后续 Agent 应优先读取 Wiki 索引和 source facts，不要重新从一堆 PDF / PPT 里临时猜重点。
 
+## 0. 一句话给同事
+
+```text
+我已经把这批资料跑成 Structured Wiki。请先读 outputs/00_source_index.md、outputs/10_context_asset_index.md、outputs/11_context_library_update_plan.md 和 brand_context_library/retrieval_maps/source_packages.md，再按任务需要读取 source_facts；只有遇到识别异常、来源冲突、外发高风险 claim 或资料写着“待确认”时，才回看 transcript / 原 PDF / PPT。
+```
+
+最小判断：
+
+- `brand_review.html` 只看有没有漏页、误读、OCR/图片/表格没读清。
+- `library_report.html` 只看知识库地图、冲突、待补和后续该读什么。
+- `quality_sampling_log.md` 没有人抽样通过前，不要对外宣称“90% 准确”。
+
 ## 1. 给同事的最小使用方式
 
 1. 新建或打开一个项目目录，把本次要处理的 PDF / PPT / DOCX / Markdown / TXT 等资料都放进这个项目目录下的 `source/` 文件夹。
