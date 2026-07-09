@@ -195,7 +195,7 @@ brand-skill demo-contract examples/anonymous_marketing_campaign --library-dir /t
 
 `build-library-report` 会生成 `library_report.html`，作为 Brand Context Map 使用：上方展示知识地图，下方提供搜索、筛选和条目详情。分类默认参考内置 Brand Marketing 分类；如果长期库中存在 `taxonomy.md`，则优先使用用户或 AI 确认过的动态分类。报告页会把冲突、旧知识更新和疑似多版本资料整理成中文待处理事项，保留“建议动作”和“最新修改时间线索”，但不把后台报告文件名铺给使用者。
 
-`verify-contract` 会检查 `docs/project_success_contract.md` 中定义的核心证据，例如 source conversion 识别质量摘要、source quality report、source version report、关键 outputs、异常复核页、长期库条目、review queue、retrieval map、Brand Context Map、私有测试目录未被追踪、报告页离线静态约束，以及生成产物不得冒充 `已品牌确认`。异常复核页只应提示识别问题和文件大纲，不应退回到后台 Context Asset 全量审核页；知识库报告页也不应把 Source Anchor、Risk Level、后台报告文件名等质量标记铺到用户界面。若存在疑似多版本资料，报告页必须展示中文待处理事项、建议动作和最新修改时间线索。加上 `--write-report` 后会在项目根目录生成 `contract_verification_report.md`，用于保留本轮通过 / 失败证据。它用于每轮开发后的本地门禁，不替代人工业务判断。
+`verify-contract` 会检查 `docs/project_success_contract.md` 中定义的核心证据，例如 source conversion 识别质量摘要、source quality report、source version report、关键 outputs、异常复核页、长期库条目、review queue、retrieval map、Brand Context Map、私有测试目录未被追踪、报告页离线静态约束，以及生成产物不得冒充 `已品牌确认`。异常复核页只应提示识别问题和文件大纲，不应退回到后台 Context Asset 全量审核页；知识库报告页也不应把 Source Anchor、Risk Level、后台报告文件名等质量标记铺到用户界面。若存在疑似多版本资料，报告页必须展示中文待处理事项、建议动作和最新修改时间线索。加上 `--write-report` 后会在项目根目录生成 `contract_verification_report.md`，用于保留本轮通过 / 失败证据；其中 `Quality sampling evidence` 只说明人工抽样证据状态，`pending; no 90% evidence` 不能当成 90% 准确率证明。它用于每轮开发后的本地门禁，不替代人工业务判断。
 
 `demo-contract` 是给本地开发和匿名 demo 验收用的便捷命令，会依次执行 `build-source-quality-report`、`build-source-version-report`、刷新结构化 outputs、`build-review-pack`、`apply-library-update`、`build-library-report`、`build-value-benchmark` 和 `verify-contract --write-report`。
 

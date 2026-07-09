@@ -139,3 +139,4 @@ Expected evidence includes:
 - `library_report.html`
 - `evaluation/direct_vs_skill_benchmark.md`
 - `contract_verification_report.md`
+- `contract_verification_report.md` includes `Quality sampling evidence`; `pending; no 90% evidence` means the run is not yet proven 90% accurate.
