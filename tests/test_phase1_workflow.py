@@ -2908,6 +2908,8 @@ class Phase1WorkflowTests(unittest.TestCase):
             report = report_path.read_text(encoding="utf-8")
             self.assertIn("# Contract Verification Report", report)
             self.assertIn("Status: passed", report)
+            self.assertIn("Human validation packet: not present; use generic benchmark / sampling log", report)
+            self.assertIn("Agent A/B packet: not present; use generic benchmark / sampling log", report)
             self.assertIn("Checked Evidence", report)
             self.assertIn("No issues found.", report)
 

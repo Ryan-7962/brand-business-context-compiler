@@ -94,6 +94,8 @@ def _write_verification_report(
         f"- Project: {project_dir}",
         f"- Library: {library_dir}",
         f"- Repo: {repo_dir if repo_dir else 'not detected'}",
+        f"- Human validation packet: {_optional_packet_status(project_dir, ['human_validation_packet.md', 'human_validation_packet.html'])}",
+        f"- Agent A/B packet: {_optional_packet_status(project_dir, ['agent_ab_packet.md'])}",
         "",
         "## Checked Evidence",
         "",
@@ -119,6 +121,11 @@ def _write_verification_report(
         lines.append("No issues found.")
     lines.append("")
     report_path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def _optional_packet_status(project_dir: Path, filenames: list[str]) -> str:
+    existing = [f"evaluation/{name}" for name in filenames if (project_dir / "evaluation" / name).exists()]
+    return ", ".join(existing) if existing else "not present; use generic benchmark / sampling log"
 
 
 def _check_skill_package(repo_dir: Path, issues: list[str]) -> None:
