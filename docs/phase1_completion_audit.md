@@ -26,9 +26,9 @@
 | 验收项 | 当前状态 | 当前证据 | 剩余缺口 |
 |---|---|---|---|
 | `run-phase1` 能从 `source/` 跑到 `contract_verification_report.md` | 已证明 | `test_cli_run_phase1_executes_full_local_loop_from_source` 已覆盖从 source 到 passed contract report 的主路径；匿名 demo `demo-contract` 当前通过 | 无 |
-| `converted_markdown/` 有来源转写、页码 / slide 锚点、文件创建时间、修改时间、转写时间 | 已证明 | 主路径测试已断言 source transcripts、source facts、conversion report、source index、创建时间、修改时间和转写时间；source index 展示转写稿路径 | 对 PPTX 仍是轻量文本抽取，不证明高保真版式 |
+| `converted_markdown/` 有来源转写、页码 / slide 锚点、文件创建时间、修改时间、转写时间 | 已证明 | 主路径测试已断言 source transcripts、source facts、conversion report、source index、创建时间、修改时间和转写时间；source facts 包含 Fact ID、Source Anchor、信息状态和来源事实内容 | 对 PPTX 仍是轻量文本抽取，不证明高保真版式 |
 | `source_quality_report.md` 能说明总页数、需要复核页数、表格数、图片/图表/小字/OCR 风险和建议动作 | 已证明 | 主路径测试已断言 source quality report 的需要复核页数、表格数和建议动作；contract 额外检查总页数、OCR、全部页面读取状态和建议动作 | 质量判断目前偏保守，图片型页面会大量进入复核 |
-| `outputs/00_source_index.md` 能告诉 Agent 每份文件的转写稿和 source facts 在哪里 | 已证明 | 主路径测试已断言 `outputs/00_source_index.md` 包含内容概述、创建时间、修改时间和来源内容摘要 | 无 |
+| `outputs/00_source_index.md` 能告诉 Agent 每份文件的转写稿和 source facts 在哪里 | 已证明 | 主路径测试已断言 `outputs/00_source_index.md` 包含内容概述、创建时间、修改时间和来源内容摘要；source facts 主路径断言确认事实层可追溯 | 无 |
 | `outputs/10_context_asset_index.md` 能告诉 Agent 哪些内容适合后续任务调用 | 已证明 | 主路径测试已断言 `outputs/10_context_asset_index.md` 包含 Context Asset Index、适用场景和信息状态 | 当前资产表达仍偏机械，需要后续靠模型精修提升可读性 |
 | `outputs/11_context_library_update_plan.md` 能说明本次资料如何进入 Wiki，以及后续任务应优先读取什么 | 已证明 | 主路径测试已断言 `outputs/11_context_library_update_plan.md` 包含 New Context Entries、Do Not Promote、Retrieval Notes 和优先读取 | 无 |
 | `brand_context_library/` 能生成长期 Markdown 条目、冲突队列、更新队列和 retrieval map | 已证明 | 主路径测试已断言 `00_library_index.md`、review queue 三文件、`retrieval_maps/source_packages.md` 和 library report；匿名 demo contract 当前通过 | 真实长期库的多人长期维护规则仍属于后续阶段 |
