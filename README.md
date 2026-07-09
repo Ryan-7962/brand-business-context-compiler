@@ -203,7 +203,7 @@ brand-skill demo-contract examples/anonymous_marketing_campaign --library-dir /t
 
 如果私有测试目录里有 `evaluation/agent_ab_packet.md`，真实 Agent 对照优先复制其中的 A/B 提示词；没有这份入口包时，再使用 `direct_vs_skill_benchmark.md` 中的通用提示词。
 
-如果私有测试目录里有 `evaluation/human_validation_packet.md` 或 `evaluation/human_validation_packet.html`，人工抽样优先从这份入口包开始，再把结果回填到 `quality_sampling_log.md`。
+如果私有测试目录里有 `evaluation/human_validation_packet.md` 或 `evaluation/human_validation_packet.html`，人工抽样优先从这份入口包开始，再把结果回填到 `quality_sampling_log.md`；HTML 入口包如提供“生成回填摘要”，可先复制摘要再补 facts 结论。
 
 如果需要在本机扫描私有测试关键词，可临时设置 `BRAND_SKILL_PRIVACY_TERMS_REGEX` 后再运行 `verify-contract`。不要把真实关键词写入仓库文件。
 

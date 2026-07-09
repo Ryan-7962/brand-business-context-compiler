@@ -17,7 +17,7 @@
 
 打开 `evaluation/quality_sampling_log.md`，按其中的 Page Sampling Plan 回到原 PDF / PPT / 截图核对。
 
-如果私有目录里已有 `evaluation/human_validation_packet.md` 或 `evaluation/human_validation_packet.html`，优先从这份入口包开始核对；它只是减少查找成本，不能替代人工判断。
+如果私有目录里已有 `evaluation/human_validation_packet.md` 或 `evaluation/human_validation_packet.html`，优先从这份入口包开始核对；它只是减少查找成本，不能替代人工判断。HTML 入口包如提供“生成回填摘要”，可直接复制到 `quality_sampling_log.md` 后再补 facts 结论。
 
 优先按 `source_anchor` 打开对应的 `converted_markdown/source_transcripts/*.md`。如果 transcript 里有 `Page Screenshot` 或页面截图表，先用截图快速核对；截图不足以判断时，再回到原 PDF / PPT / 原始图片。
 
