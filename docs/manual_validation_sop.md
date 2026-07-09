@@ -19,6 +19,8 @@
 
 如果私有目录里已有 `evaluation/human_validation_packet.md` 或 `evaluation/human_validation_packet.html`，优先从这份入口包开始核对；它只是减少查找成本，不能替代人工判断。HTML 入口包如提供“生成回填摘要”，可直接复制到 `quality_sampling_log.md` 后再补 facts 结论。
 
+人工回填后的 `quality_sampling_log.md` 是验收证据；重跑 `build-value-benchmark` 会保留它。只有源文件大改、需要重新抽样时，才手动另存旧日志后再重新生成。
+
 优先按 `source_anchor` 打开对应的 `converted_markdown/source_transcripts/*.md`。如果 transcript 里有 `Page Screenshot` 或页面截图表，先用截图快速核对；截图不足以判断时，再回到原 PDF / PPT / 原始图片。
 
 每页只判断五件事：

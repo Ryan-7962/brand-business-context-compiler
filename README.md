@@ -199,7 +199,7 @@ brand-skill demo-contract examples/anonymous_marketing_campaign --library-dir /t
 
 `demo-contract` 是给本地开发和匿名 demo 验收用的便捷命令，会依次执行 `build-source-quality-report`、`build-source-version-report`、刷新结构化 outputs、`build-review-pack`、`apply-library-update`、`build-library-report`、`build-value-benchmark` 和 `verify-contract --write-report`。
 
-`build-value-benchmark` 会生成 `evaluation/direct_vs_skill_benchmark.md`，用于对比“直接把 PDF/PPT 发给 AI”和“先经 Skill 转写、抽 facts、编译、入库后再回答”的差异。它也会生成 `evaluation/quality_sampling_log.md`，把总页数、需复核页数、source facts 数和建议抽样页写清楚。未完成原页核对前，这份日志只作为抽样计划，不能宣称 90% 准确率。
+`build-value-benchmark` 会生成 `evaluation/direct_vs_skill_benchmark.md`，用于对比“直接把 PDF/PPT 发给 AI”和“先经 Skill 转写、抽 facts、编译、入库后再回答”的差异。它也会在缺少 `evaluation/quality_sampling_log.md` 时生成抽样日志，把总页数、需复核页数、source facts 数和建议抽样页写清楚；如果日志已存在，会保留人工回填结果。未完成原页核对前，这份日志只作为抽样计划，不能宣称 90% 准确率。
 
 如果私有测试目录里有 `evaluation/agent_ab_packet.md`，真实 Agent 对照优先复制其中的 A/B 提示词；没有这份入口包时，再使用 `direct_vs_skill_benchmark.md` 中的通用提示词。
 
