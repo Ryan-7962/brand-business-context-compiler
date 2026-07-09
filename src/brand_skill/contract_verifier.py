@@ -152,6 +152,9 @@ def _quality_sampling_evidence_value(text: str) -> str:
             return stripped.split("：", 1)[1].strip()
         if stripped.startswith("是否可作为 90% 准确率证据:"):
             return stripped.split(":", 1)[1].strip()
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if len(cells) >= 2 and cells[0] == "是否可作为 90% 准确率证据":
+            return cells[1]
     return ""
 
 
