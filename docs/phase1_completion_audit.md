@@ -34,7 +34,7 @@
 | `brand_context_library/` 能生成长期 Markdown 条目、冲突队列、更新队列和 retrieval map | 已证明 | 主路径测试已断言 `00_library_index.md`、review queue 三文件、`retrieval_maps/source_packages.md` 和 library report；匿名 demo contract 已用临时知识库复验通过 | 真实长期库的多人长期维护规则仍属于后续阶段 |
 | `library_report.html` 能用中文展示知识库地图、索引大纲、待处理事项和条目详情 | 已证明 | 主路径测试已断言 `library_report.html` 包含 Brand Context Map、Knowledge Explorer、categoryFilter 和条目详情 | 只验证了静态 HTML，不是正式 Web App |
 | 对同一批资料，基于 Wiki 的 Agent 输出应比直接丢 PDF / PPT 更完整、更可追溯、更少版本混淆 | 部分证明 | `evaluation/direct_vs_skill_benchmark.md`、`evaluation/ab_answer_record.md`、`evaluation/quality_sampling_log.md` 和自动 evidence snapshot 已能记录页数、事实数、输出数、入库条目、retrieval 行数；匿名 demo 与一个真实私有多文件资料包均已有本地 A/B 记录；1 个私有包已有真实 Agent A/B 执行入口包 | 真实私有资料包 A/B 仍是本地证据对照，不是外部 Agent 实跑结果；复杂 PDF / PPT / 图片型资料仍缺人工核对后的页面级 / 事实级通过率 |
-| 真实私有资料包页面级 / 事实级抽样准确率 | 部分证明 | 3 个匿名私有资料包已按当前 contract 复验通过，并均生成 `evaluation/quality_sampling_log.md`；匿名批次规模分别为 48 页 / 80 页 / 32 页，source facts 数分别为 339 / 599 / 260；其中 1 个私有包已有 3 页 AI 视觉预检、5 条 source facts 可追溯性预检记录，以及 12 页 / 5 facts 的 Markdown 与 HTML 人工验收入口包 | 当前页面级 / 事实级通过率仍未形成 90% 证据；AI 视觉 / facts 预检和验收入口包不能替代人工原页核对；还需人工填写页面级 / 事实级通过率 |
+| 真实私有资料包页面级 / 事实级抽样准确率 | 部分证明 | 3 个匿名私有资料包已按当前 contract 复验通过，并均生成 `evaluation/quality_sampling_log.md`；匿名批次规模分别为 48 页 / 80 页 / 32 页，source facts 数分别为 339 / 599 / 260；其中 1 个私有包已有 3 页 AI 视觉预检、5 条 source facts 可追溯性预检记录，以及 12 页 / 5 facts 的 Markdown 与 HTML 人工验收入口包；HTML 入口包已提供本地回填摘要 | 当前页面级 / 事实级通过率仍未形成 90% 证据；AI 视觉 / facts 预检和验收入口包不能替代人工原页核对；还需人工填写页面级 / 事实级通过率 |
 | 测试、编译检查、隐私边界和 Git 提交记录通过 | 已证明 | 当前轮已通过 `pytest tests/test_phase1_workflow.py -q`、`compileall tests`、匿名 demo `demo-contract` 和公开改动隐私词扫描 | 私有目录仍保持不提交；真实准确率需要人工原页核对 |
 
 ## 当前完成度判断
