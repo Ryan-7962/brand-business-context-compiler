@@ -35,7 +35,7 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 4. 如果 `brand_review.html` 没有明显识别异常，且 `library_report.html` 里没有必须先处理的冲突或待补资料，就把这个项目目录和下面的“Work Buddy 任务提示词”交给 Work Buddy。
 5. Work Buddy 后续优先读 Structured Wiki，不要一上来重新读原始 PDF / PPT。
 
-如果 `evaluation/quality_sampling_log.md` 还没有人工通过率记录，Work Buddy 仍可使用 Wiki，但不能把它当成已经证明 90% 准确的资料。
+如果 `evaluation/quality_sampling_log.md` 还没有人工通过率记录，Work Buddy 仍可使用 Wiki，但不能把它当成已经证明 90% 准确的资料。已有人工记录时，把它当成验收证据；重跑 `build-value-benchmark` 会保留这份日志。
 
 ## 2. 后续 Agent 优先读取顺序
 
