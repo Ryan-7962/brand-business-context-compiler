@@ -96,6 +96,7 @@ def _write_verification_report(
         f"- Repo: {repo_dir if repo_dir else 'not detected'}",
         f"- Human validation packet: {_optional_packet_status(project_dir, ['human_validation_packet.md', 'human_validation_packet.html'])}",
         f"- Agent A/B packet: {_optional_packet_status(project_dir, ['agent_ab_packet.md'])}",
+        f"- Quality sampling evidence: {_quality_sampling_status(project_dir)}",
         "",
         "## Checked Evidence",
         "",
@@ -126,6 +127,20 @@ def _write_verification_report(
 def _optional_packet_status(project_dir: Path, filenames: list[str]) -> str:
     existing = [f"evaluation/{name}" for name in filenames if (project_dir / "evaluation" / name).exists()]
     return ", ".join(existing) if existing else "not present; use generic benchmark / sampling log"
+
+
+def _quality_sampling_status(project_dir: Path) -> str:
+    path = project_dir / "evaluation" / "quality_sampling_log.md"
+    if not path.exists():
+        return "missing"
+    text = path.read_text(encoding="utf-8")
+    if "是否可作为 90% 准确率证据：是" in text:
+        return "manual evidence says yes"
+    if "是否可作为 90% 准确率证据：否" in text:
+        return "manual evidence says no"
+    if any(marker in text for marker in ["未形成 90% 页面级 / 事实级准确率证据", "未形成证据", "待抽样"]):
+        return "pending; no 90% evidence"
+    return "manual entries present; inspect quality_sampling_log.md"
 
 
 def _check_skill_package(repo_dir: Path, issues: list[str]) -> None:

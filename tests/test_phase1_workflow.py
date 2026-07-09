@@ -2916,6 +2916,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Status: passed", report)
             self.assertIn("Human validation packet: not present; use generic benchmark / sampling log", report)
             self.assertIn("Agent A/B packet: not present; use generic benchmark / sampling log", report)
+            self.assertIn("Quality sampling evidence: pending; no 90% evidence", report)
             self.assertIn("Checked Evidence", report)
             self.assertIn("No issues found.", report)
 
@@ -2928,6 +2929,24 @@ class Phase1WorkflowTests(unittest.TestCase):
             report = report_path.read_text(encoding="utf-8")
             self.assertIn("Human validation packet: evaluation/human_validation_packet.html", report)
             self.assertIn("Agent A/B packet: evaluation/agent_ab_packet.md", report)
+
+            (evaluation_dir / "quality_sampling_log.md").write_text(
+                self._quality_sampling_log_text() + "\n是否可作为 90% 准确率证据：是\n",
+                encoding="utf-8",
+            )
+            with redirect_stdout(StringIO()):
+                verify_project_contract(project_dir, library_dir=library_dir, report_path=report_path)
+            report = report_path.read_text(encoding="utf-8")
+            self.assertIn("Quality sampling evidence: manual evidence says yes", report)
+
+            (evaluation_dir / "quality_sampling_log.md").write_text(
+                self._quality_sampling_log_text() + "\n是否可作为 90% 准确率证据：否\n",
+                encoding="utf-8",
+            )
+            with redirect_stdout(StringIO()):
+                verify_project_contract(project_dir, library_dir=library_dir, report_path=report_path)
+            report = report_path.read_text(encoding="utf-8")
+            self.assertIn("Quality sampling evidence: manual evidence says no", report)
 
     def test_verify_project_contract_writes_failure_report_before_exit(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
