@@ -1,6 +1,6 @@
 # Phase 1 Completion Audit｜第一阶段完成度审计
 
-审计日期：2026-07-08
+审计日期：2026-07-09
 
 本文件用于对照 `docs/project_goal.md` 的第一阶段验收标准，记录当前仓库已经被证据证明的部分、证据不足的部分，以及下一步最小行动。
 
@@ -31,7 +31,7 @@
 | `outputs/00_source_index.md` 能告诉 Agent 每份文件的转写稿和 source facts 在哪里 | 已证明 | 主路径测试已断言 `outputs/00_source_index.md` 包含内容概述、创建时间、修改时间和来源内容摘要；source facts 主路径断言确认事实层可追溯 | 无 |
 | `outputs/10_context_asset_index.md` 能告诉 Agent 哪些内容适合后续任务调用 | 已证明 | 主路径测试已断言 `outputs/10_context_asset_index.md` 包含 Context Asset Index、适用场景和信息状态 | 当前资产表达仍偏机械，需要后续靠模型精修提升可读性 |
 | `outputs/11_context_library_update_plan.md` 能说明本次资料如何进入 Wiki，以及后续任务应优先读取什么 | 已证明 | 主路径测试已断言 `outputs/11_context_library_update_plan.md` 包含 New Context Entries、Do Not Promote、Retrieval Notes 和优先读取 | 无 |
-| `brand_context_library/` 能生成长期 Markdown 条目、冲突队列、更新队列和 retrieval map | 已证明 | 主路径测试已断言 `00_library_index.md`、review queue 三文件、`retrieval_maps/source_packages.md` 和 library report；匿名 demo contract 当前通过 | 真实长期库的多人长期维护规则仍属于后续阶段 |
+| `brand_context_library/` 能生成长期 Markdown 条目、冲突队列、更新队列和 retrieval map | 已证明 | 主路径测试已断言 `00_library_index.md`、review queue 三文件、`retrieval_maps/source_packages.md` 和 library report；匿名 demo contract 已用临时知识库复验通过 | 真实长期库的多人长期维护规则仍属于后续阶段 |
 | `library_report.html` 能用中文展示知识库地图、索引大纲、待处理事项和条目详情 | 已证明 | 主路径测试已断言 `library_report.html` 包含 Brand Context Map、Knowledge Explorer、categoryFilter 和条目详情 | 只验证了静态 HTML，不是正式 Web App |
 | 对同一批资料，基于 Wiki 的 Agent 输出应比直接丢 PDF / PPT 更完整、更可追溯、更少版本混淆 | 部分证明 | `evaluation/direct_vs_skill_benchmark.md`、`evaluation/ab_answer_record.md`、`evaluation/quality_sampling_log.md` 和自动 evidence snapshot 已能记录页数、事实数、输出数、入库条目、retrieval 行数；匿名 demo 与一个真实私有多文件资料包均已有本地 A/B 记录；1 个私有包已有真实 Agent A/B 执行入口包 | 真实私有资料包 A/B 仍是本地证据对照，不是外部 Agent 实跑结果；复杂 PDF / PPT / 图片型资料仍缺人工核对后的页面级 / 事实级通过率 |
 | 真实私有资料包页面级 / 事实级抽样准确率 | 部分证明 | 3 个匿名私有资料包已按当前 contract 复验通过，并均生成 `evaluation/quality_sampling_log.md`；匿名批次规模分别为 48 页 / 80 页 / 32 页，source facts 数分别为 339 / 599 / 260；其中 1 个私有包已有 3 页 AI 视觉预检、5 条 source facts 可追溯性预检记录，以及 12 页 / 5 facts 的 Markdown 与 HTML 人工验收入口包 | 当前页面级 / 事实级通过率仍未形成 90% 证据；AI 视觉 / facts 预检和验收入口包不能替代人工原页核对；还需人工填写页面级 / 事实级通过率 |
@@ -41,7 +41,7 @@
 
 按第一阶段“能否跑通并生成 AI-readable Wiki”判断，当前约 88% 完成。
 
-按“可以放心交给同事日常使用”判断，当前约 75% 完成。原因是：主路径证据已经覆盖关键产物、匿名 demo contract 当前通过，3 个私有资料包也已按当前 contract 重新通过并生成质量抽样计划；但还不能宣称 90% 准确，下一步需要人工原页核对抽样页并完成真实 Agent 对照。
+按“可以放心交给同事日常使用”判断，当前约 75% 完成。原因是：主路径证据已经覆盖关键产物、匿名 demo contract 已用临时知识库复验通过，3 个私有资料包也已按当前 contract 复验通过并生成质量抽样计划；但还不能宣称 90% 准确，下一步需要人工原页核对抽样页并完成真实 Agent 对照。
 
 ## 下一步最小行动
 
