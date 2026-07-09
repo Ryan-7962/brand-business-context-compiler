@@ -126,7 +126,7 @@ Work Buddy、Codex、Claude 或其他 Agent 基于 Wiki 生成后续工作产出
 
 真实私有资料包已经跑过当前主链路。下一步不是继续加功能，而是补齐验收证据：
 
-1. 按 `docs/quality_sampling_protocol.md` 对私有资料包做人工原页抽样核对。
-2. 抽样 `source_facts`，确认事实候选能回到原页或 transcript。
-3. 用同一组问题做一次真实 Agent 对照：直接读原始资料 vs 读取 Structured Wiki。
+1. 优先使用私有包里的 `evaluation/human_validation_packet.md` / `.html` 完成人工原页与 source facts 抽样；没有入口包时按 `docs/quality_sampling_protocol.md` 和 `docs/manual_validation_sop.md` 从 `quality_sampling_log.md` 抽样。
+2. 把人工结论回填到 `evaluation/quality_sampling_log.md`，形成页面级 / 事实级通过率。
+3. 优先使用私有包里的 `evaluation/agent_ab_packet.md` 做真实 Agent 对照：直接读原始资料 vs 读取 Structured Wiki；没有入口包时用 `direct_vs_skill_benchmark.md` 的通用提示词。
 4. 只修复真实验收暴露出的最小缺口。

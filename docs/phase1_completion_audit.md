@@ -41,12 +41,13 @@
 
 按第一阶段“能否跑通并生成 AI-readable Wiki”判断，当前约 88% 完成。
 
-按“可以放心交给同事日常使用”判断，当前约 75% 完成。原因是：主路径证据已经覆盖关键产物、匿名 demo contract 当前通过，3 个私有资料包也已按当前 contract 重新通过并生成质量抽样计划；但还不能宣称 90% 准确，下一步需要人工原页核对抽样页。
+按“可以放心交给同事日常使用”判断，当前约 75% 完成。原因是：主路径证据已经覆盖关键产物、匿名 demo contract 当前通过，3 个私有资料包也已按当前 contract 重新通过并生成质量抽样计划；但还不能宣称 90% 准确，下一步需要人工原页核对抽样页并完成真实 Agent 对照。
 
 ## 下一步最小行动
 
-1. 按 `docs/manual_validation_sop.md` 对私有资料包做人工原页核对，并抽样 source facts，形成页面级 / 事实级通过率。
-2. 用同一组问题做一次真实 Agent 对照：直接读原始资料 vs 读取 Structured Wiki。
-3. 如果对照结果确实更好，再把 Work Buddy 使用说明收成一页同事可执行 SOP。
+1. 如果私有包里有 `evaluation/human_validation_packet.md` 或 `.html`，先用它完成页面 / facts 抽样；否则按 `docs/manual_validation_sop.md` 从 `quality_sampling_log.md` 抽样。
+2. 把人工结论回填到 `evaluation/quality_sampling_log.md`，形成页面级 / 事实级通过率。
+3. 如果私有包里有 `evaluation/agent_ab_packet.md`，用它完成真实 Agent A/B；否则使用 `evaluation/direct_vs_skill_benchmark.md` 的通用提示词。
+4. 只修复人工验收或真实 Agent A/B 暴露出的最小缺口。
 
 暂不建议继续增加分类、后台字段或复杂 UI。下一步最有价值的是证明“这个 Wiki 真的比直接扔 PDF/PPT 给 Agent 更好”。
