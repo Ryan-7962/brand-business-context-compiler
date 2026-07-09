@@ -109,6 +109,7 @@ def _write_verification_report(
         "- Context library entries and review queues",
         "- Brand Context Map report",
         "- Direct PDF/PPT vs Skill benchmark",
+        "- Quality sampling evidence status",
         "- Private test file tracking",
         "- Optional privacy term scan",
         "- Unapproved confirmed-status claims",

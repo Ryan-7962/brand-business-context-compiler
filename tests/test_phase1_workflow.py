@@ -2918,6 +2918,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Agent A/B packet: not present; use generic benchmark / sampling log", report)
             self.assertIn("Quality sampling evidence: pending; no 90% evidence", report)
             self.assertIn("Checked Evidence", report)
+            self.assertIn("Quality sampling evidence status", report)
             self.assertIn("No issues found.", report)
 
             (evaluation_dir / "human_validation_packet.html").write_text("<!doctype html><title>验收入口</title>", encoding="utf-8")
