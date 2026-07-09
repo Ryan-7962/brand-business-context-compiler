@@ -72,3 +72,13 @@ P0 / P1：N / N
 - 所有 P1 已进入复核队列，不提升为长期可靠知识。
 
 不满足就不要包装结论，直接写“不能作为 90% 准确率证据”。
+
+## 6. 回填后复验
+
+填完 `quality_sampling_log.md` 后，在同一个私有资料包重新运行 `verify-contract --write-report`。
+
+检查 `contract_verification_report.md` 里的 `Quality sampling evidence`：
+
+- `manual evidence says yes`：人工日志明确认为可作为 90% 准确率证据。
+- `manual evidence says no`：人工日志明确认为不可作为 90% 准确率证据。
+- `pending; no 90% evidence`：仍然只是抽样计划或未形成证据，不能宣称 90% 准确。
