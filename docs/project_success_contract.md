@@ -57,6 +57,8 @@ Codex 最终应把本项目推进为一个本地优先的 Brand / Business Conte
 - MinerU 独立 readiness / eval 文件只作为可选调试证据，不作为第一阶段默认验收前置条件。真实验收优先看通用 `source_engine_*` 评估链路；只有连续出现图片、表格、小字或扫描件读取缺口时，再用 MinerU 小样证明是否值得增强。
 - 项目价值不能只用“单次 PDF 总结是否顺口”判断。必须能用同一批资料对比“直接把 PDF/PPT 发给 AI”和“先经本 Skill 转写、抽 facts、编译、入库后再回答”的差异，并在覆盖率、来源追溯、多文件版本冲突、长期复用和人工修正成本上拿出证据。
 - `evaluation/direct_vs_skill_benchmark.md` 能把上述对比落实成固定问题集、当前 Skill 证据清单、两套可复制 A/B 评估提示词、答案记录模板和评分表，避免项目价值停留在主观判断。
+- 如果私有测试目录存在 `evaluation/agent_ab_packet.md`，真实 Agent A/B 应优先使用该文件中的资料专属提示词；否则使用 `evaluation/direct_vs_skill_benchmark.md` 中的通用提示词。
+- 如果私有测试目录存在 `evaluation/human_validation_packet.md` 或 `evaluation/human_validation_packet.html`，人工抽样应优先使用该文件确认页面和事实是否读准，并把通过率回填到 `evaluation/quality_sampling_log.md`；该文件不能替代人工判断，也不能单独证明 90% 以上准确率。
 - 当资料来自 ima 或其他外部知识库时，`source/source_manifest.json` 能保留来源平台、知识库、路径、media id 等追溯线索，并写入 transcript / conversion report。
 - ima 私有资料导入必须通过 `_private_test_runs/` 私有目录验证，导入后能继续跑 `convert-source` 和 `build-source-facts`。
 - `converted_markdown/source_facts/` 能继承 Source Anchor，并尽量保留章节上下文、表格行和低置信度说明；事实候选仍不得冒充品牌确认。
