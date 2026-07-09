@@ -111,6 +111,8 @@ The user should review only:
 
 Do not ask the user to inspect every extracted fact. The review page should answer: what was read, what the outline is, what was not read clearly, and how to fix it. Backend-heavy source-anchor tables, risk taxonomies, or asset IDs remain machine-readable evidence.
 
+If `evaluation/human_validation_packet.md` or `.html` exists in a private run, use it first for page / facts sampling, then write the final pass-rate summary back to `evaluation/quality_sampling_log.md`. If `evaluation/agent_ab_packet.md` exists, use it for the real Agent A/B comparison before falling back to the generic `direct_vs_skill_benchmark.md` prompts.
+
 ## Verification Before Completion
 
 Before claiming a project run is valid:
