@@ -45,7 +45,7 @@
 
 ## 下一步最小行动
 
-1. 按 `docs/quality_sampling_protocol.md` 对私有资料包至少 16 页做人工原页核对，并抽样 source facts，形成页面级 / 事实级通过率。
+1. 按 `docs/manual_validation_sop.md` 对私有资料包做人工原页核对，并抽样 source facts，形成页面级 / 事实级通过率。
 2. 用同一组问题做一次真实 Agent 对照：直接读原始资料 vs 读取 Structured Wiki。
 3. 如果对照结果确实更好，再把 Work Buddy 使用说明收成一页同事可执行 SOP。
 

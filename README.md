@@ -175,6 +175,7 @@ brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
 - [docs/ponytail_simplification_audit.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/ponytail_simplification_audit.md)：哪些能力保留、延后或移出第一阶段。
 - [docs/source_reading_quality_playbook.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/source_reading_quality_playbook.md)：PDF / PPT / 长图读取质量验收。
 - [docs/quality_sampling_protocol.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/quality_sampling_protocol.md)：90% 读取准确性抽样证据协议。
+- [docs/manual_validation_sop.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/manual_validation_sop.md)：人工原页抽样验收的一页执行单。
 
 本地验收 demo 可用一条命令跑完入库、知识库报告页和 contract 验证：
 
