@@ -2913,6 +2913,16 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Checked Evidence", report)
             self.assertIn("No issues found.", report)
 
+            (evaluation_dir / "human_validation_packet.html").write_text("<!doctype html><title>验收入口</title>", encoding="utf-8")
+            (evaluation_dir / "agent_ab_packet.md").write_text("# Agent A/B Packet\n", encoding="utf-8")
+
+            with redirect_stdout(StringIO()):
+                verify_project_contract(project_dir, library_dir=library_dir, report_path=report_path)
+
+            report = report_path.read_text(encoding="utf-8")
+            self.assertIn("Human validation packet: evaluation/human_validation_packet.html", report)
+            self.assertIn("Agent A/B packet: evaluation/agent_ab_packet.md", report)
+
     def test_verify_project_contract_writes_failure_report_before_exit(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir) / "demo_project"
