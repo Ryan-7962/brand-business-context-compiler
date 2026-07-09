@@ -124,13 +124,9 @@ Work Buddy、Codex、Claude 或其他 Agent 基于 Wiki 生成后续工作产出
 
 当前不优先继续堆功能或做复杂工具评估。
 
-下一步应选 1-2 个真实私有资料包做瘦身验收：
+真实私有资料包已经跑过当前主链路。下一步不是继续加功能，而是补齐验收证据：
 
-1. 把多份资料放入同一个 `source/` 文件夹。
-2. 跑 `run-phase1`。
-3. 检查 HTML 报告和 Wiki 索引是否能回答：
-   - 读了哪些文件？
-   - 每份文件的大纲是什么？
-   - 哪些页或内容没读清楚？
-   - 后续做 GEO / 种草 / PDP / 拍摄 brief 时应优先读取哪些 Wiki 文件？
+1. 按 `docs/quality_sampling_protocol.md` 对私有资料包做人工原页抽样核对。
+2. 抽样 `source_facts`，确认事实候选能回到原页或 transcript。
+3. 用同一组问题做一次真实 Agent 对照：直接读原始资料 vs 读取 Structured Wiki。
 4. 只修复真实验收暴露出的最小缺口。
