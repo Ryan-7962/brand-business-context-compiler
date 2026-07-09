@@ -15,6 +15,7 @@
 - `brand_review.html` 只看有没有漏页、误读、OCR/图片/表格没读清。
 - `library_report.html` 只看知识库地图、冲突、待补和后续该读什么。
 - `quality_sampling_log.md` 没有人抽样通过前，不要对外宣称“90% 准确”。
+- `contract_verification_report.md` 里的 `Quality sampling evidence: pending; no 90% evidence` 也不能当成 90% 准确率证明。
 
 ## 1. 给同事的最小使用方式
 
