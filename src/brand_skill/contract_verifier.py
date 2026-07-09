@@ -135,13 +135,24 @@ def _quality_sampling_status(project_dir: Path) -> str:
     if not path.exists():
         return "missing"
     text = path.read_text(encoding="utf-8")
-    if "是否可作为 90% 准确率证据：是" in text:
+    evidence = _quality_sampling_evidence_value(text)
+    if evidence == "是":
         return "manual evidence says yes"
-    if "是否可作为 90% 准确率证据：否" in text:
+    if evidence == "否":
         return "manual evidence says no"
     if any(marker in text for marker in ["未形成 90% 页面级 / 事实级准确率证据", "未形成证据", "待抽样"]):
         return "pending; no 90% evidence"
     return "manual entries present; inspect quality_sampling_log.md"
+
+
+def _quality_sampling_evidence_value(text: str) -> str:
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("是否可作为 90% 准确率证据："):
+            return stripped.split("：", 1)[1].strip()
+        if stripped.startswith("是否可作为 90% 准确率证据:"):
+            return stripped.split(":", 1)[1].strip()
+    return ""
 
 
 def _check_skill_package(repo_dir: Path, issues: list[str]) -> None:

@@ -2932,6 +2932,15 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("Agent A/B packet: evaluation/agent_ab_packet.md", report)
 
             (evaluation_dir / "quality_sampling_log.md").write_text(
+                self._quality_sampling_log_text() + "\n是否可作为 90% 准确率证据：是 / 否\n",
+                encoding="utf-8",
+            )
+            with redirect_stdout(StringIO()):
+                verify_project_contract(project_dir, library_dir=library_dir, report_path=report_path)
+            report = report_path.read_text(encoding="utf-8")
+            self.assertIn("Quality sampling evidence: pending; no 90% evidence", report)
+
+            (evaluation_dir / "quality_sampling_log.md").write_text(
                 self._quality_sampling_log_text() + "\n是否可作为 90% 准确率证据：是\n",
                 encoding="utf-8",
             )
