@@ -21,12 +21,12 @@ wiki/
 ```markdown
 # 批次索引
 
-| Source ID | 文件名 | 事实摘要 | 知识页 | 转写稿 | 版本线索 | 何时阅读 |
+| Source ID | 文件名 | 内容概述 | 知识页 | 转写稿 | 版本线索 | 何时阅读 |
 |---|---|---|---|---|---|---|
 | S001 | <原始文件名> | <只写来源资料支持的简要事实摘要> | wiki/documents/S001.md | converted_markdown/source_transcripts/S001_<file>.md | <source_version_report.md 的相关线索或无明显冲突> | <需要该资料时的阅读建议> |
 ```
 
-The index has one row for every source. Its factual summary must be source-backed; it does not replace the detailed knowledge page.
+The index has exactly these seven non-empty columns and one row for every source. `知识页` must be `wiki/documents/<source-id>.md`; `转写稿` must be the existing transcript path declared for that source in `conversion_report.md`. Its factual summary must be source-backed; it does not replace the detailed knowledge page.
 
 ## `wiki/documents/<source-id>.md`
 
@@ -52,7 +52,7 @@ Every page must contain every heading above, even when a section only records `[
 
 ### Traceability Labels
 
-- Source-backed statements use `[来源: S001#page=1]` or `[来源: S001#slide=1]` with the page or slide number from the transcript.
+- Source-backed statements use `[来源: S001#page=1]` or `[来源: S001#slide=1]` with an anchor that exists in the same source's transcript. Do not cite another source or an unrecorded page/slide.
 - Agent synthesis that combines source-backed facts uses `[AI归纳]`; it must remain distinguishable from direct source statements.
 - Information absent from the evidence uses `[资料未提供]`. Do not leave `待补充`, `待填写`, `TODO`, or template placeholders in the finished Wiki.
 - Do not present automatic structural verification as a check of semantic accuracy, factual truth, or completeness of the agent's interpretation.
@@ -71,4 +71,4 @@ When there are no exceptions, the body is exactly:
 未发现需要人工处理的读取异常。
 ```
 
-Do not use this file as a generic task list or a restatement of the Wiki.
+Every real anchor in `source_quality_report.md` under `需要复核的页面` must be listed here. Do not claim that there are no reading exceptions when review anchors exist. Do not use this file as a generic task list or a restatement of the Wiki.

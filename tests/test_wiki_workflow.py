@@ -20,23 +20,56 @@ REQUIRED_HEADINGS = (
 )
 
 
-def create_conversion_report(project_dir: Path, source_ids: list[str]) -> None:
+def create_conversion_report(
+    project_dir: Path,
+    source_ids: list[str],
+    *,
+    page_ranges: dict[str, str] | None = None,
+) -> None:
     converted = project_dir / "converted_markdown"
     converted.mkdir(parents=True)
+    transcripts = converted / "source_transcripts"
+    transcripts.mkdir()
     rows = [
         "# Source Conversion Report",
         "",
         "## Source Files",
         "",
-        "| 来源编号 | 原始文件 | 转写 Markdown |",
-        "|---|---|---|",
+        "| 来源编号 | 原始文件 | 转写 Markdown | 页码/Slide 范围 |",
+        "|---|---|---|---|",
     ]
     for source_id in source_ids:
         rows.append(
             f"| {source_id} | {source_id.lower()}_source.md | "
-            f"converted_markdown/source_transcripts/{source_id}_source.md |"
+            f"converted_markdown/source_transcripts/{source_id}_source.md | "
+            f"{(page_ranges or {}).get(source_id, '1-1')} |"
+        )
+        (transcripts / f"{source_id}_source.md").write_text(
+            f"# Source Transcript｜{source_id.lower()}_source.md\n\n"
+            f"## Page 1\n\n- Source Anchor：{source_id}#page=1\n",
+            encoding="utf-8",
         )
     (converted / "conversion_report.md").write_text("\n".join(rows) + "\n", encoding="utf-8")
+    write_source_quality_report(project_dir)
+
+
+def write_source_quality_report(project_dir: Path, review_anchors: list[str] | None = None) -> None:
+    rows = [
+        "# Source Quality Report",
+        "",
+        "## 需要复核的页面",
+        "",
+        "| Source Anchor | 原始文件 | 低置信度说明 | 建议动作 |",
+        "|---|---|---|---|",
+    ]
+    if review_anchors:
+        rows.extend(f"| {anchor} | source.md | 需要人工复核 | 人工复核 |" for anchor in review_anchors)
+    else:
+        rows.append("| - | - | 无明显低置信度页面 | 继续后续语义编译 |")
+    (project_dir / "converted_markdown" / "source_quality_report.md").write_text(
+        "\n".join(rows) + "\n",
+        encoding="utf-8",
+    )
 
 
 def write_valid_wiki(project_dir: Path, source_ids: list[str]) -> None:
@@ -46,7 +79,7 @@ def write_valid_wiki(project_dir: Path, source_ids: list[str]) -> None:
     index_rows = [
         "# 批次索引",
         "",
-        "| Source ID | 文件名 | 事实摘要 | 知识页 | 转写稿 | 版本线索 | 何时阅读 |",
+        "| Source ID | 文件名 | 内容概述 | 知识页 | 转写稿 | 版本线索 | 何时阅读 |",
         "|---|---|---|---|---|---|---|",
     ]
     for source_id in source_ids:
@@ -147,6 +180,120 @@ def test_verify_wiki_rejects_unresolved_placeholders(tmp_path: Path) -> None:
     document.write_text(document.read_text(encoding="utf-8") + "\n待补充\n", encoding="utf-8")
     with pytest.raises(SystemExit):
         verify_wiki(tmp_path)
+
+
+def test_verify_wiki_rejects_unknown_or_nonexistent_document_anchor(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    create_conversion_report(tmp_path, source_ids=["S001", "S002"])
+    write_valid_wiki(tmp_path, source_ids=["S001", "S002"])
+    document = tmp_path / "wiki" / "documents" / "S001.md"
+    document.write_text(
+        document.read_text(encoding="utf-8").replace(
+            "事实 [来源: S001#page=1]",
+            "事实 [来源: S001#page=9999]\n跨来源 [来源: S002#page=1]",
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit):
+        verify_wiki(tmp_path)
+    output = capsys.readouterr().out
+    assert "S001#page=9999 is not present in its transcript" in output
+    assert "S002#page=1 does not belong to S001" in output
+
+
+def test_verify_wiki_requires_every_conversion_range_anchor_in_its_transcript(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    create_conversion_report(tmp_path, source_ids=["S001"], page_ranges={"S001": "1-2"})
+    write_valid_wiki(tmp_path, source_ids=["S001"])
+    with pytest.raises(SystemExit):
+        verify_wiki(tmp_path)
+    assert "S001 conversion range is missing transcript anchor S001#page=2" in capsys.readouterr().out
+
+
+def test_verify_wiki_rejects_legacy_document_not_in_conversion_report(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    create_conversion_report(tmp_path, source_ids=["S001"])
+    write_valid_wiki(tmp_path, source_ids=["S001"])
+    (tmp_path / "wiki" / "documents" / "S999.md").write_text("# 遗留页面\n", encoding="utf-8")
+    with pytest.raises(SystemExit):
+        verify_wiki(tmp_path)
+    assert "Unknown knowledge page: wiki/documents/S999.md" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    ("column", "replacement"),
+    [
+        ("Source ID", ""),
+        ("文件名", ""),
+        ("内容概述", ""),
+        ("知识页", "wiki/documents/S999.md"),
+        ("转写稿", "converted_markdown/source_transcripts/S999_source.md"),
+        ("版本线索", ""),
+        ("何时阅读", ""),
+    ],
+)
+def test_verify_wiki_requires_complete_index_fields_and_expected_paths(
+    tmp_path: Path,
+    column: str,
+    replacement: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    create_conversion_report(tmp_path, source_ids=["S001"])
+    write_valid_wiki(tmp_path, source_ids=["S001"])
+    index = tmp_path / "wiki" / "00_index.md"
+    headers = index.read_text(encoding="utf-8").splitlines()[2].strip("|").split("|")
+    values = index.read_text(encoding="utf-8").splitlines()[4].strip("|").split("|")
+    values[headers.index(f" {column} ")] = f" {replacement} "
+    index.write_text(
+        "\n".join(
+            [
+                "# 批次索引",
+                "",
+                "|" + "|".join(headers) + "|",
+                "|---|---|---|---|---|---|---|",
+                "|" + "|".join(values) + "|",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit):
+        verify_wiki(tmp_path)
+    assert f"index row for S001 has an invalid {column}" in capsys.readouterr().out
+
+
+def test_verify_wiki_rejects_index_with_missing_or_wrong_column(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    create_conversion_report(tmp_path, source_ids=["S001"])
+    write_valid_wiki(tmp_path, source_ids=["S001"])
+    index = tmp_path / "wiki" / "00_index.md"
+    index.write_text(
+        index.read_text(encoding="utf-8").replace("内容概述 |", "事实摘要 |"),
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit):
+        verify_wiki(tmp_path)
+    assert "must use exactly the required seven columns" in capsys.readouterr().out
+
+
+def test_verify_wiki_requires_uncertainties_to_list_real_review_anchors(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    create_conversion_report(tmp_path, source_ids=["S001"])
+    write_valid_wiki(tmp_path, source_ids=["S001"])
+    write_source_quality_report(tmp_path, review_anchors=["S001#page=1"])
+    with pytest.raises(SystemExit):
+        verify_wiki(tmp_path)
+    assert "uncertainties.md must list review anchor S001#page=1" in capsys.readouterr().out
 
 
 def test_verify_wiki_accepts_a_complete_traceable_wiki(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
