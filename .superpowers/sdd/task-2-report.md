@@ -62,3 +62,30 @@ Implementation commit: `717a03a`
 ## Follow-up Concerns
 
 Semantic quality still requires active Agent and, where appropriate, human source review. Task 3-4 functionality was not implemented.
+
+---
+
+## Second Follow-up Fixes
+
+- Real default PDF/PPT conversion rows are now merged by Source ID, original file, and transcript path, with page/slide ranges aggregated across rows.
+- Repeated Source IDs conflict only when their original file or transcript path differs.
+- Multi-page MarkItDown sources may use an aggregate transcript anchor without failing deterministic page coverage, but only when `wiki/uncertainties.md` records the Source ID and `MarkItDown 未保留稳定页码/页边界`.
+- Knowledge-page citations still must resolve to anchors that actually exist in the matching transcript; MarkItDown aggregate output is not presented as page-level traceability.
+- Schema, compilation prompt, and Skill wording now use one knowledge page per unique Source ID and expose the MarkItDown boundary limitation.
+
+## Second Follow-up Commit
+
+Implementation commit: `2ad9f27`
+
+## Second Follow-up TDD Evidence
+
+- `.venv/bin/python -m pytest tests/test_wiki_workflow.py -k 'merges_real or conflicting_rows or markitdown' -q`: initially 5 failed for duplicate-source handling and forced missing-page anchors; after implementation, 5 passed.
+
+## Second Follow-up Tests
+
+- `.venv/bin/python -m pytest tests/test_wiki_workflow.py -q`: 26 passed.
+- `.venv/bin/python -m pytest tests/test_phase1_workflow.py -q`: 104 passed, 2 existing PyMuPDF deprecation warnings, 5 subtests passed.
+
+## Second Follow-up Concerns
+
+MarkItDown aggregate transcripts remain traceable only to anchors actually present in the transcript, not to every physical page. Semantic quality still requires active Agent and, where appropriate, human source review. Task 3-4 functionality was not implemented.
