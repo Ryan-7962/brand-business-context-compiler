@@ -31,6 +31,7 @@ def _parse_conversion_report(markdown: str) -> list[dict[str, str]]:
         return []
 
     rows: list[dict[str, str]] = []
+    seen_sources: set[tuple[str, str, str]] = set()
     index = 0
     while index < len(table_lines) - 2:
         headers = _split_row(table_lines[index])
@@ -41,16 +42,22 @@ def _parse_conversion_report(markdown: str) -> list[dict[str, str]]:
                 if len(cells) != len(headers):
                     break
                 row = dict(zip(headers, cells))
-                rows.append(
-                    {
-                        "source_id": row.get("来源编号", "").strip(),
-                        "file_name": row.get("原始文件", "").strip(),
-                        "created_at": row.get("原始文件创建时间", "").strip() or "待补充",
-                        "modified_at": row.get("原始文件修改时间", "").strip() or "待补充",
-                        "transcript": row.get("转写 Markdown", "").strip() or "待补充",
-                        "external_source": row.get("外部来源", "").strip() or "-",
-                    }
+                parsed_row = {
+                    "source_id": row.get("来源编号", "").strip(),
+                    "file_name": row.get("原始文件", "").strip(),
+                    "created_at": row.get("原始文件创建时间", "").strip() or "待补充",
+                    "modified_at": row.get("原始文件修改时间", "").strip() or "待补充",
+                    "transcript": row.get("转写 Markdown", "").strip() or "待补充",
+                    "external_source": row.get("外部来源", "").strip() or "-",
+                }
+                source_key = (
+                    parsed_row["source_id"],
+                    parsed_row["file_name"],
+                    parsed_row["transcript"],
                 )
+                if source_key not in seen_sources:
+                    seen_sources.add(source_key)
+                    rows.append(parsed_row)
             break
         index += 1
     return [row for row in rows if row["source_id"] and row["file_name"]]
