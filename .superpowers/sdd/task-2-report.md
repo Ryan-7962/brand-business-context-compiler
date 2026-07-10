@@ -39,3 +39,26 @@ No HTML report builder or WorkBuddy ZIP implementation was added.
 ## Concerns
 
 `build-wiki-report` remains a documented next workflow step, but is intentionally not implemented in Task 2 because it belongs to Task 3. Semantic quality still requires active Agent and, where appropriate, human source review.
+
+---
+
+## Follow-up Fixes
+
+- Knowledge-page source anchors now must belong to that page's source and exist in the conversion-report transcript.
+- The verifier checks every number in the conversion-report page/slide range against deterministic transcript anchors.
+- `wiki/documents/` now has exact source-ID coverage, and the index has strict seven-column, non-empty, project-local path validation.
+- Real review anchors from `source_quality_report.md` must appear in `uncertainties.md`; the no-exception statement is rejected when they exist.
+- The verifier remains structural and traceability-only; it does not claim semantic accuracy.
+
+## Follow-up Commit
+
+Implementation commit: `717a03a`
+
+## Follow-up Tests
+
+- `.venv/bin/python -m pytest tests/test_wiki_workflow.py -q`: 21 passed.
+- `.venv/bin/python -m pytest tests/test_phase1_workflow.py -q`: 104 passed, 2 existing PyMuPDF deprecation warnings, 5 subtests passed.
+
+## Follow-up Concerns
+
+Semantic quality still requires active Agent and, where appropriate, human source review. Task 3-4 functionality was not implemented.
