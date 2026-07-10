@@ -25,6 +25,7 @@ def create_conversion_report(
     source_ids: list[str],
     *,
     page_ranges: dict[str, str] | None = None,
+    engine: str = "pymupdf4llm",
 ) -> None:
     converted = project_dir / "converted_markdown"
     converted.mkdir(parents=True)
@@ -35,14 +36,14 @@ def create_conversion_report(
         "",
         "## Source Files",
         "",
-        "| 来源编号 | 原始文件 | 转写 Markdown | 页码/Slide 范围 |",
-        "|---|---|---|---|",
+        "| 来源编号 | 原始文件 | 转写 Markdown | 转写引擎 | 页码/Slide 范围 |",
+        "|---|---|---|---|---|",
     ]
     for source_id in source_ids:
         rows.append(
             f"| {source_id} | {source_id.lower()}_source.md | "
             f"converted_markdown/source_transcripts/{source_id}_source.md | "
-            f"{(page_ranges or {}).get(source_id, '1-1')} |"
+            f"{engine} | {(page_ranges or {}).get(source_id, '1-1')} |"
         )
         (transcripts / f"{source_id}_source.md").write_text(
             f"# Source Transcript｜{source_id.lower()}_source.md\n\n"
@@ -51,6 +52,45 @@ def create_conversion_report(
         )
     (converted / "conversion_report.md").write_text("\n".join(rows) + "\n", encoding="utf-8")
     write_source_quality_report(project_dir)
+
+
+def write_real_conversion_report(
+    project_dir: Path,
+    rows: list[tuple[str, str, str, str, str]],
+) -> None:
+    converted = project_dir / "converted_markdown"
+    converted.mkdir(parents=True)
+    lines = [
+        "# Source Conversion Report",
+        "",
+        "## Source Files",
+        "",
+        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 | 外部来源 |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+    ]
+    for source_id, filename, transcript, engine, page_range in rows:
+        lines.append(
+            f"| {source_id} | {filename} | 2026-01-01 | 2026-01-01 | 2026-01-01 | "
+            f"{transcript} | {engine} | 文本解析 | 否 | {page_range} | 中 | 是 | "
+            "待复核 | 无明显低置信度 | 检查抽取文本 | 本地 source/ |"
+        )
+    (converted / "conversion_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_source_transcript(project_dir: Path, source_id: str, page_numbers: list[int]) -> None:
+    transcripts = project_dir / "converted_markdown" / "source_transcripts"
+    transcripts.mkdir(parents=True, exist_ok=True)
+    sections = [f"# Source Transcript｜{source_id.lower()}_source.md", ""]
+    for page_number in page_numbers:
+        sections.extend(
+            [
+                f"## Page {page_number}",
+                "",
+                f"- Source Anchor：{source_id}#page={page_number}",
+                "",
+            ]
+        )
+    (transcripts / f"{source_id}_source.md").write_text("\n".join(sections), encoding="utf-8")
 
 
 def write_source_quality_report(project_dir: Path, review_anchors: list[str] | None = None) -> None:
@@ -212,6 +252,105 @@ def test_verify_wiki_requires_every_conversion_range_anchor_in_its_transcript(
     with pytest.raises(SystemExit):
         verify_wiki(tmp_path)
     assert "S001 conversion range is missing transcript anchor S001#page=2" in capsys.readouterr().out
+
+
+def test_verify_wiki_merges_real_per_page_conversion_rows_for_one_source(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    transcript = "converted_markdown/source_transcripts/S001_source.md"
+    write_real_conversion_report(
+        tmp_path,
+        [
+            ("S001", "s001_source.md", transcript, "pymupdf4llm", "1"),
+            ("S001", "s001_source.md", transcript, "pymupdf4llm", "2"),
+            ("S001", "s001_source.md", transcript, "pymupdf4llm", "3"),
+        ],
+    )
+    write_source_transcript(tmp_path, "S001", [1, 2, 3])
+    write_source_quality_report(tmp_path)
+    write_valid_wiki(tmp_path, source_ids=["S001"])
+
+    verify_wiki(tmp_path)
+
+    assert "Wiki verification passed." in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    ("second_filename", "second_transcript", "conflicting_field"),
+    [
+        ("other.md", "converted_markdown/source_transcripts/S001_source.md", "原始文件"),
+        ("s001_source.md", "converted_markdown/source_transcripts/S001_other.md", "转写 Markdown"),
+    ],
+)
+def test_verify_wiki_rejects_conflicting_rows_for_one_source(
+    tmp_path: Path,
+    second_filename: str,
+    second_transcript: str,
+    conflicting_field: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    transcript = "converted_markdown/source_transcripts/S001_source.md"
+    write_real_conversion_report(
+        tmp_path,
+        [
+            ("S001", "s001_source.md", transcript, "pymupdf4llm", "1"),
+            ("S001", second_filename, second_transcript, "pymupdf4llm", "2"),
+        ],
+    )
+    write_source_transcript(tmp_path, "S001", [1, 2])
+    write_source_quality_report(tmp_path)
+    write_valid_wiki(tmp_path, source_ids=["S001"])
+
+    with pytest.raises(SystemExit):
+        verify_wiki(tmp_path)
+
+    assert f"S001 has conflicting {conflicting_field}" in capsys.readouterr().out
+
+
+def test_verify_wiki_accepts_markitdown_aggregate_anchor_with_explicit_uncertainty(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    transcript = "converted_markdown/source_transcripts/S001_source.md"
+    write_real_conversion_report(
+        tmp_path,
+        [("S001", "s001_source.md", transcript, "markitdown", "1-3")],
+    )
+    write_source_transcript(tmp_path, "S001", [1])
+    write_source_quality_report(tmp_path, review_anchors=["S001#page=1"])
+    write_valid_wiki(tmp_path, source_ids=["S001"])
+    (tmp_path / "wiki" / "uncertainties.md").write_text(
+        "# 异常与不确定项\n\n"
+        "- S001 / S001#page=1：MarkItDown 未保留稳定页码/页边界。\n",
+        encoding="utf-8",
+    )
+
+    verify_wiki(tmp_path)
+
+    assert "Wiki verification passed." in capsys.readouterr().out
+
+
+def test_verify_wiki_requires_markitdown_page_boundary_uncertainty(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    transcript = "converted_markdown/source_transcripts/S001_source.md"
+    write_real_conversion_report(
+        tmp_path,
+        [("S001", "s001_source.md", transcript, "markitdown", "1-3")],
+    )
+    write_source_transcript(tmp_path, "S001", [1])
+    write_source_quality_report(tmp_path)
+    write_valid_wiki(tmp_path, source_ids=["S001"])
+
+    with pytest.raises(SystemExit):
+        verify_wiki(tmp_path)
+
+    assert (
+        "uncertainties.md must document S001: MarkItDown 未保留稳定页码/页边界"
+        in capsys.readouterr().out
+    )
 
 
 def test_verify_wiki_rejects_legacy_document_not_in_conversion_report(

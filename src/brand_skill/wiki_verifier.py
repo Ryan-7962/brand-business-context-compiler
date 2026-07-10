@@ -25,9 +25,10 @@ INDEX_COLUMNS = (
     "版本线索",
     "何时阅读",
 )
-CONVERSION_COLUMNS = ("来源编号", "原始文件", "转写 Markdown", "页码/Slide 范围")
+CONVERSION_COLUMNS = ("来源编号", "原始文件", "转写 Markdown", "转写引擎", "页码/Slide 范围")
 UNRESOLVED_PLACEHOLDERS = ("待补充", "待填写", "TODO", "TBD", "{{", "}}")
 NO_UNCERTAINTIES_TEXT = "未发现需要人工处理的读取异常。"
+MARKITDOWN_BOUNDARY_LIMIT = "MarkItDown 未保留稳定页码/页边界"
 
 
 @dataclass(frozen=True)
@@ -35,7 +36,8 @@ class SourceRecord:
     source_id: str
     filename: str
     transcript_path: Path
-    page_range: str
+    engines: frozenset[str]
+    page_numbers: frozenset[int]
 
 
 def verify_wiki(project_dir: Path) -> None:
@@ -52,14 +54,20 @@ def collect_wiki_issues(project_dir: Path) -> list[str]:
     """Return structural and deterministic-evidence failures, not semantic judgments."""
     issues: list[str] = []
     source_records = _source_records_from_conversion_report(project_dir, issues)
-    transcript_anchors = _collect_transcript_anchors(source_records, issues)
+    transcript_anchors, markitdown_boundary_sources = _collect_transcript_anchors(source_records, issues)
     wiki_dir = project_dir / "wiki"
     if not wiki_dir.is_dir():
         return [*issues, "Missing wiki/ directory."]
 
     index_source_ids = _collect_index_issues(project_dir, wiki_dir / "00_index.md", source_records, issues)
     _collect_index_coverage_issues(source_records, index_source_ids, issues)
-    _collect_uncertainties_issues(wiki_dir / "uncertainties.md", project_dir, transcript_anchors, issues)
+    _collect_uncertainties_issues(
+        wiki_dir / "uncertainties.md",
+        project_dir,
+        transcript_anchors,
+        markitdown_boundary_sources,
+        issues,
+    )
     _collect_documents_issues(project_dir, wiki_dir / "documents", source_records, transcript_anchors, issues)
 
     for markdown_path in _wiki_markdown_files(wiki_dir):
@@ -87,18 +95,47 @@ def _source_records_from_conversion_report(project_dir: Path, issues: list[str])
         source_id = values["来源编号"]
         filename = values["原始文件"]
         transcript_value = values["转写 Markdown"]
+        engine = values["转写引擎"]
         page_range = values["页码/Slide 范围"]
-        if not source_id or not filename or not transcript_value or not page_range:
+        if not source_id or not filename or not transcript_value or not engine or not page_range:
             issues.append(f"conversion_report.md source row {row_number} has an empty required field.")
-            continue
-        if source_id in records:
-            issues.append(f"conversion_report.md has duplicate source {source_id}.")
             continue
         transcript_path = _project_path(project_dir, transcript_value)
         if transcript_path is None:
             issues.append(f"conversion_report.md has an invalid transcript path for {source_id}.")
             continue
-        records[source_id] = SourceRecord(source_id, filename, transcript_path, page_range)
+        page_numbers = _range_numbers(page_range)
+        if page_numbers is None:
+            issues.append(f"{source_id} has an invalid conversion range: {page_range}.")
+            continue
+
+        existing = records.get(source_id)
+        if existing is None:
+            records[source_id] = SourceRecord(
+                source_id,
+                filename,
+                transcript_path,
+                frozenset({engine.lower()}),
+                frozenset(page_numbers),
+            )
+            continue
+
+        has_conflict = False
+        if filename != existing.filename:
+            issues.append(f"{source_id} has conflicting 原始文件 values in conversion_report.md.")
+            has_conflict = True
+        if transcript_path != existing.transcript_path:
+            issues.append(f"{source_id} has conflicting 转写 Markdown values in conversion_report.md.")
+            has_conflict = True
+        if has_conflict:
+            continue
+        records[source_id] = SourceRecord(
+            source_id,
+            filename,
+            transcript_path,
+            existing.engines | {engine.lower()},
+            existing.page_numbers | set(page_numbers),
+        )
 
     if not records:
         issues.append("conversion_report.md has no source entries.")
@@ -108,8 +145,9 @@ def _source_records_from_conversion_report(project_dir: Path, issues: list[str])
 def _collect_transcript_anchors(
     source_records: dict[str, SourceRecord],
     issues: list[str],
-) -> dict[str, set[str]]:
+) -> tuple[dict[str, set[str]], set[str]]:
     anchors_by_source: dict[str, set[str]] = {}
+    markitdown_boundary_sources: set[str] = set()
     for source_id, record in source_records.items():
         if not record.transcript_path.is_file():
             issues.append(f"Missing transcript for {source_id}: {record.transcript_path}.")
@@ -123,32 +161,33 @@ def _collect_transcript_anchors(
         if not source_anchors:
             issues.append(f"Transcript for {source_id} has no source anchors.")
             continue
-        _collect_range_coverage_issues(record, source_anchors, issues)
-    return anchors_by_source
+        if _collect_range_coverage_issues(record, source_anchors, issues):
+            markitdown_boundary_sources.add(source_id)
+    return anchors_by_source, markitdown_boundary_sources
 
 
 def _transcript_anchors(markdown: str) -> list[str]:
     return re.findall(r"^\s*-\s*Source Anchor[：:]\s*([^\s]+)\s*$", markdown, flags=re.MULTILINE)
 
 
-def _collect_range_coverage_issues(record: SourceRecord, anchors: set[str], issues: list[str]) -> None:
-    expected_numbers = _range_numbers(record.page_range)
-    if not expected_numbers:
-        issues.append(f"{record.source_id} has an invalid conversion range: {record.page_range}.")
-        return
-    kinds = {
-        match.group("kind")
+def _collect_range_coverage_issues(record: SourceRecord, anchors: set[str], issues: list[str]) -> bool:
+    valid_matches = [
+        match
         for anchor in anchors
         if (match := re.fullmatch(rf"{re.escape(record.source_id)}#(?P<kind>page|slide)=(?P<number>\d+)", anchor))
-    }
+    ]
+    kinds = {match.group("kind") for match in valid_matches}
     if not kinds:
         issues.append(f"Transcript for {record.source_id} has no valid page or slide anchors.")
-        return
+        return False
+    if record.engines == {"markitdown"} and len(record.page_numbers) > len(valid_matches):
+        return True
     for kind in kinds:
-        for number in expected_numbers:
+        for number in sorted(record.page_numbers):
             anchor = f"{record.source_id}#{kind}={number}"
             if anchor not in anchors:
                 issues.append(f"{record.source_id} conversion range is missing transcript anchor {anchor}.")
+    return False
 
 
 def _range_numbers(page_range: str) -> range | None:
@@ -242,6 +281,7 @@ def _collect_uncertainties_issues(
     uncertainties_path: Path,
     project_dir: Path,
     transcript_anchors: dict[str, set[str]],
+    markitdown_boundary_sources: set[str],
     issues: list[str],
 ) -> None:
     if not uncertainties_path.is_file():
@@ -259,13 +299,15 @@ def _collect_uncertainties_issues(
             issues.append(f"source_quality_report.md review anchor is not present in a transcript: {anchor}.")
         else:
             real_review_anchors.append(anchor)
-    if not real_review_anchors:
-        return
-    if NO_UNCERTAINTIES_TEXT in markdown:
+    if real_review_anchors and NO_UNCERTAINTIES_TEXT in markdown:
         issues.append("uncertainties.md cannot claim no reading exceptions when review anchors exist.")
     for anchor in real_review_anchors:
         if anchor not in markdown:
             issues.append(f"uncertainties.md must list review anchor {anchor}.")
+    lines = markdown.splitlines()
+    for source_id in sorted(markitdown_boundary_sources):
+        if not any(source_id in line and MARKITDOWN_BOUNDARY_LIMIT in line for line in lines):
+            issues.append(f"uncertainties.md must document {source_id}: {MARKITDOWN_BOUNDARY_LIMIT}.")
 
 
 def _review_anchors_from_quality_report(project_dir: Path, issues: list[str]) -> list[str]:

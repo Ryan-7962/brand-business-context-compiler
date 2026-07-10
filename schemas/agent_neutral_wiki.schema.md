@@ -13,7 +13,7 @@ wiki/
     └── <source-id>.md
 ```
 
-- Create exactly one `wiki/documents/<source-id>.md` page for every `来源编号` in `converted_markdown/conversion_report.md`.
+- Create exactly one `wiki/documents/<source-id>.md` page for every unique `来源编号` in `converted_markdown/conversion_report.md`. Default PDF/PPT conversion may use multiple per-page rows for the same source; merge those rows by Source ID, original file, and transcript path.
 - Keep `converted_markdown/` as evidence. The Wiki is a derived semantic layer, not a replacement for source transcripts, source facts, quality reports, or version reports.
 
 ## `wiki/00_index.md`
@@ -53,6 +53,7 @@ Every page must contain every heading above, even when a section only records `[
 ### Traceability Labels
 
 - Source-backed statements use `[来源: S001#page=1]` or `[来源: S001#slide=1]` with an anchor that exists in the same source's transcript. Do not cite another source or an unrecorded page/slide.
+- Default pageable conversion must preserve every page/slide anchor declared by the conversion report. A multi-page MarkItDown transcript may expose only one aggregate anchor; cite only that real anchor and do not claim page-level traceability for the remaining physical pages.
 - Agent synthesis that combines source-backed facts uses `[AI归纳]`; it must remain distinguishable from direct source statements.
 - Information absent from the evidence uses `[资料未提供]`. Do not leave `待补充`, `待填写`, `TODO`, or template placeholders in the finished Wiki.
 - Do not present automatic structural verification as a check of semantic accuracy, factual truth, or completeness of the agent's interpretation.
@@ -71,4 +72,4 @@ When there are no exceptions, the body is exactly:
 未发现需要人工处理的读取异常。
 ```
 
-Every real anchor in `source_quality_report.md` under `需要复核的页面` must be listed here. Do not claim that there are no reading exceptions when review anchors exist. Do not use this file as a generic task list or a restatement of the Wiki.
+Every real anchor in `source_quality_report.md` under `需要复核的页面` must be listed here. For a multi-page MarkItDown source with fewer transcript anchors than physical pages, include the Source ID and the exact limitation `MarkItDown 未保留稳定页码/页边界`. Do not claim that there are no reading exceptions when review anchors or this boundary limitation exists. Do not use this file as a generic task list or a restatement of the Wiki.

@@ -90,6 +90,8 @@ brand-skill plan-source-engine-eval <project_dir> --max-pages 5
 brand-skill scaffold-source-engine-eval-results <project_dir>
 ```
 
+For multi-page MarkItDown input, the transcript can contain one aggregate anchor even when the conversion report records multiple physical pages. Only existing transcript anchors are traceable. Record the Source ID and `MarkItDown 未保留稳定页码/页边界` in `wiki/uncertainties.md`; do not describe unanchored physical pages as page-level traceable.
+
 Use `_private_test_runs/` for real brand samples. Public examples must stay anonymous.
 
 ## Human Review Rule
