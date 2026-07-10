@@ -1,0 +1,74 @@
+# Schema｜Agent-Neutral Wiki
+
+This contract is the handoff boundary between deterministic source preparation and an active AI agent's semantic compilation. It preserves source traceability without claiming that structural validation proves semantic accuracy.
+
+## Required Files
+
+```text
+wiki/
+├── 00_index.md
+├── uncertainties.md
+└── documents/
+    ├── S001.md
+    └── <source-id>.md
+```
+
+- Create exactly one `wiki/documents/<source-id>.md` page for every `来源编号` in `converted_markdown/conversion_report.md`.
+- Keep `converted_markdown/` as evidence. The Wiki is a derived semantic layer, not a replacement for source transcripts, source facts, quality reports, or version reports.
+
+## `wiki/00_index.md`
+
+```markdown
+# 批次索引
+
+| Source ID | 文件名 | 事实摘要 | 知识页 | 转写稿 | 版本线索 | 何时阅读 |
+|---|---|---|---|---|---|---|
+| S001 | <原始文件名> | <只写来源资料支持的简要事实摘要> | wiki/documents/S001.md | converted_markdown/source_transcripts/S001_<file>.md | <source_version_report.md 的相关线索或无明显冲突> | <需要该资料时的阅读建议> |
+```
+
+The index has one row for every source. Its factual summary must be source-backed; it does not replace the detailed knowledge page.
+
+## `wiki/documents/<source-id>.md`
+
+```markdown
+# <文件名>｜<source-id>
+
+## 文件概述
+
+## 内容大纲
+
+## 核心观点
+
+## 关键事实
+
+## 业务关系
+
+## 不确定项
+
+## 来源
+```
+
+Every page must contain every heading above, even when a section only records `[资料未提供]`.
+
+### Traceability Labels
+
+- Source-backed statements use `[来源: S001#page=1]` or `[来源: S001#slide=1]` with the page or slide number from the transcript.
+- Agent synthesis that combines source-backed facts uses `[AI归纳]`; it must remain distinguishable from direct source statements.
+- Information absent from the evidence uses `[资料未提供]`. Do not leave `待补充`, `待填写`, `TODO`, or template placeholders in the finished Wiki.
+- Do not present automatic structural verification as a check of semantic accuracy, factual truth, or completeness of the agent's interpretation.
+
+## `wiki/uncertainties.md`
+
+```markdown
+# 异常与不确定项
+
+<只记录未读页面、转写/提取不确定性、版本冲突，或必须补充的资料。>
+```
+
+When there are no exceptions, the body is exactly:
+
+```markdown
+未发现需要人工处理的读取异常。
+```
+
+Do not use this file as a generic task list or a restatement of the Wiki.

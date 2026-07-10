@@ -13,12 +13,13 @@ The core model is:
 
 ```text
 Raw Sources
--> Compiler Skill
--> Structured Wiki
--> Work Buddy / Agent outputs
+-> Deterministic evidence preparation
+-> Active Agent semantic compilation
+-> Agent-neutral Wiki
+-> Downstream Agent outputs
 ```
 
-The first-stage deliverable is not a PDF/PPT summary, not a SaaS app, and not enterprise RAG. It is a local skill pack plus CLI workflow that compiles raw files into a structured Markdown Wiki, source indexes, exception reports, and a static HTML knowledge report.
+The first-stage deliverable is not a PDF/PPT summary, not a SaaS app, and not enterprise RAG. It is a local skill pack plus CLI workflow that prepares traceable evidence and guides an active Agent to compile an Agent-neutral Wiki.
 
 ## First-Stage Boundary
 
@@ -27,8 +28,8 @@ Do:
 - Compile PDF, PPTX, Markdown, TXT, DOCX, and optional MarkItDown-supported files from `source/`.
 - Preserve source anchors, page or slide references, file creation time, file modification time, and low-confidence areas.
 - Separate source-backed facts, AI-structured interpretation, pending confirmation, and missing context.
-- Write a local `brand_context_library/` or caller-provided library directory.
-- Generate `review/brand_review.html` for exception review and `library_report.html` for knowledge-map viewing.
+- Produce a local `wiki/` with a batch index, one knowledge page per source, and real uncertainties.
+- Keep source transcripts, source facts, quality reports, and version reports as traceability evidence.
 
 Do not:
 
@@ -46,35 +47,26 @@ For a new project:
 brand-skill init <project_dir>
 ```
 
-Place source files under `source/`, then run:
+Place source files under `source/`, then prepare deterministic evidence:
 
 ```bash
-brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
+.venv/bin/brand-skill prepare-wiki <project_dir>
 ```
 
-The full first-stage loop is:
+The recommended two-stage workflow is:
 
 ```text
 source/
--> converted_markdown/source_transcripts/
--> converted_markdown/conversion_report.md
--> converted_markdown/source_quality_report.md
--> converted_markdown/source_version_report.md
--> converted_markdown/source_facts/
--> outputs/00_source_index.md
--> outputs/02_document_profile.md
--> outputs/03_marketing_semantic_transcript.md
--> outputs/04_key_facts_and_claims.md
--> outputs/05_strategy_and_execution_map.md
--> outputs/06_risk_and_review_items.md
--> outputs/10_context_asset_index.md
--> outputs/11_context_library_update_plan.md
--> review/brand_review.html
--> brand_context_library/
--> brand_context_library/library_report.html
--> evaluation/direct_vs_skill_benchmark.md
--> contract_verification_report.md
+-> prepare-wiki
+-> active Agent reads every prepared transcript and evidence file
+-> active Agent writes wiki/
+-> build-wiki-report
+-> verify-wiki
 ```
+
+Use `prompts/10_compile_agent_neutral_wiki.md` and `schemas/agent_neutral_wiki.schema.md` for the active Agent step. `verify-wiki` validates coverage, required file structure, source anchors, and unresolved placeholders; it does not validate semantic accuracy.
+
+When the CLI is unavailable in WorkBuddy, use WorkBuddy's native file-reading tools to read the same prepared evidence and produce the same `wiki/` contract. Explicitly record every unread file or page in `wiki/uncertainties.md`.
 
 ## Source Conversion Engines
 
@@ -111,32 +103,18 @@ The user should review only:
 
 Do not ask the user to inspect every extracted fact. The review page should answer: what was read, what the outline is, what was not read clearly, and how to fix it. Backend-heavy source-anchor tables, risk taxonomies, or asset IDs remain machine-readable evidence.
 
-If `evaluation/human_validation_packet.md` or `.html` exists in a private run, use it first for page / facts sampling, then write the final pass-rate summary back to `evaluation/quality_sampling_log.md`. Treat an existing `quality_sampling_log.md` as human validation evidence; `build-value-benchmark` preserves it instead of refreshing the template. If `evaluation/agent_ab_packet.md` exists, use it for the real Agent A/B comparison before falling back to the generic `direct_vs_skill_benchmark.md` prompts.
+If `evaluation/human_validation_packet.md` or `.html` exists in a private run, use it first for page / facts sampling, then write the final pass-rate summary back to `evaluation/quality_sampling_log.md`. Treat an existing `quality_sampling_log.md` as human validation evidence; `build-value-benchmark` preserves it instead of refreshing the template.
+
+## Legacy Phase 1 Compatibility
+
+Existing projects can continue to use `brand-skill run-phase1`. That legacy path retains its own `source_engine_eval_results.md`, `review/brand_review.html`, and `library_report.html` outputs. It is not the recommended workflow for new Agent-neutral Wiki work.
 
 ## Verification Before Completion
 
-Before claiming a project run is valid:
+Before claiming a Wiki is structurally valid:
 
 ```bash
-.venv/bin/python -m pytest tests/test_phase1_workflow.py -q
-.venv/bin/python -m compileall src tests
-brand-skill demo-contract examples/anonymous_marketing_campaign --library-dir /tmp/bmcc_demo_contract
-brand-skill verify-contract examples/anonymous_marketing_campaign --library-dir /tmp/bmcc_demo_contract --write-report
+.venv/bin/brand-skill verify-wiki <project_dir>
 ```
 
-Expected evidence includes:
-
-- `converted_markdown/conversion_report.md`
-- `converted_markdown/source_quality_report.md`
-- `converted_markdown/source_version_report.md`
-- `converted_markdown/source_engine_readiness_report.md`
-- `converted_markdown/source_engine_eval_plan.md`
-- `converted_markdown/source_engine_eval_results.md`
-- `outputs/03_marketing_semantic_transcript.md`
-- `outputs/10_context_asset_index.md`
-- `outputs/11_context_library_update_plan.md`
-- `review/brand_review.html`
-- `library_report.html`
-- `evaluation/direct_vs_skill_benchmark.md`
-- `contract_verification_report.md`
-- `contract_verification_report.md` includes `Quality sampling evidence`; `pending; no 90% evidence` means the run is not yet proven 90% accurate.
+The verifier is intentionally limited. Semantic correctness, source interpretation, and any claim of accuracy require active Agent review and, where appropriate, human review of the underlying sources.
