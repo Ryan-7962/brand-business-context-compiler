@@ -100,73 +100,40 @@ GEO / PDP / 拍摄 / 种草 / 销售 / 客服 / 复盘 / 竞品分析等派生�
 | 不适用 | 当前资料类型不涉及该字段 |
 | 已品牌确认 | 品牌经理确认后，才能作为最高优先级依据 |
 
-## CLI 常用命令
+## 推荐使用路径
 
-第一阶段默认只需要记住这几条：
+新项目统一使用 Agent-neutral Wiki 的五步流程：
 
-```bash
-brand-skill init <project_name>
-brand-skill validate-input <project_dir>
-brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
-brand-skill demo-contract <project_dir> --library-dir <brand_context_library_dir>
-brand-skill verify-contract <project_dir> --library-dir <brand_context_library_dir> --write-report
-```
+1. 初始化项目，并将 PDF / PPTX / DOCX / Markdown / TXT 等资料放入 `source/`：
 
-分步调试时再使用：
+   ```bash
+   brand-skill init <project_dir>
+   ```
 
-```bash
-brand-skill convert-source <project_dir> --engine pymupdf4llm
-brand-skill build-source-quality-report <project_dir>
-brand-skill build-source-version-report <project_dir>
-brand-skill check-source-engines <project_dir>
-brand-skill plan-source-engine-eval <project_dir> --max-pages 5
-brand-skill scaffold-source-engine-eval-results <project_dir>
-brand-skill build-source-facts <project_dir>
-brand-skill compile-outputs <project_dir>
-brand-skill scaffold-output <project_dir>
-brand-skill build-prompt-pack <project_dir>
-brand-skill build-review-pack <project_dir>
-brand-skill apply-library-update <project_dir> --library-dir <brand_context_library_dir>
-brand-skill build-library-report <brand_context_library_dir>
-brand-skill build-value-benchmark <project_dir> --library-dir <brand_context_library_dir>
-```
+2. 准备可追溯的确定性证据：
 
-私有知识库导入只在用户明确授权时使用，默认写入 `_private_test_runs/`：
+   ```bash
+   brand-skill prepare-wiki <project_dir>
+   ```
 
-```bash
-brand-skill import-ima-media _private_test_runs/<run_name> --media-id <ima_media_id> --title <file_name>
-```
+3. 让 Codex、WorkBuddy 或其他活动 Agent 阅读每份 prepared transcript 和 evidence file，按 [SKILL.md](SKILL.md) 使用仓库内的 `prompts/10_compile_agent_neutral_wiki.md` 与 `schemas/agent_neutral_wiki.schema.md` 写入 `wiki/`；WorkBuddy ZIP 中这两个文件位于 `references/`。
+4. 生成给使用者查看的 Wiki 报告：
 
-## 最小使用路径
+   ```bash
+   brand-skill build-wiki-report <project_dir>
+   ```
 
-推荐先用一条命令跑完整第一阶段闭环：
+5. 检查 Wiki 的文件结构、覆盖率、来源锚点和未解决占位项：
 
-```bash
-brand-skill run-phase1 <project_dir> --library-dir <brand_context_library_dir>
-```
+   ```bash
+   brand-skill verify-wiki <project_dir>
+   ```
 
-它会依次执行 source conversion、source facts、质量报告、版本报告、00-11 结构化输出、异常确认页、长期库更新、知识库报告页、value benchmark 和 contract verification。
+WorkBuddy 没有 CLI 时，应使用同一 Skill 中的本地读文件能力完成第 3 步，并把每个未读文件或页面如实记录在 `wiki/uncertainties.md`。实际 WorkBuddy 导入和调用的待办证据见 [docs/workbuddy_validation_checklist.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/workbuddy_validation_checklist.md)。
 
-如果需要分步调试，可按下面的顺序拆开运行：
+## Legacy Compatibility
 
-```text
-1. 把 PDF / PPTX / Markdown / TXT / DOCX 源稿放入 source/；PPT 旧格式 / 长图可先转成 PDF 或后续接入高保真转换器
-2. 运行 source conversion，生成带页码和低置信度标记的 Markdown
-3. 运行 build-source-quality-report，生成识别质量报告，定位需要 OCR / MinerU / MarkItDown / 人工复核的页面
-4. 运行 build-source-version-report，生成版本线索报告，定位同主题多版本资料
-5. 可选运行 check-source-engines 和 plan-source-engine-eval，评估 pymupdf4llm / MarkItDown / MinerU 的小样对比条件
-6. 运行 build-source-facts，生成只基于来源原文的事实候选层
-7. 运行 compile-outputs，先生成 00-11 结构化输出底稿
-8. 如需更高质量表达，再用 Prompt Bundle 或模型在底稿基础上精修
-9. 查看 review/brand_review.html，只处理识别异常
-10. 运行 apply-library-update，把可沉淀内容写入 brand_context_library/
-11. 运行 build-library-report，生成一页中文知识库概览
-12. 运行 build-value-benchmark，生成“直接读 PDF/PPT vs Skill 链路”的对比评估表和质量抽样日志
-13. 运行 verify-contract --write-report，检查当前产物是否满足项目执行准则里的核心证据，并留下本地验证报告
-14. 后续写 GEO / PDP / 种草 / 销售 / 复盘 brief 时，从长期库调用上下文
-```
-
-把 Structured Wiki 交给 Work Buddy 或其他 Agent 使用时，可直接参考 [docs/work_buddy_handoff_guide.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/work_buddy_handoff_guide.md)。里面提供了可复制的任务提示词和不同任务的读取顺序，避免后续 Agent 重新临时总结原始 PDF / PPT。
+`brand-skill run-phase1` 保留为旧项目兼容路径，不是新项目的推荐流程。它的历史命令与 00-11 输出契约仍可供既有项目继续使用；新 Wiki 工作流不展开这套旧命令矩阵。
 
 当前阶段的收敛与验收文档：
 
@@ -207,7 +174,7 @@ brand-skill demo-contract examples/anonymous_marketing_campaign --library-dir /t
 
 如果需要在本机扫描私有测试关键词，可临时设置 `BRAND_SKILL_PRIVACY_TERMS_REGEX` 后再运行 `verify-contract`。不要把真实关键词写入仓库文件。
 
-产品资料可选校验只在产品 claim 场景启用，不属于默认 `run-phase1` 路径：
+产品资料可选校验只在产品 claim 场景启用，不属于推荐的 Wiki 流程：
 
 ```bash
 brand-skill check-brand-lock <project_dir>
