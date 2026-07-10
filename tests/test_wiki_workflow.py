@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from brand_skill.cli import main as cli_main
+from brand_skill.wiki_report import build_wiki_report
 from brand_skill.wiki_verifier import verify_wiki
 from brand_skill.wiki_workflow import prepare_wiki_sources
 
@@ -447,3 +448,43 @@ def test_verify_wiki_cli_dispatches_project_dir(tmp_path: Path) -> None:
         with patch.object(sys, "argv", ["brand-skill", "verify-wiki", str(tmp_path)]):
             cli_main()
     verify.assert_called_once_with(tmp_path)
+
+
+def test_report_shows_only_user_facing_content(tmp_path: Path) -> None:
+    write_valid_wiki(tmp_path, source_ids=["S001"])
+
+    report = build_wiki_report(tmp_path)
+
+    html = report.read_text(encoding="utf-8")
+    assert "资料批次概览" in html
+    assert "知识页" in html
+    assert "需要处理的问题" in html
+    assert "Fact ID" not in html
+    assert "Review Priority" not in html
+    assert "source_engine_eval" not in html
+
+
+def test_report_escapes_wiki_markdown_and_loads_no_remote_resources(tmp_path: Path) -> None:
+    write_valid_wiki(tmp_path, source_ids=["S001"])
+    document = tmp_path / "wiki" / "documents" / "S001.md"
+    document.write_text("# 知识页 <script>alert(1)</script>\n", encoding="utf-8")
+    (tmp_path / "wiki" / "uncertainties.md").write_text(
+        "# 异常与不确定项\n\n- <script>alert(2)</script>\n",
+        encoding="utf-8",
+    )
+
+    report = build_wiki_report(tmp_path)
+
+    html = report.read_text(encoding="utf-8")
+    assert "<script>alert" not in html
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
+    assert "&lt;script&gt;alert(2)&lt;/script&gt;" in html
+    assert "<link " not in html
+    assert " src=" not in html
+
+
+def test_build_wiki_report_cli_dispatches_project_dir(tmp_path: Path) -> None:
+    with patch("brand_skill.cli.build_wiki_report") as build_report:
+        with patch.object(sys, "argv", ["brand-skill", "build-wiki-report", str(tmp_path)]):
+            cli_main()
+    build_report.assert_called_once_with(tmp_path)

@@ -24,6 +24,7 @@ from .source_quality import build_source_quality_report
 from .source_versions import build_source_version_report
 from .value_benchmark import build_value_benchmark
 from .wiki_verifier import verify_wiki
+from .wiki_report import build_wiki_report
 from .wiki_workflow import prepare_wiki_sources
 from .workflow import init_project, scaffold_output, validate_input, build_prompt_pack
 from .validators import check_brand_lock_sheet_draft, check_claim_matrix
@@ -77,6 +78,9 @@ def main() -> None:
 
     p_verify_wiki = sub.add_parser("verify-wiki")
     p_verify_wiki.add_argument("project_dir")
+
+    p_build_wiki_report = sub.add_parser("build-wiki-report")
+    p_build_wiki_report.add_argument("project_dir")
 
     p_check_source_engines = sub.add_parser("check-source-engines")
     p_check_source_engines.add_argument("project_dir")
@@ -165,6 +169,8 @@ def main() -> None:
         prepare_wiki_sources(project_dir, engine=args.engine)
     elif args.command == "verify-wiki":
         verify_wiki(project_dir)
+    elif args.command == "build-wiki-report":
+        build_wiki_report(project_dir)
     elif args.command == "check-source-engines":
         check_source_engines(project_dir)
     elif args.command == "plan-source-engine-eval":
