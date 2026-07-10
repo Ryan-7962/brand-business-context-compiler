@@ -21,6 +21,10 @@ def build_workbuddy_package(repo_root: Path, output_dir: Path) -> Path:
         "schemas/agent_neutral_wiki.schema.md",
         "references/agent_neutral_wiki.schema.md",
     )
+    packaged_prompt = (repo_root / PROMPT_PATH).read_text(encoding="utf-8").replace(
+        "schemas/agent_neutral_wiki.schema.md",
+        "references/agent_neutral_wiki.schema.md",
+    )
 
     archive = output_dir / ARCHIVE_FILENAME
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -32,7 +36,7 @@ def build_workbuddy_package(repo_root: Path, output_dir: Path) -> Path:
         )
         package.writestr(
             f"{PACKAGE_DIRECTORY}/references/compile_agent_neutral_wiki.md",
-            (repo_root / PROMPT_PATH).read_bytes(),
+            packaged_prompt,
         )
     return archive
 

@@ -129,7 +129,7 @@ GEO / PDP / 拍摄 / 种草 / 销售 / 客服 / 复盘 / 竞品分析等派生�
    brand-skill verify-wiki <project_dir>
    ```
 
-WorkBuddy 没有 CLI 时，应使用同一 Skill 中的本地读文件能力完成第 3 步，并把每个未读文件或页面如实记录在 `wiki/uncertainties.md`。实际 WorkBuddy 导入和调用的待办证据见 [docs/workbuddy_validation_checklist.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/workbuddy_validation_checklist.md)。
+WorkBuddy 没有 CLI 时，应使用同一 Skill 中的本地读文件能力完成第 3 步，并把每个未读文件或页面如实记录在 `wiki/uncertainties.md`。实际 WorkBuddy 导入和调用的待办证据见 [docs/workbuddy_validation_checklist.md](docs/workbuddy_validation_checklist.md)。
 
 ## Legacy Compatibility
 
