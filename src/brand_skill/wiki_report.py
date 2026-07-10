@@ -7,6 +7,16 @@ import re
 from pathlib import Path
 
 
+BACKEND_MARKERS = (
+    "fact id",
+    "asset id",
+    "review priority",
+    "source_engine_eval",
+    "contract status",
+    "validation template",
+)
+
+
 def build_wiki_report(project_dir: Path) -> Path:
     """Write the user-facing wiki report and return its path."""
     wiki_dir = project_dir / "wiki"
@@ -63,11 +73,29 @@ def _markdown_table_rows(markdown: str) -> list[list[str]]:
         stripped = line.strip()
         if not stripped.startswith("|") or not stripped.endswith("|"):
             continue
-        row = [cell.strip() for cell in stripped.strip("|").split("|")]
+        row = [cell.strip() for cell in _split_markdown_row(stripped)]
         if row and all(set(cell) <= {"-", ":"} for cell in row):
             continue
         rows.append(row)
     return rows
+
+
+def _split_markdown_row(line: str) -> list[str]:
+    content = line[1:-1]
+    cells = [""]
+    index = 0
+    while index < len(content):
+        character = content[index]
+        if character == "\\" and index + 1 < len(content) and content[index + 1] == "|":
+            cells[-1] += "|"
+            index += 2
+        elif character == "|":
+            cells.append("")
+            index += 1
+        else:
+            cells[-1] += character
+            index += 1
+    return cells
 
 
 def _render_knowledge_pages(documents_dir: Path) -> str:
@@ -81,7 +109,7 @@ def _render_knowledge_pages(documents_dir: Path) -> str:
 def _render_markdown(markdown: str, *, skip_first_heading: bool = False) -> str:
     rendered = []
     first_heading_skipped = False
-    for line in markdown.splitlines():
+    for line in _remove_backend_content(markdown).splitlines():
         if not line.strip():
             continue
         escaped = html.escape(line.strip())
@@ -97,6 +125,35 @@ def _render_markdown(markdown: str, *, skip_first_heading: bool = False) -> str:
         else:
             rendered.append(f"<p>{escaped}</p>")
     return "".join(rendered)
+
+
+def _remove_backend_content(markdown: str) -> str:
+    lines = markdown.splitlines()
+    visible_lines = []
+    index = 0
+    while index < len(lines):
+        if _is_markdown_table_line(lines[index]):
+            table = []
+            while index < len(lines) and _is_markdown_table_line(lines[index]):
+                table.append(lines[index])
+                index += 1
+            if not any(_contains_backend_marker(line) for line in table):
+                visible_lines.extend(table)
+            continue
+        if not _contains_backend_marker(lines[index]):
+            visible_lines.append(lines[index])
+        index += 1
+    return "\n".join(visible_lines)
+
+
+def _is_markdown_table_line(line: str) -> bool:
+    stripped = line.strip()
+    return stripped.startswith("|") and stripped.endswith("|")
+
+
+def _contains_backend_marker(line: str) -> bool:
+    normalized = line.casefold()
+    return any(marker in normalized for marker in BACKEND_MARKERS)
 
 
 def _render_report(batch_overview: str, knowledge_pages: str, uncertainties: str) -> str:

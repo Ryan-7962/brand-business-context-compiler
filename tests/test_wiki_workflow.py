@@ -483,6 +483,58 @@ def test_report_escapes_wiki_markdown_and_loads_no_remote_resources(tmp_path: Pa
     assert " src=" not in html
 
 
+def test_report_omits_backend_tables_and_marked_lines_from_knowledge_pages(tmp_path: Path) -> None:
+    write_valid_wiki(tmp_path, source_ids=["S001"])
+    document = tmp_path / "wiki" / "documents" / "S001.md"
+    document.write_text(
+        "# S001 知识页\n\n"
+        "## 核心观点\n\n面向用户的内容。\n\n"
+        "| Fact ID | Asset ID | Review Priority |\n"
+        "|---|---|---|\n"
+        "| FACT-001 | ASSET-001 | P0-secret-row |\n\n"
+        "source_engine_eval: internal-engine-value\n"
+        "contract status: internal-contract-value\n"
+        "validation template: internal-template-value\n",
+        encoding="utf-8",
+    )
+
+    html = build_wiki_report(tmp_path).read_text(encoding="utf-8")
+
+    assert "面向用户的内容。" in html
+    for hidden_content in (
+        "Fact ID",
+        "Asset ID",
+        "Review Priority",
+        "FACT-001",
+        "ASSET-001",
+        "P0-secret-row",
+        "source_engine_eval",
+        "internal-engine-value",
+        "contract status",
+        "internal-contract-value",
+        "validation template",
+        "internal-template-value",
+    ):
+        assert hidden_content not in html
+
+
+def test_report_preserves_index_row_with_escaped_pipe_in_summary(tmp_path: Path) -> None:
+    write_valid_wiki(tmp_path, source_ids=["S001"])
+    index = tmp_path / "wiki" / "00_index.md"
+    index.write_text(
+        index.read_text(encoding="utf-8").replace(
+            "| S001 | s001_source.md | 摘要 |",
+            r"| S001 | s001_source.md | 摘要 \| 延伸 |",
+        ),
+        encoding="utf-8",
+    )
+
+    html = build_wiki_report(tmp_path).read_text(encoding="utf-8")
+
+    assert "s001_source.md" in html
+    assert "摘要 | 延伸" in html
+
+
 def test_build_wiki_report_cli_dispatches_project_dir(tmp_path: Path) -> None:
     with patch("brand_skill.cli.build_wiki_report") as build_report:
         with patch.object(sys, "argv", ["brand-skill", "build-wiki-report", str(tmp_path)]):
