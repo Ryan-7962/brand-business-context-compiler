@@ -14,6 +14,12 @@ BACKEND_MARKERS = (
     "source_engine_eval",
     "contract status",
     "validation template",
+    "source anchor",
+    "来源锚点",
+    "risk level",
+    "风险等级",
+    "review id",
+    "context asset index review",
 )
 
 

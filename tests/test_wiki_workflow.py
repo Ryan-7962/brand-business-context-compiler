@@ -518,6 +518,41 @@ def test_report_omits_backend_tables_and_marked_lines_from_knowledge_pages(tmp_p
         assert hidden_content not in html
 
 
+def test_report_omits_traceability_review_tables_but_keeps_canonical_source_citations(tmp_path: Path) -> None:
+    write_valid_wiki(tmp_path, source_ids=["S001"])
+    document = tmp_path / "wiki" / "documents" / "S001.md"
+    document.write_text(
+        "# S001 知识页\n\n"
+        "## 关键事实\n\n普通正文 [来源: S001#page=1]\n\n"
+        "| 风险等级 | Review ID | Source Anchor |\n"
+        "|---|---|---|\n"
+        "| high-secret | REVIEW-SECRET | S001#page=999 |\n\n"
+        "来源锚点: hidden-source-anchor\n"
+        "Risk Level: hidden-risk-level\n"
+        "Context Asset Index Review: hidden-index-review\n",
+        encoding="utf-8",
+    )
+
+    html = build_wiki_report(tmp_path).read_text(encoding="utf-8")
+
+    assert "普通正文 [来源: S001#page=1]" in html
+    for hidden_content in (
+        "风险等级",
+        "Review ID",
+        "Source Anchor",
+        "high-secret",
+        "REVIEW-SECRET",
+        "S001#page=999",
+        "来源锚点",
+        "hidden-source-anchor",
+        "Risk Level",
+        "hidden-risk-level",
+        "Context Asset Index Review",
+        "hidden-index-review",
+    ):
+        assert hidden_content not in html
+
+
 def test_report_preserves_index_row_with_escaped_pipe_in_summary(tmp_path: Path) -> None:
     write_valid_wiki(tmp_path, source_ids=["S001"])
     index = tmp_path / "wiki" / "00_index.md"
