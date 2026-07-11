@@ -18,7 +18,7 @@ def build_source_version_report(project_dir: Path) -> Path:
         print("No source rows found in converted_markdown/conversion_report.md.")
         raise SystemExit(1)
 
-    groups = _likely_version_groups(rows)
+    groups = _likely_version_groups(rows, project_dir)
     report_path = converted_dir / "source_version_report.md"
     report_path.write_text(_render_report(rows, groups), encoding="utf-8")
     print(f"Source version report created: {report_path}")
@@ -71,12 +71,57 @@ def _is_separator(cells: list[str]) -> bool:
     return bool(cells) and all(set(cell.replace(" ", "")) <= {"-", ":"} for cell in cells)
 
 
-def _likely_version_groups(rows: list[dict[str, str]]) -> dict[str, list[dict[str, str]]]:
+def _likely_version_groups(
+    rows: list[dict[str, str]], project_dir: Path | None = None
+) -> dict[str, list[dict[str, str]]]:
     grouped: dict[str, list[dict[str, str]]] = {}
     for row in rows:
         key = _normalize_version_key(row["file_name"])
         grouped.setdefault(key, []).append(row)
-    return {key: value for key, value in grouped.items() if len(value) > 1}
+    return {
+        key: value
+        for key, value in grouped.items()
+        if len(value) > 1 and _has_content_overlap(value, project_dir)
+    }
+
+
+def _has_content_overlap(rows: list[dict[str, str]], project_dir: Path | None) -> bool:
+    if project_dir is None:
+        return True
+    texts = [text for row in rows if (text := _transcript_text(row, project_dir))]
+    if len(texts) < 2:
+        return True
+    for index, left in enumerate(texts):
+        for right in texts[index + 1 :]:
+            left_grams = _character_ngrams(left)
+            right_grams = _character_ngrams(right)
+            shared = len(left_grams & right_grams)
+            if shared / len(left_grams | right_grams) >= 0.15:
+                return True
+            if shared / min(len(left_grams), len(right_grams)) >= 0.25:
+                return True
+    return False
+
+
+def _transcript_text(row: dict[str, str], project_dir: Path) -> str:
+    declared = Path(row["transcript"])
+    candidates = [project_dir / declared, project_dir / "converted_markdown" / declared]
+    transcript = next((path for path in candidates if path.is_file()), None)
+    if transcript is None:
+        return ""
+    markdown = transcript.read_text(encoding="utf-8")
+    sections = re.findall(
+        r"^### Text\s*$\n(.*?)(?=^### |^## Page|\Z)",
+        markdown,
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    text = "".join(sections) if sections else markdown
+    text = re.sub(r"!\[[^]]*\]\([^)]*\)", "", text)
+    return re.sub(r"\s+", "", text)
+
+
+def _character_ngrams(text: str, size: int = 3) -> set[str]:
+    return {text[index : index + size] for index in range(max(0, len(text) - size + 1))} or {text}
 
 
 def _normalize_version_key(file_name: str) -> str:

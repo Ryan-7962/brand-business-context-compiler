@@ -1510,7 +1510,6 @@ class Phase1WorkflowTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-
             with redirect_stdout(StringIO()):
                 build_source_version_report(project_dir)
 
@@ -1541,7 +1540,6 @@ class Phase1WorkflowTests(unittest.TestCase):
                 "\n".join(["# Source Conversion Report", "", "## Source Files", "", headers, separator, *rows]) + "\n",
                 encoding="utf-8",
             )
-
             with redirect_stdout(StringIO()):
                 build_source_version_report(project_dir)
 
@@ -1646,6 +1644,16 @@ class Phase1WorkflowTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
+            transcripts = converted / "source_transcripts"
+            transcripts.mkdir()
+            (transcripts / "S001.md").write_text(
+                "## Page 1\n### Text\n共同会议主题、渠道进度和新品计划。工作版补充讨论问题。\n",
+                encoding="utf-8",
+            )
+            (transcripts / "S002.md").write_text(
+                "## Page 1\n### Text\n共同会议主题、渠道进度和新品计划。Final 补充确认结论。\n",
+                encoding="utf-8",
+            )
 
             with redirect_stdout(StringIO()):
                 build_source_version_report(project_dir)
@@ -1653,6 +1661,38 @@ class Phase1WorkflowTests(unittest.TestCase):
             report_text = (converted / "source_version_report.md").read_text(encoding="utf-8")
             self.assertIn("疑似多版本组数：1", report_text)
             self.assertIn("S002 / Final_六神品牌生意会_整合版_4月8日.pdf", report_text)
+
+    def test_build_source_version_report_rejects_same_name_with_different_scope(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            transcripts = converted / "source_transcripts"
+            transcripts.mkdir(parents=True)
+            (converted / "conversion_report.md").write_text(
+                "\n".join(
+                    [
+                        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 外部来源 |",
+                        "|---|---|---|---|---|---|",
+                        "| S001 | Draft_六神生意进度会_4月8日.pdf | 2026-04-07 | 2026-04-07 | converted_markdown/source_transcripts/S001.md | 本地 source/ |",
+                        "| S002 | Final_六神品牌生意会_整合版_4月8日.pdf | 2026-04-08 | 2026-04-08 | converted_markdown/source_transcripts/S002.md | 本地 source/ |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (transcripts / "S001.md").write_text(
+                "## Page 1\n### Text\n财务收入、渠道库存、经销商进展和费用规划。\n",
+                encoding="utf-8",
+            )
+            (transcripts / "S002.md").write_text(
+                "## Page 1\n### Text\n品牌心智、代言人传播、花露水产品创意和媒介节奏。\n",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_source_version_report(project_dir)
+
+            report_text = (converted / "source_version_report.md").read_text(encoding="utf-8")
+            self.assertIn("疑似多版本组数：0", report_text)
 
     def test_build_source_version_report_does_not_group_different_topics_on_same_date(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
