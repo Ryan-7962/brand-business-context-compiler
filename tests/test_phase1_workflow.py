@@ -1510,6 +1510,30 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("来源文件数：2", report_text)
             self.assertIn("疑似多版本组数：0", report_text)
 
+    def test_build_source_version_report_deduplication_key_includes_source_id(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir(parents=True)
+            headers = "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写时间 | 转写 Markdown | 转写引擎 | 提取方式 | OCR 是否启用 | 页码/Slide 范围 | 表格还原质量 | 图片/图表保留 | Notes/角标/脚注 | 低置信度区域 | 待人工复核 | 外部来源 |"
+            separator = "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"
+            rows = [
+                "| S001 | shared.pdf | 2026-01-01 | 2026-01-02 | 2026-01-02 | source_transcripts/shared.md | pymupdf4llm | PDF | 否 | 1 | 中 | 是 | 待复核 | 无 | 否 | 本地 source/ |",
+                "| S001 | shared.pdf | 2026-01-01 | 2026-01-02 | 2026-01-02 | source_transcripts/shared.md | pymupdf4llm | PDF | 否 | 1 | 中 | 是 | 待复核 | 无 | 否 | 本地 source/ |",
+                "| S002 | shared.pdf | 2026-01-01 | 2026-01-02 | 2026-01-02 | source_transcripts/shared.md | pymupdf4llm | PDF | 否 | 1 | 中 | 是 | 待复核 | 无 | 否 | 本地 source/ |",
+                "| S002 | shared.pdf | 2026-01-01 | 2026-01-02 | 2026-01-02 | source_transcripts/shared.md | pymupdf4llm | PDF | 否 | 1 | 中 | 是 | 待复核 | 无 | 否 | 本地 source/ |",
+            ]
+            (converted / "conversion_report.md").write_text(
+                "\n".join(["# Source Conversion Report", "", "## Source Files", "", headers, separator, *rows]) + "\n",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_source_version_report(project_dir)
+
+            report_text = (converted / "source_version_report.md").read_text(encoding="utf-8")
+            self.assertIn("来源文件数：2", report_text)
+
     def test_build_source_version_report_renders_one_row_per_source_in_version_group(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir)
