@@ -72,4 +72,4 @@ When there are no exceptions, the body is exactly:
 未发现需要人工处理的读取异常。
 ```
 
-Every real anchor in `source_quality_report.md` under `需要复核的页面` must be listed here. For a multi-page MarkItDown source with fewer transcript anchors than physical pages, include the Source ID and the exact limitation `MarkItDown 未保留稳定页码/页边界`. Do not claim that there are no reading exceptions when review anchors or this boundary limitation exists. Do not use this file as a generic task list or a restatement of the Wiki.
+Rows in `source_quality_report.md` under `需要复核的页面` are Agent inspection candidates, not automatic human exceptions. Inspect the matching transcript and available screenshot, and list only items that remain unread or uncertain. For a multi-page MarkItDown source with fewer transcript anchors than physical pages, include the Source ID and the exact limitation `MarkItDown 未保留稳定页码/页边界`. Do not claim that there are no reading exceptions when this boundary limitation exists. Do not use this file as a generic task list or a restatement of the Wiki.

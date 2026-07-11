@@ -27,7 +27,6 @@ INDEX_COLUMNS = (
 )
 CONVERSION_COLUMNS = ("来源编号", "原始文件", "转写 Markdown", "转写引擎", "页码/Slide 范围")
 UNRESOLVED_PLACEHOLDERS = ("待补充", "待填写", "TODO", "TBD", "{{", "}}")
-NO_UNCERTAINTIES_TEXT = "未发现需要人工处理的读取异常。"
 MARKITDOWN_BOUNDARY_LIMIT = "MarkItDown 未保留稳定页码/页边界"
 
 
@@ -293,17 +292,9 @@ def _collect_uncertainties_issues(
 
     review_anchors = _review_anchors_from_quality_report(project_dir, issues)
     known_anchors = set().union(*transcript_anchors.values()) if transcript_anchors else set()
-    real_review_anchors = []
     for anchor in review_anchors:
         if anchor not in known_anchors:
             issues.append(f"source_quality_report.md review anchor is not present in a transcript: {anchor}.")
-        else:
-            real_review_anchors.append(anchor)
-    if real_review_anchors and NO_UNCERTAINTIES_TEXT in markdown:
-        issues.append("uncertainties.md cannot claim no reading exceptions when review anchors exist.")
-    for anchor in real_review_anchors:
-        if anchor not in markdown:
-            issues.append(f"uncertainties.md must list review anchor {anchor}.")
     lines = markdown.splitlines()
     for source_id in sorted(markitdown_boundary_sources):
         if not any(source_id in line and MARKITDOWN_BOUNDARY_LIMIT in line for line in lines):

@@ -1446,9 +1446,48 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("## 全部页面读取状态", report_text)
             self.assertIn("| S001#page=1 | sample.pdf | 120 | 0 | 0 | 0 | 可进入后续编译 | 无明显低置信度。 |", report_text)
             self.assertIn("| S001#page=2 | sample.pdf | 8 | 3 | 2 | 0 | 需要复核 | 可抽取文字较少；含图片/视觉信息 |", report_text)
-            self.assertIn("| S001#page=2 | sample.pdf | 8 | 3 | 2 | 0 | 可抽取文字较少；含图片/视觉信息 | OCR / MinerU / 人工复核 |", report_text)
-            self.assertIn("| S001#page=3 | sample.pdf | 120 | 0 | 0 | 1 | 无明显低置信度。 | MinerU / MarkItDown / 人工复核 |", report_text)
-            self.assertIn("优先处理含图片、低文字量、表格、小字或 OCR 不确定页面", report_text)
+            self.assertIn("| S001#page=2 | sample.pdf | 8 | 3 | 2 | 0 | 可抽取文字较少；含图片/视觉信息 | Agent 查看截图；必要时用 OCR / MinerU；仍不清楚再询问使用者 |", report_text)
+            self.assertIn("| S001#page=3 | sample.pdf | 120 | 0 | 0 | 1 | 无明显低置信度。 | Agent 对照页面；必要时换 MinerU / MarkItDown；仍不清楚再询问使用者 |", report_text)
+            self.assertIn("Agent 内部重点检查候选，不自动等于人工异常", report_text)
+
+    def test_source_quality_ignores_generated_metadata_tables_outside_text_section(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            transcripts_dir = project_dir / "converted_markdown" / "source_transcripts"
+            transcripts_dir.mkdir(parents=True)
+            (transcripts_dir / "S001_source.md").write_text(
+                "\n".join(
+                    [
+                        "# Source Transcript｜sample.pdf",
+                        "",
+                        "## Page 1",
+                        "- Source Anchor：S001#page=1",
+                        "- Extracted text chars：120",
+                        "- Embedded images detected：0",
+                        "- Vector drawings detected：0",
+                        "",
+                        "### Text",
+                        "这是足够长且可正常读取的正文内容。",
+                        "",
+                        "### Images / Charts",
+                        "| 图片 | 位置 |",
+                        "|---|---|",
+                        "| image_01.png | 页面内 |",
+                        "",
+                        "### Low Confidence / Need Review",
+                        "- 无明显低置信度。",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_source_quality_report(project_dir)
+
+            report_text = (
+                project_dir / "converted_markdown" / "source_quality_report.md"
+            ).read_text(encoding="utf-8")
+            self.assertIn("| S001#page=1 | sample.pdf | 120 | 0 | 0 | 0 |", report_text)
 
     def test_build_source_version_report_groups_likely_versions_by_modified_time(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

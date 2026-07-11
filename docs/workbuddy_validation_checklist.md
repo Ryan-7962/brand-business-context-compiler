@@ -2,18 +2,18 @@
 
 ## 当前状态
 
-**尚未验证。** 本清单记录需要在公司电脑的 WorkBuddy 界面完成的真实导入和运行证据。ZIP 的本地构建与自动隐私检查不能证明 WorkBuddy 已导入、已触发或已完成语义编译。
+**部分验证。** 2026-07-11 已在 macOS WorkBuddy 5.2.5 使用官方 CLI API 完成认证连通测试，并从临时项目的 `.codebuddy/skills/` 加载 ZIP：`brand-business-context-compiler` 被正确发现，且返回了 Skill 中定义的完整核心流程。尚未完成真实来源文件的 Wiki 编译、重复办公任务验证，以及公司电脑环境验证。
 
 ## 准备
 
-- [ ] 使用 `python scripts/build_workbuddy_package.py` 构建 `dist/brand-business-context-compiler-workbuddy.zip`。
-- [ ] 确认 ZIP 仅含 `SKILL.md`、Wiki schema 和 Wiki 编译 prompt 三个公开文件。
+- [x] 使用 `python scripts/build_workbuddy_package.py` 构建 `dist/brand-business-context-compiler-workbuddy.zip`。
+- [x] 确认 ZIP 仅含 `SKILL.md`、Wiki schema 和 Wiki 编译 prompt 三个公开文件。
 - [ ] 准备一个已获授权、可在公司电脑上处理的来源文件夹；不要把私有资料复制进仓库、ZIP 或本清单。
 
 ## WorkBuddy 导入与触发
 
 - [ ] 在 WorkBuddy 导入 ZIP，并记录导入日期、操作者和可复现的界面证据位置。
-- [ ] 确认 `brand-business-context-compiler` 出现在可用 Skill 列表中。
+- [x] 在本机 CLI 临时项目中确认 `brand-business-context-compiler` 可被发现并执行；公司电脑界面仍待验证。
 - [ ] 对准备好的来源文件夹发起一次任务，确认 WorkBuddy 触发该 Skill；记录任务入口和触发结果。
 
 ## 必须保留的 Wiki 产物
@@ -31,4 +31,4 @@
 
 ## 完成记录
 
-完成后在本节填写：导入证据位置、触发任务链接或截图位置、来源批次标识、三类 Wiki 产物路径、未读内容记录、办公任务结果，以及仍存在的限制。没有这些证据前，保持本清单的“尚未验证”状态。
+完成后在本节填写：公司电脑导入证据位置、触发任务链接或截图位置、来源批次标识、三类 Wiki 产物路径、未读内容记录、办公任务结果，以及仍存在的限制。在这些证据齐全前，保持本清单的“部分验证”状态。

@@ -96,10 +96,10 @@ Use `_private_test_runs/` for real brand samples. Public examples must stay anon
 
 ## Human Review Rule
 
-The user should review only:
+After the Agent has inspected the transcript and available page/slide screenshots, the user should review only unresolved items:
 
 - Which files were read, their page / slide coverage, and whether the outline is obviously wrong.
-- Low-confidence OCR, image, chart, small-print, table, or page-boundary areas.
+- OCR, image, chart, small-print, table, or page-boundary areas that remain unclear after Agent inspection.
 - Missing business information such as budget, timing, channel list, owner, evidence source, or conflicting versions.
 - Key facts that would become risky if reused downstream.
 

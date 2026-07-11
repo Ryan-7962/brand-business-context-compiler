@@ -424,16 +424,17 @@ def test_verify_wiki_rejects_index_with_missing_or_wrong_column(
     assert "must use exactly the required seven columns" in capsys.readouterr().out
 
 
-def test_verify_wiki_requires_uncertainties_to_list_real_review_anchors(
+def test_verify_wiki_allows_agent_review_candidates_to_be_resolved_without_human_escalation(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     create_conversion_report(tmp_path, source_ids=["S001"])
     write_valid_wiki(tmp_path, source_ids=["S001"])
     write_source_quality_report(tmp_path, review_anchors=["S001#page=1"])
-    with pytest.raises(SystemExit):
-        verify_wiki(tmp_path)
-    assert "uncertainties.md must list review anchor S001#page=1" in capsys.readouterr().out
+
+    verify_wiki(tmp_path)
+
+    assert "Wiki verification passed." in capsys.readouterr().out
 
 
 def test_verify_wiki_accepts_a_complete_traceable_wiki(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

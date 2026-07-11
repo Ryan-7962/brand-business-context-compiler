@@ -42,7 +42,7 @@ def _parse_transcript(path: Path) -> list[dict[str, str | int]]:
                 "text_chars": _metadata_int(block, "Extracted text chars"),
                 "image_count": _metadata_int(block, "Embedded images detected"),
                 "drawing_count": _metadata_int(block, "Vector drawings detected"),
-                "table_count": _markdown_table_count(block),
+                "table_count": _markdown_table_count(_extract_subsection(block, "Text")),
                 "low_confidence": _low_confidence(block),
             }
         )
@@ -141,12 +141,12 @@ def _normalize_low_confidence(text: str) -> str:
 def _recommended_action(row: dict[str, str | int]) -> str:
     reasons = str(row["low_confidence"])
     if int(row["table_count"]) > 0 or "表格" in reasons:
-        return "MinerU / MarkItDown / 人工复核"
+        return "Agent 对照页面；必要时换 MinerU / MarkItDown；仍不清楚再询问使用者"
     if int(row["image_count"]) > 0 or int(row["text_chars"]) < 20 or "图片" in reasons or "视觉" in reasons:
-        return "OCR / MinerU / 人工复核"
+        return "Agent 查看截图；必要时用 OCR / MinerU；仍不清楚再询问使用者"
     if "PowerPoint 轻量转写" in reasons:
-        return "MinerU / 原 PPT 人工复核"
-    return "人工复核"
+        return "Agent 对照原 PPT；必要时换引擎；仍不清楚再询问使用者"
+    return "Agent 对照来源检查；仍不清楚再询问使用者"
 
 
 def _render_report(page_rows: list[dict[str, str | int]], review_rows: list[dict[str, str | int]]) -> str:
@@ -157,7 +157,7 @@ def _render_report(page_rows: list[dict[str, str | int]], review_rows: list[dict
         "",
         f"- 总页数：{len(page_rows)}",
         f"- 需要复核页数：{len(review_rows)}",
-        "- 复核原则：优先处理含图片、低文字量、表格、小字或 OCR 不确定页面；关键品牌口径和关键数字必须回到原始页面确认。",
+        "- 复核原则：含图片、低文字量、表格、小字或 OCR 不确定的页面是 Agent 内部重点检查候选，不自动等于人工异常；只有 Agent 检查后仍无法判断的内容才升级给使用者。",
         "",
         "## 全部页面读取状态",
         "",
