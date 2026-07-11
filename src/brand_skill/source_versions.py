@@ -88,6 +88,8 @@ def _normalize_version_key(file_name: str) -> str:
     stem = re.sub(r"(?:^|_)(?:\d{4}|\d{6}|\d{8})(?=_|$)", "_", stem)
     stem = re.sub(r"(?i)(?:^|_)(?:copy|副本|备份|最新版|更新版)(?:_\d+)?(?=_|$)", "_", stem)
     stem = re.sub(r"(?i)(?:^|_)[a-f0-9]{8,}(?=_|$)", "_", stem)
+    stem = stem.replace("生意进度会", "生意会")
+    stem = re.sub(r"(?:品牌|整合版|汇总版)", "", stem)
     stem = re.sub(r"_{2,}", "_", stem).strip("_")
     return stem or Path(file_name).stem.lower()
 

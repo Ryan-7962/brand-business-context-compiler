@@ -1630,6 +1630,53 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("S002 / category plan final 0801 copy.pdf / 2026-08-01T18:00:00+08:00", report_text)
             self.assertIn("category_plan_final0729_a1b2c3d4.pdf", report_text)
 
+    def test_build_source_version_report_groups_real_meeting_draft_and_integrated_final(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir(parents=True)
+            (converted / "conversion_report.md").write_text(
+                "\n".join(
+                    [
+                        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 外部来源 |",
+                        "|---|---|---|---|---|---|",
+                        "| S001 | Draft_六神生意进度会_4月8日.pdf | 2026-04-07 | 2026-04-07 | converted_markdown/source_transcripts/S001.md | 本地 source/ |",
+                        "| S002 | Final_六神品牌生意会_整合版_4月8日.pdf | 2026-04-08 | 2026-04-08 | converted_markdown/source_transcripts/S002.md | 本地 source/ |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_source_version_report(project_dir)
+
+            report_text = (converted / "source_version_report.md").read_text(encoding="utf-8")
+            self.assertIn("疑似多版本组数：1", report_text)
+            self.assertIn("S002 / Final_六神品牌生意会_整合版_4月8日.pdf", report_text)
+
+    def test_build_source_version_report_does_not_group_different_topics_on_same_date(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_dir = Path(temp_dir)
+            converted = project_dir / "converted_markdown"
+            converted.mkdir(parents=True)
+            (converted / "conversion_report.md").write_text(
+                "\n".join(
+                    [
+                        "| 来源编号 | 原始文件 | 原始文件创建时间 | 原始文件修改时间 | 转写 Markdown | 外部来源 |",
+                        "|---|---|---|---|---|---|",
+                        "| S001 | 六神品牌生意会_4月8日.pdf | 2026-04-08 | 2026-04-08 | converted_markdown/source_transcripts/S001.md | 本地 source/ |",
+                        "| S002 | 六神产品培训_4月8日.pdf | 2026-04-08 | 2026-04-08 | converted_markdown/source_transcripts/S002.md | 本地 source/ |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()):
+                build_source_version_report(project_dir)
+
+            report_text = (converted / "source_version_report.md").read_text(encoding="utf-8")
+            self.assertIn("疑似多版本组数：0", report_text)
+
     def test_cli_build_source_version_report_command(self) -> None:
         import sys
 
