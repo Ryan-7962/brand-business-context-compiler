@@ -72,6 +72,18 @@ def test_workbuddy_package_rewrites_prompt_schema_reference_to_packaged_file(tmp
     assert "schemas/agent_neutral_wiki.schema.md" not in prompt_text
 
 
+def test_workbuddy_prompt_escalates_only_compilation_blockers(tmp_path: Path) -> None:
+    archive = build_workbuddy_package(REPO_ROOT, tmp_path)
+
+    with ZipFile(archive) as package:
+        prompt_text = package.read(
+            f"{PACKAGE_ROOT}/references/compile_agent_neutral_wiki.md"
+        ).decode("utf-8")
+
+    assert "does not block faithful Wiki compilation" in prompt_text
+    assert "Do not add generic disclaimers" in prompt_text
+
+
 def test_workbuddy_package_excludes_sensitive_content_and_absolute_paths(tmp_path: Path) -> None:
     archive = build_workbuddy_package(REPO_ROOT, tmp_path)
 

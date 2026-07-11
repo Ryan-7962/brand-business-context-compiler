@@ -105,6 +105,8 @@ After the Agent has inspected the transcript and available page/slide screenshot
 
 Do not ask the user to inspect every extracted fact. The review page should answer: what was read, what the outline is, what was not read clearly, and how to fix it. Backend-heavy source-anchor tables, risk taxonomies, or asset IDs remain machine-readable evidence.
 
+Do not escalate a business field merely because the source says it is not provided. Keep that as a source-backed gap in the document knowledge page unless it prevents reliable interpretation of the current source. Do not invent generic OCR, layout, screenshot, or brand-confirmation warnings when no concrete reading problem exists.
+
 If `evaluation/human_validation_packet.md` or `.html` exists in a private run, use it first for page / facts sampling, then write the final pass-rate summary back to `evaluation/quality_sampling_log.md`. Treat an existing `quality_sampling_log.md` as human validation evidence; `build-value-benchmark` preserves it instead of refreshing the template.
 
 ## Legacy Phase 1 Compatibility
