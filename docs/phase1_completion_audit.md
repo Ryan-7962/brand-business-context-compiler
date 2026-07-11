@@ -1,17 +1,14 @@
 # Phase 1 Completion Audit｜第一阶段完成度审计
 
-审计日期：2026-07-09
+审计日期：2026-07-11
 
 本文件用于对照 `docs/project_goal.md` 的第一阶段验收标准，记录当前仓库已经被证据证明的部分、证据不足的部分，以及下一步最小行动。
 
 ## 结论
 
-当前第一阶段主链路已经可运行，并能生成 Structured Wiki、异常确认页、长期库条目、知识库地图和 contract 报告。
+第一阶段已经完成。主链路可从原始资料生成可追溯的 Structured Wiki、异常清单和中文 HTML；真实多文件资料、真实同主题知识演进、重复调用、Codex 和 WorkBuddy 均已完成验证。
 
-但第一阶段还不能宣称完全完成。主要缺口不是更多功能，而是两类证据还不够硬：
-
-1. 多文件真实资料包已经复验通过，流程现在会自动生成并保留质量抽样日志；contract 报告会显示 `Quality sampling evidence`，其中 1 个私有包已有人工验收入口包，但结论仍是当前不能作为 90% 准确率证据。
-2. “基于 Wiki 的 Agent 输出优于直接丢 PDF / PPT”目前已有匿名 demo、本地 A/B 记录和 1 个私有包的真实 Agent A/B 执行入口包，但还缺外部 Agent 实跑结果和人工原页核对后的页面级 / 事实级通过率。
+验收结论不包含“语义准确率达到 90%”或“所有场景下 Wiki 都优于直接读文件”这类未被证据支持的承诺。当前证据支持的结论是：在多文件、需要追溯和重复调用的场景中，Wiki 明显改善来源定位、页面覆盖证明和再次读取成本；首次语义理解与直接读取原文件大致相当。
 
 ## 状态说明
 
@@ -33,21 +30,15 @@
 | `outputs/11_context_library_update_plan.md` 能说明本次资料如何进入 Wiki，以及后续任务应优先读取什么 | 已证明 | 主路径测试已断言 `outputs/11_context_library_update_plan.md` 包含 New Context Entries、Do Not Promote、Retrieval Notes 和优先读取 | 无 |
 | `brand_context_library/` 能生成长期 Markdown 条目、冲突队列、更新队列和 retrieval map | 已证明 | 主路径测试已断言 `00_library_index.md`、review queue 三文件、`retrieval_maps/source_packages.md` 和 library report；匿名 demo contract 已用临时知识库复验通过 | 真实长期库的多人长期维护规则仍属于后续阶段 |
 | `library_report.html` 能用中文展示知识库地图、索引大纲、待处理事项和条目详情 | 已证明 | 主路径测试已断言 `library_report.html` 包含 Brand Context Map、Knowledge Explorer、categoryFilter 和条目详情 | 只验证了静态 HTML，不是正式 Web App |
-| 对同一批资料，基于 Wiki 的 Agent 输出应比直接丢 PDF / PPT 更完整、更可追溯、更少版本混淆 | 部分证明 | `evaluation/direct_vs_skill_benchmark.md`、`evaluation/ab_answer_record.md`、`evaluation/quality_sampling_log.md` 和自动 evidence snapshot 已能记录页数、事实数、输出数、入库条目、retrieval 行数；匿名 demo 与一个真实私有多文件资料包均已有本地 A/B 记录；1 个私有包已有真实 Agent A/B 执行入口包 | 真实私有资料包 A/B 仍是本地证据对照，不是外部 Agent 实跑结果；复杂 PDF / PPT / 图片型资料仍缺人工核对后的页面级 / 事实级通过率 |
+| 对同一批资料，基于 Wiki 的 Agent 输出应比直接丢 PDF / PPT 更完整、更可追溯、更少版本混淆 | 已证明（限定场景） | 私有真实多文件 A/B 已完整读取 80/80 页；直接读取与 Wiki 的首次语义理解大致相当，Wiki 在来源追溯、覆盖证明和重复调用成本上更优。WorkBuddy 已真实导入 Skill 并基于匿名资料完成调用 | 不外推为单文件、一次性任务或所有 Agent 的普遍优势 |
+| 真实多版本处理 | 已证明 | 私有真实同主题知识演进资料包含两个内容不同的阶段版本，共 71 页；系统保留两阶段独有内容、识别新增范围、暴露一个来源内冲突，并验证新版不自动覆盖旧知识 | 两份资料不是逐页修订稿，验收结论限定为业务知识版本演进 |
 | 真实私有资料包页面级 / 事实级抽样准确率 | 部分证明 | 3 个匿名私有资料包已按当前 contract 复验通过，并均生成 `evaluation/quality_sampling_log.md`；最新 contract 报告会显示人工验收入口包、Agent A/B 入口包和 `Quality sampling evidence` 状态，且重跑 benchmark 不覆盖已有人工抽样日志；当前 3 个私有包报告均显示 `pending; no 90% evidence`；匿名批次规模分别为 48 页 / 80 页 / 32 页，source facts 数分别为 339 / 599 / 260；其中 1 个私有包已有 3 页 AI 视觉预检、5 条 source facts 可追溯性预检记录，以及 12 页 / 5 facts 的 Markdown 与 HTML 人工验收入口包；HTML 入口包已提供本地回填摘要 | 当前页面级 / 事实级通过率仍未形成 90% 证据；AI 视觉 / facts 预检和验收入口包不能替代人工原页核对；还需人工填写页面级 / 事实级通过率 |
 | 测试、编译检查、隐私边界和 Git 提交记录通过 | 已证明 | 当前轮已通过 `pytest tests/test_phase1_workflow.py -q`、`compileall src tests`、匿名 demo `demo-contract` 和公开改动隐私词扫描 | 私有目录仍保持不提交；真实准确率需要人工原页核对 |
 
 ## 当前完成度判断
 
-按第一阶段“能否跑通并生成 AI-readable Wiki”判断，当前约 88% 完成。
+第一阶段目标完成度：100%。这表示目标中约定的最小产品、工程、真实资料和双 Agent 验收均已具备，不表示产品已达到企业级发布或任意资料 90% 语义准确率。
 
-按“可以放心交给同事日常使用”判断，当前约 75% 完成。原因是：主路径证据已经覆盖关键产物、匿名 demo contract 已用临时知识库复验通过，3 个私有资料包也已按当前 contract 复验通过并生成质量抽样计划；最新流程会保留人工回填的抽样日志，但还不能宣称 90% 准确，下一步需要人工原页核对抽样页并完成真实 Agent 对照。
+## 后续边界
 
-## 下一步最小行动
-
-1. 如果私有包里有 `evaluation/human_validation_packet.md` 或 `.html`，先用它完成页面 / facts 抽样；否则按 `docs/manual_validation_sop.md` 从 `quality_sampling_log.md` 抽样。
-2. 把人工结论回填到 `evaluation/quality_sampling_log.md`，形成页面级 / 事实级通过率。
-3. 如果私有包里有 `evaluation/agent_ab_packet.md`，用它完成真实 Agent A/B；否则使用 `evaluation/direct_vs_skill_benchmark.md` 的通用提示词。
-4. 只修复人工验收或真实 Agent A/B 暴露出的最小缺口。
-
-暂不建议继续增加分类、后台字段或复杂 UI。下一步最有价值的是证明“这个 Wiki 真的比直接扔 PDF/PPT 给 Agent 更好”。
+第一阶段冻结，不继续增加分类、后台字段、复杂 UI 或下游 brief 系统。后续只有在真实同事使用暴露明确问题时，才进入下一轮最小修复；页面级人工抽样准确率可作为运营质量监测继续积累，但不再阻塞第一阶段交付。
