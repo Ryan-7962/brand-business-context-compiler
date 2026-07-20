@@ -1,5 +1,7 @@
 # Brand Marketing Context Compiler
 
+> **换电脑后从这里开始：** [另一台电脑需要完成的真实 WorkBuddy A/B 测试](TEST_ON_ANOTHER_COMPUTER.md)
+
 将品牌方“给人看的”Marketing 资料，例如活动方案、广告公司提案、新品上市方案、销售策略、经销商大会 PPT、抖音爆品打法计划书、爆款视频复盘、投放总结、产品培训资料、品牌策略 PPT，编译为 **AI 更容易理解、检索、引用、审核和复用的结构化品牌上下文知识库**。
 
 本项目第一阶段不是做复杂平台，也不是直接生成 GEO / PDP / 拍摄 / 种草 brief，而是沉淀一组可被 Codex / Claude / ChatGPT / Work Buddy 等 AI 代理稳定执行的 Skills。核心结构可以理解为三层：
