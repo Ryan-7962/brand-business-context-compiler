@@ -1,6 +1,8 @@
 # Brand Marketing Context Compiler
 
 > **换电脑后从这里开始：** [另一台电脑需要完成的真实 WorkBuddy A/B 测试](TEST_ON_ANOTHER_COMPUTER.md)
+>
+> **交给另一台 Codex 继续开发：** [Windows Codex 项目交接](CODEX_HANDOFF.md)
 
 将品牌方“给人看的”Marketing 资料，例如活动方案、广告公司提案、新品上市方案、销售策略、经销商大会 PPT、抖音爆品打法计划书、爆款视频复盘、投放总结、产品培训资料、品牌策略 PPT，编译为 **AI 更容易理解、检索、引用、审核和复用的结构化品牌上下文知识库**。
 
