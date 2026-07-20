@@ -22,7 +22,7 @@ Raw Sources：同事直接丢进来的 PDF / PPT / DOCX / MD / TXT 等资料
 6. 生成 Context Library Update Plan，说明本次资料如何并入长期品牌知识库。
 7. 生成 Exception Review Queue，只在识别异常时请用户修正。
 
-更新后的项目目标见 [docs/project_goal.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/project_goal.md)。当前定位可简化为：把“临时把 PDF/PPT 发给 AI 读”升级为“持续积累、可追溯、可复用的本地品牌 / 业务上下文系统”。
+更新后的项目目标见 [docs/project_goal.md](docs/project_goal.md)。当前定位可简化为：把“临时把 PDF/PPT 发给 AI 读”升级为“持续积累、可追溯、可复用的本地品牌 / 业务上下文系统”。
 
 `SKILL.md` 是 AI Agent 的技能入口，说明第一阶段边界、默认 CLI 工作流、source engine 评估规则、人工复核范围和验收命令。`prompt_bundle.md`、`prompts/` 和 `schemas/` 是第一阶段 Prompt / Schema 包。`verify-contract` 会检查这些入口和核心文件是否存在，避免项目只剩代码和文档而没有可执行 skill 包。
 
@@ -54,7 +54,7 @@ Raw Sources：同事直接丢进来的 PDF / PPT / DOCX / MD / TXT 等资料
 - 仓库内置 demo / Skill 发布包不得包含真实测试 PDF 中的品牌名、竞品名、价格、预算、销量、渠道激励和平台数据；真实客户资料只作为本地私有测试材料使用。
 - 产品类 claim 仍需证据和适用范围，但只在产品资料模块启用。
 
-详见 [docs/test_fixture_privacy_rules.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/test_fixture_privacy_rules.md)。
+详见 [docs/test_fixture_privacy_rules.md](docs/test_fixture_privacy_rules.md)。
 
 ## 第一阶段默认产物
 
@@ -102,6 +102,8 @@ GEO / PDP / 拍摄 / 种草 / 销售 / 客服 / 复盘 / 竞品分析等派生�
 
 ## 推荐使用路径
 
+需要迁移到另一台 Windows / macOS 电脑，或导入 WorkBuddy 时，直接查看 [换电脑安装与测试](docs/cross_platform_test_guide.md)。
+
 新项目统一使用 Agent-neutral Wiki 的五步流程：
 
 1. 初始化项目，并将 PDF / PPTX / DOCX / Markdown / TXT 等资料放入 `source/`：
@@ -137,12 +139,12 @@ WorkBuddy 没有 CLI 时，应使用同一 Skill 中的本地读文件能力完�
 
 当前阶段的收敛与验收文档：
 
-- [docs/phase1_completion_audit.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/phase1_completion_audit.md)：第一阶段完成度和证据缺口。
-- [docs/agent_workstream_split.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/agent_workstream_split.md)：45 个可分派 Agent 子板块。
-- [docs/ponytail_simplification_audit.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/ponytail_simplification_audit.md)：哪些能力保留、延后或移出第一阶段。
-- [docs/source_reading_quality_playbook.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/source_reading_quality_playbook.md)：PDF / PPT / 长图读取质量验收。
-- [docs/quality_sampling_protocol.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/quality_sampling_protocol.md)：90% 读取准确性抽样证据协议。
-- [docs/manual_validation_sop.md](/Users/ryan/AI%20相关/产品资料转%20MD/brand-ai-product-knowledge-skill_handoff/docs/manual_validation_sop.md)：人工原页抽样验收的一页执行单。
+- [docs/phase1_completion_audit.md](docs/phase1_completion_audit.md)：第一阶段完成度和证据缺口。
+- [docs/agent_workstream_split.md](docs/agent_workstream_split.md)：45 个可分派 Agent 子板块。
+- [docs/ponytail_simplification_audit.md](docs/ponytail_simplification_audit.md)：哪些能力保留、延后或移出第一阶段。
+- [docs/source_reading_quality_playbook.md](docs/source_reading_quality_playbook.md)：PDF / PPT / 长图读取质量验收。
+- [docs/quality_sampling_protocol.md](docs/quality_sampling_protocol.md)：90% 读取准确性抽样证据协议。
+- [docs/manual_validation_sop.md](docs/manual_validation_sop.md)：人工原页抽样验收的一页执行单。
 
 本地验收 demo 可用一条命令跑完入库、知识库报告页和 contract 验证：
 

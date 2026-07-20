@@ -11,7 +11,7 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 
 
-DEFAULT_IMA_API_SCRIPT = Path("/Users/ryan/.codex/skills/ima-skill/ima_api.cjs")
+DEFAULT_IMA_API_SCRIPT = Path.home() / ".codex" / "skills" / "ima-skill" / "ima_api.cjs"
 
 
 def import_ima_media(
