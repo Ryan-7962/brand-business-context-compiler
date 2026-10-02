@@ -6,6 +6,10 @@
 
 首次结果遗漏封面实质内容和部分章节引用，部分旧OCR候选的关键脚注数字有误；Codex回看原页并交由WorkBuddy定点修正，保留首次结果与校准证据。覆盖检查不证明全量语义准确。Windows、GUI导入、仅给原文件的宿主读取、真实下游Brief仍需分别验收。
 
+分发试用版：四文件Skill ZIP、`START_HERE_ZH.md`和`SHA256SUMS`已生成；中文指引包含安装、转换、后续brief及真实异常处理。重新打包中断保留旧ZIP，162项测试及5项subtest通过。普通同事不需完整开发环境；读取能力仍依赖宿主。
+
+仅原件的32页PDF CLI测试在540秒内未写出MD，出现重复读图，判为失败；已补进度保持约束，尚未运行证明修复。Mac WorkBuddy 5.6.2已看到真实技能管理/上传入口，但锁屏中止导入，需要用户手动解锁；不宣称GUI安装通过。当前仅供授权小批量试用，不是正式全量部署验收。
+
 ## 准备
 
 - [x] 使用 `python scripts/build_workbuddy_package.py` 构建 `dist/brand-business-context-compiler-workbuddy.zip`。

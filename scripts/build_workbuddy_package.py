@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from zipfile import ZIP_DEFLATED, ZipFile
 
 
@@ -30,22 +32,25 @@ def build_workbuddy_package(repo_root: Path, output_dir: Path) -> Path:
         "references/agent_neutral_wiki.schema.md",
     )
 
+    schema = (repo_root / SCHEMA_PATH).read_bytes()
+    once_prompt = (repo_root / ONCE_PROMPT_PATH).read_bytes()
+    guide = (repo_root / "docs/work_buddy_handoff_guide.md").read_bytes()
     archive = output_dir / ARCHIVE_FILENAME
     output_dir.mkdir(parents=True, exist_ok=True)
-    with ZipFile(archive, "w", compression=ZIP_DEFLATED) as package:
-        package.writestr(f"{PACKAGE_DIRECTORY}/SKILL.md", packaged_skill)
-        package.writestr(
-            f"{PACKAGE_DIRECTORY}/references/agent_neutral_wiki.schema.md",
-            (repo_root / SCHEMA_PATH).read_bytes(),
-        )
-        package.writestr(
-            f"{PACKAGE_DIRECTORY}/references/compile_agent_neutral_wiki.md",
-            packaged_prompt,
-        )
-        package.writestr(
-            f"{PACKAGE_DIRECTORY}/references/compile_once.md",
-            (repo_root / ONCE_PROMPT_PATH).read_bytes(),
-        )
+    with NamedTemporaryFile(dir=output_dir, suffix=".zip", delete=False) as handle:
+        temporary = Path(handle.name)
+    try:
+        with ZipFile(temporary, "w", compression=ZIP_DEFLATED) as package:
+            package.writestr(f"{PACKAGE_DIRECTORY}/SKILL.md", packaged_skill)
+            package.writestr(f"{PACKAGE_DIRECTORY}/references/agent_neutral_wiki.schema.md", schema)
+            package.writestr(f"{PACKAGE_DIRECTORY}/references/compile_agent_neutral_wiki.md", packaged_prompt)
+            package.writestr(f"{PACKAGE_DIRECTORY}/references/compile_once.md", once_prompt)
+        temporary.replace(archive)
+    finally:
+        temporary.unlink(missing_ok=True)
+    (output_dir / "START_HERE_ZH.md").write_bytes(guide)
+    checksum = hashlib.sha256(archive.read_bytes()).hexdigest()
+    (output_dir / "SHA256SUMS").write_text(f"{checksum}  {archive.name}\n", encoding="utf-8")
     return archive
 
 

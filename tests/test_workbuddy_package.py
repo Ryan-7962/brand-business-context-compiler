@@ -1,7 +1,9 @@
 from pathlib import Path
+import hashlib
 import re
 from zipfile import ZipFile
 
+import pytest
 from scripts.build_workbuddy_package import build_workbuddy_package
 
 
@@ -41,6 +43,11 @@ def test_workbuddy_package_contains_only_public_files(tmp_path: Path) -> None:
         for name in names
         for forbidden_part in FORBIDDEN_PATH_PARTS
     )
+
+    guide = tmp_path / "START_HERE_ZH.md"
+    assert guide.read_bytes() == (REPO_ROOT / "docs/work_buddy_handoff_guide.md").read_bytes()
+    checksum = hashlib.sha256(archive.read_bytes()).hexdigest()
+    assert (tmp_path / "SHA256SUMS").read_text() == f"{checksum}  {archive.name}\n"
 
 
 def test_workbuddy_package_rewrites_skill_references_to_packaged_files(tmp_path: Path) -> None:
@@ -111,3 +118,21 @@ def test_workbuddy_package_excludes_sensitive_content_and_absolute_paths(tmp_pat
         content = "\n".join(package.read(name).decode("utf-8") for name in package.namelist())
 
     assert all(forbidden_text not in content for forbidden_text in FORBIDDEN_CONTENT)
+
+
+def test_failed_rebuild_preserves_existing_archive(tmp_path: Path, monkeypatch) -> None:
+    archive = build_workbuddy_package(REPO_ROOT, tmp_path)
+    original = archive.read_bytes()
+    write = ZipFile.writestr
+
+    def interrupted_write(package, *args, **kwargs):
+        write(package, *args, **kwargs)
+        raise OSError("Simulated interrupted package write")
+
+    monkeypatch.setattr(ZipFile, "writestr", interrupted_write)
+    with pytest.raises(OSError, match="interrupted"):
+        build_workbuddy_package(REPO_ROOT, tmp_path)
+    assert archive.read_bytes() == original
+    assert sorted(p.name for p in tmp_path.iterdir()) == [
+        "SHA256SUMS", "START_HERE_ZH.md", archive.name
+    ]

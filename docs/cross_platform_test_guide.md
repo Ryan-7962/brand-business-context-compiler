@@ -22,7 +22,7 @@
 
 ## Windows：最短安装
 
-先安装 Git、Python 3.11 和 Codex，然后在 PowerShell 执行：
+普通同事优先按[中文使用说明](work_buddy_handoff_guide.md)直接导入ZIP，不需要开发环境。以下仅用于开发或备用转换工具。先安装 Git、Python 3.11 和 Codex，然后在 PowerShell 执行：
 
 ```powershell
 git clone https://github.com/Ryan-7962/brand-business-context-compiler.git
@@ -33,8 +33,11 @@ py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe scripts\build_workbuddy_package.py
 
 New-Item -ItemType Directory -Force "$env:USERPROFILE\.codex\skills" | Out-Null
+if (Test-Path "$env:USERPROFILE\.codex\skills\brand-business-context-compiler") {
+  throw "同名Skill已存在，请先保留旧版并确认升级，不自动覆盖。"
+}
 Expand-Archive .\dist\brand-business-context-compiler-workbuddy.zip `
-  -DestinationPath "$env:USERPROFILE\.codex\skills" -Force
+  -DestinationPath "$env:USERPROFILE\.codex\skills"
 ```
 
 重启 Codex。确认 CLI 可用：
@@ -54,7 +57,11 @@ python3.11 -m venv .venv
 .venv/bin/python scripts/build_workbuddy_package.py
 
 mkdir -p "$HOME/.codex/skills"
-unzip -o dist/brand-business-context-compiler-workbuddy.zip -d "$HOME/.codex/skills"
+if [ -e "$HOME/.codex/skills/brand-business-context-compiler" ]; then
+  printf '%s\n' '同名Skill已存在，请先保留旧版并确认升级。'
+else
+  unzip dist/brand-business-context-compiler-workbuddy.zip -d "$HOME/.codex/skills"
+fi
 ```
 
 重启 Codex，然后运行：

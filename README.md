@@ -1,5 +1,7 @@
 # Brand Marketing Context Compiler
 
+> **给同事使用：** 下载[同事试用版](https://github.com/Ryan-7962/brand-business-context-compiler/releases/tag/v0.2.0-pilot.1)中的Skill ZIP和`START_HERE_ZH.md`，按[中文使用说明](docs/work_buddy_handoff_guide.md)导入技能、放入资料、发送提示词即可。默认不需要Git、Python或建Wiki。包不自带OCR引擎，实际文件读取依赖宿主Agent；请先用一份授权资料试跑。预处理证据流程已验证，原件32页CLI测试超时，GUI/Windows未完整验收；这不是正式全量部署版。
+>
 > **换电脑后从这里开始：** [另一台电脑需要完成的真实 WorkBuddy A/B 测试](TEST_ON_ANOTHER_COMPUTER.md)
 >
 > **交给另一台 Codex 继续开发：** [Windows Codex 项目交接](CODEX_HANDOFF.md)
@@ -32,7 +34,7 @@ Raw Sources：同事直接丢进来的 PDF / PPT / DOCX / MD / TXT 等资料
 
 这是当前推荐的精简路径，不要求使用者逐一确认事实表，也不默认生成下方全部历史兼容产物。结构检查通过不等于内容准确，更不等于基于 Wiki 的结果必然优于直接读原文件。
 
-更新后的项目目标见 [docs/project_goal.md](docs/project_goal.md)。当前定位可简化为：把“临时把 PDF/PPT 发给 AI 读”升级为“持续积累、可追溯、可复用的本地品牌 / 业务上下文系统”。
+更新后的项目目标见 [docs/project_goal.md](docs/project_goal.md)。当前定位可简化为：把人读的资料转译成详细、可追溯、可复用的AI上下文；长期积累是可选模式。
 
 `SKILL.md` 是 AI Agent 的技能入口，说明第一阶段边界、默认 CLI 工作流、source engine 评估规则、人工复核范围和验收命令。`prompt_bundle.md`、`prompts/` 和 `schemas/` 是第一阶段 Prompt / Schema 包。`verify-contract` 会检查这些入口和核心文件是否存在，避免项目只剩代码和文档而没有可执行 skill 包。
 

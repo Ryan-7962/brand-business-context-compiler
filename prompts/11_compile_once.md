@@ -16,6 +16,7 @@ Use the host Agent's available file-reading and vision tools or existing prepare
 - Read all pages/slides, including tables, charts, image text, footnotes, hidden slides and speaker notes when present. Record hidden/notes status; do not treat them as approved copy.
 - Use native text and actual visual inspection together when images carry meaning or extracted text is unclear. A rendered image or an anchor is not proof of reading.
 - Reuse already calibrated evidence. Retry unresolved key regions with available tools; do not pretend an unread region was empty or processed successfully.
+- Keep successful page evidence and retry only unresolved regions, not the entire file again. Encoded image data or image metadata alone is not visual understanding; if the host cannot expose readable image content, report that limitation instead of repeatedly opening the same images.
 - Record file creation/modification times and their origin only when available. Copy/sync timestamps are version clues, not business approval or effective dates.
 
 ## Write the Document
