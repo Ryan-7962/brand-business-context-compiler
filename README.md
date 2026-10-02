@@ -18,13 +18,13 @@ Raw Sources：同事直接丢进来的 PDF / PPT / DOCX / MD / TXT 等资料
 
 第一阶段默认流程：
 
-1. 先把 PDF / PPT / 长图 / 文档尽量保真地转成 Markdown。
-2. 再识别资料类型、文件目的、目标读者、业务阶段和关键信息。
-3. 将资料完整转述成 AI-readable Marketing Semantic Transcript。
-4. 抽取关键事实、claim、策略、执行动作、风险和待确认项。
-5. 生成 Context Asset Index，把资料沉淀为可复用的品牌上下文资产。
-6. 生成 Context Library Update Plan，说明本次资料如何并入长期品牌知识库。
-7. 生成 Exception Review Queue，只在识别异常时请用户修正。
+1. 原始资料放入 `source/`，不改写原件。
+2. 运行 `prepare-wiki`，生成逐页转写、截图、文件时间与版本线索。
+3. 当前 Agent 按 `SKILL.md` 完整读取来源，并补读图片、图表、备注及隐藏页。
+4. 编译 `wiki/00_index.md`、每份资料的 `wiki/documents/<source-id>.md` 和真实异常 `wiki/uncertainties.md`。
+5. 运行 `verify-wiki` 检查结构与来源，再用真实任务核对语义；运行 `build-wiki-report` 生成中文本地报告。
+
+这是当前推荐的精简路径，不要求使用者逐一确认事实表，也不默认生成下方全部历史兼容产物。结构检查通过不等于内容准确，更不等于基于 Wiki 的结果必然优于直接读原文件。
 
 更新后的项目目标见 [docs/project_goal.md](docs/project_goal.md)。当前定位可简化为：把“临时把 PDF/PPT 发给 AI 读”升级为“持续积累、可追溯、可复用的本地品牌 / 业务上下文系统”。
 
@@ -60,7 +60,7 @@ Raw Sources：同事直接丢进来的 PDF / PPT / DOCX / MD / TXT 等资料
 
 详见 [docs/test_fixture_privacy_rules.md](docs/test_fixture_privacy_rules.md)。
 
-## 第一阶段默认产物
+## 历史兼容产物（按需）
 
 ```text
 outputs/

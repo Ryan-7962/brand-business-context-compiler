@@ -72,6 +72,8 @@ For image-only or low-text pages, read the actual screenshot with the host Agent
 
 For visual evidence, separate verbatim text, observable appearance, and interpretation. Do not infer font names, permitted uses, color codes, or design rules from a logo/chart example unless the source states them. A model's claim that everything is clear is not a quality check; compare important statements against the image and preserve unresolved discrepancies.
 
+For PPTX, check hidden slides and speaker notes as well as visible slide text. Default PDF exports may skip hidden slides; verify counts and source mappings before using an export for visual reading. Preserve hidden content and notes with their status, never as automatically approved copy. Batch large image requests to the host's actual limits, persist successful page evidence, and retry only unresolved regions. Prioritize product/claim conditions, numerical units and material table cells; do not turn every unread decorative label into a user confirmation task.
+
 ## Source Conversion Engines
 
 Default:

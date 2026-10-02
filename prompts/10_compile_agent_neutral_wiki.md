@@ -8,13 +8,19 @@ Read all of the following before you classify or summarize anything:
 
 1. `converted_markdown/conversion_report.md`
 2. Every file in `converted_markdown/source_transcripts/`, completely
-3. Every matching file in `converted_markdown/source_facts/`
+3. Matching files in `converted_markdown/source_facts/` as navigation aids; consult relevant rows when needed, rather than stuffing thousands of duplicate rows into the same context as a completely read transcript
 4. `converted_markdown/source_quality_report.md`
 5. `converted_markdown/source_version_report.md`
 
 Treat the complete transcript as the primary reading evidence. Source facts help navigation and traceability, but do not replace complete reading. Treat quality-report review rows as Agent inspection candidates: inspect their transcript text and available page/slide screenshot first, then escalate only what remains unread or uncertain. Use the version report to expose conflicts or version clues.
 
+If the host context limit prevents complete reading, split the document into anchored batches and merge their persisted evidence. Do not label content as `资料未提供` merely because it was omitted from the model context: report the actual unread scope and retry smaller inputs first. Do not invent approval requirements or absolute prohibitions on using source statements; distinguish source content, missing evidence, and business approval status without making unsupported policy decisions.
+
 If a page has no usable extracted text, read its actual screenshot using available vision/OCR tools and persist the recovered content with that page's anchor. Converter control markers are not facts. Do not count a screenshot that has merely been generated as a visually read page. Separate visible text and literal visual descriptions from interpretation; do not invent fonts, color codes or usage rules from examples. Verify important visual claims against the image, and record pages still unread if the tools cannot read them.
+
+For PPTX, inspect hidden-slide flags and speaker notes when the host tools allow it. A PDF exported from the same presentation may omit hidden slides; compare actual counts and retain the mapping to original slide/page anchors rather than silently renumbering. Preserve hidden slides and speaker notes as internal source evidence, not automatically approved public wording. An alternative Office renderer can help read content, but does not prove exact PowerPoint typography or layout.
+
+Batch vision reads within the host's request-size limits. Record exactly which source anchors each response covers, reject wrong file/page mappings, and reuse successful evidence rather than rereading it. Read critical image text and conditions at adequate resolution; retry a specific unclear region before escalating it. Unread decorative background labels do not automatically block the whole document; unread claim conditions, data units or material table cells do.
 
 ## Compilation Rules
 
