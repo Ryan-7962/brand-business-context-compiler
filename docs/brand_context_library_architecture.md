@@ -1,5 +1,7 @@
 # Brand Context Library Architecture
 
+> 历史兼容架构说明。2026-10-02 起，以 `../01_PRD_Brand_Product_Knowledge_Compiler.md` 和 `project_goal.md` 为当前需求依据。下方目录与 Library Writer 是已有旧链路，不是新项目默认必需结构，也不证明当前 Agent-neutral Wiki 已完成跨文件语义关联。新开发优先复用 `wiki/`，不并行扩建两套知识库。
+
 ## 1. 定位
 
 Brand Marketing Context Compiler 的长期目标不是给每份 PDF 做总结，而是把品牌 Marketing 工作中不断产生的资料、会议、方案、复盘和判断，沉淀为一个可持续演化的品牌上下文知识库。
