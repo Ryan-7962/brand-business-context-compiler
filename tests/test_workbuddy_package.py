@@ -98,6 +98,10 @@ def test_workbuddy_package_supports_standalone_conversion(tmp_path: Path) -> Non
     assert "Do not create a Wiki" in prompt
     assert "compiled/<source-id>.md" in prompt
     assert "Do not replace the body with a summary" in prompt
+    assert "different originals share a Source ID" in prompt
+    assert "distinct output names" in prompt
+    assert "Cover and section-divider pages" in prompt
+    assert "superscript-to-footnote mismatch" in prompt
 
 
 def test_workbuddy_package_excludes_sensitive_content_and_absolute_paths(tmp_path: Path) -> None:
