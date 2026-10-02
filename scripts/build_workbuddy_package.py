@@ -8,6 +8,7 @@ PACKAGE_DIRECTORY = "brand-business-context-compiler"
 ARCHIVE_FILENAME = "brand-business-context-compiler-workbuddy.zip"
 SKILL_PATH = Path("SKILL.md")
 PROMPT_PATH = Path("prompts/10_compile_agent_neutral_wiki.md")
+ONCE_PROMPT_PATH = Path("prompts/11_compile_once.md")
 SCHEMA_PATH = Path("schemas/agent_neutral_wiki.schema.md")
 
 
@@ -20,6 +21,9 @@ def build_workbuddy_package(repo_root: Path, output_dir: Path) -> Path:
     ).replace(
         "schemas/agent_neutral_wiki.schema.md",
         "references/agent_neutral_wiki.schema.md",
+    ).replace(
+        "prompts/11_compile_once.md",
+        "references/compile_once.md",
     )
     packaged_prompt = (repo_root / PROMPT_PATH).read_text(encoding="utf-8").replace(
         "schemas/agent_neutral_wiki.schema.md",
@@ -37,6 +41,10 @@ def build_workbuddy_package(repo_root: Path, output_dir: Path) -> Path:
         package.writestr(
             f"{PACKAGE_DIRECTORY}/references/compile_agent_neutral_wiki.md",
             packaged_prompt,
+        )
+        package.writestr(
+            f"{PACKAGE_DIRECTORY}/references/compile_once.md",
+            (repo_root / ONCE_PROMPT_PATH).read_bytes(),
         )
     return archive
 

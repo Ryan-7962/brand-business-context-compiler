@@ -1,11 +1,24 @@
 # 换电脑安装与测试
 
-安装完成后，请继续执行仓库根目录的 [真实 WorkBuddy A/B 测试任务](../TEST_ON_ANOTHER_COMPUTER.md)。它会说明另一台电脑需要提供哪些真实资料、如何生成同一份 Brief，以及如何比较直接读取和 Wiki 读取。
+默认先测单次转译；确实需要持续建库时，再执行仓库根目录的 [真实 WorkBuddy A/B 测试任务](../TEST_ON_ANOTHER_COMPUTER.md)，比较直接读取和 Wiki 读取。
 
 本项目由两部分组成：
 
 - 完整 GitHub 仓库：负责 PDF / PPT / DOCX 转写、页码锚点、版本线索和校验。
-- WorkBuddy / Codex Skill ZIP：告诉 Agent 如何把转写结果编译成 Markdown Wiki。
+- WorkBuddy / Codex Skill ZIP：默认编译详细结构化MD，明确要求建库时才生成Wiki。宿主Agent能完整读文件时，单次转换不要求安装CLI。
+
+## 单次测试（默认）
+
+导入最新生成的 Skill ZIP 后，在 Codex 或 WorkBuddy 中发送：
+
+```text
+调用 brand-business-context-compiler，将【文件或文件夹完整路径】转为详细的中文MD。
+只做单次转换，不建Wiki、不生成HTML。保留完整正文、表格、数据条件、香型/产品区别和来源位置，不要只给摘要。
+全部文件和页/slide都要登记；实际没读清的关键区域才告诉我具体位置和补救方式。
+输出到【指定目录】，不要覆盖原件或已有结果。
+```
+
+验收：每份文件有可用MD，大纲与正文对应，关键事实和条件可回源，读取状态真实；没有额外生成知识库、强制确认表或HTML。多文件仍可单次交付。下面的CLI安装步骤是可选辅助工具，Wiki步骤只在明确建库时执行。
 
 ## Windows：最短安装
 
@@ -50,7 +63,7 @@ unzip -o dist/brand-business-context-compiler-workbuddy.zip -d "$HOME/.codex/ski
 .venv/bin/brand-skill --help
 ```
 
-## 第一次真实测试
+## 持续建库测试（按需）
 
 新建一个项目，并把已获授权的 PDF / PPTX / DOCX / MD / TXT 放进 `source/`：
 
@@ -87,7 +100,7 @@ macOS：
 - `wiki/report.html` 可以打开。
 - `verify-wiki` 输出 `Wiki verification passed.`。
 
-## WorkBuddy 测试
+## WorkBuddy 建库测试（按需）
 
 从 GitHub Releases 下载 `brand-business-context-compiler-workbuddy.zip`，在 WorkBuddy 的 Skill 管理界面导入。
 

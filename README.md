@@ -4,9 +4,15 @@
 >
 > **交给另一台 Codex 继续开发：** [Windows Codex 项目交接](CODEX_HANDOFF.md)
 
-将品牌方“给人看的”Marketing 资料，例如活动方案、广告公司提案、新品上市方案、销售策略、经销商大会 PPT、抖音爆品打法计划书、爆款视频复盘、投放总结、产品培训资料、品牌策略 PPT，编译为 **AI 更容易理解、检索、引用、审核和复用的结构化品牌上下文知识库**。
+将品牌方“给人看的”Marketing 资料，例如活动方案、广告公司提案、新品上市方案、销售策略、经销商大会 PPT、抖音爆品打法计划书、爆款视频复盘、投放总结、产品培训资料、品牌策略 PPT，编译为 **AI 更容易理解、引用和复用的结构化 Markdown**。需要持续积累时，再建立关联知识库。
 
-本项目第一阶段不是做复杂平台，也不是直接生成 GEO / PDP / 拍摄 / 种草 brief，而是沉淀一组可被 Codex / Claude / ChatGPT / Work Buddy 等 AI 代理稳定执行的 Skills。核心结构可以理解为三层：
+## 两种使用方式
+
+**单次转译（默认）**：给一份或一批文件，获得详细MD及真实读取异常说明；不强制Wiki、长期索引或HTML。例如：“把这个文件夹转成AI可读的中文MD，保留完整内容和来源，不建知识库。”Agent使用 [单次转译提示词](prompts/11_compile_once.md)，默认交付 `compiled/<source-id>.md`，也可遵循指定路径。
+
+**持续建库（明确要求）**：在相同的保真转译基础上，再建立Wiki、跨资料关联与索引。例如：“把这些资料加入我的品牌知识库，保留旧版本并更新关联。”后续可复用单次转译证据，不必重跑所有文件。多文件本身不代表要建库。
+
+本项目第一阶段不是做复杂平台，也不是直接生成 GEO / PDP / 拍摄 / 种草 brief，而是沉淀一组可被 Codex / Claude / ChatGPT / Work Buddy 等 AI 代理执行的 Skills。持续建库时，核心结构可以理解为三层：
 
 ```text
 Raw Sources：同事直接丢进来的 PDF / PPT / DOCX / MD / TXT 等资料
@@ -16,7 +22,7 @@ Raw Sources：同事直接丢进来的 PDF / PPT / DOCX / MD / TXT 等资料
 
 后续 GEO、PDP、拍摄、种草、销售、客服、复盘等工作产出，应优先基于 Structured Wiki 生成，而不是每次重新临时读取一堆原始 PPT / PDF。
 
-第一阶段默认流程：
+建库模式流程（不是单次转换的必经步骤）：
 
 1. 原始资料放入 `source/`，不改写原件。
 2. 运行 `prepare-wiki`，生成逐页转写、截图、文件时间与版本线索。
@@ -30,9 +36,9 @@ Raw Sources：同事直接丢进来的 PDF / PPT / DOCX / MD / TXT 等资料
 
 `SKILL.md` 是 AI Agent 的技能入口，说明第一阶段边界、默认 CLI 工作流、source engine 评估规则、人工复核范围和验收命令。`prompt_bundle.md`、`prompts/` 和 `schemas/` 是第一阶段 Prompt / Schema 包。`verify-contract` 会检查这些入口和核心文件是否存在，避免项目只剩代码和文档而没有可执行 skill 包。
 
-## Skill 组结构
+## 历史兼容 Skill 组结构（按需）
 
-| Skill | 第一阶段职责 |
+| Skill | 兼容模块职责 |
 |---|---|
 | Source Conversion Skill | 将 PDF / PPT / 长图 / 文档尽量保真转为 Markdown 中间稿 |
 | Marketing Semantic Compiler Skill | 生成文件画像、完整语义转述、事实、策略、执行和风险底稿 |
@@ -52,7 +58,7 @@ Raw Sources：同事直接丢进来的 PDF / PPT / DOCX / MD / TXT 等资料
 - 第一阶段先生成 AI-readable 营销语义底稿，后续再派生不同场景 brief。
 - 不把所有资料强行套成产品项、SKU 或香型。
 - 资料里没有的信息必须标注 `待补充` / `待确认` / `不适用`。
-- 默认自动转写、索引和入库，不让用户逐份确认；只有文件大纲跑偏、页面/slide 漏读、图片/表格/小字/OCR 识别异常、版本冲突或资料本身缺信息时才进入人工复核。
+- 默认自动完整读取并交付结构化MD，明确建库需求才索引和入库；Agent校准后仍影响使用的真实异常才进入人工复核，不让用户逐份确认。
 - 报告页只说明本次读了什么、索引大纲是什么、哪些地方没读清楚、需要用什么方式弥补；不要求用户检查所有后台事实表。
 - 内部策略、未确认判断、平台风险、竞品攻击、敏感数据必须在后台质量层明确暴露，但不应默认塞进给用户的确认页。
 - 仓库内置 demo / Skill 发布包不得包含真实测试 PDF 中的品牌名、竞品名、价格、预算、销量、渠道激励和平台数据；真实客户资料只作为本地私有测试材料使用。
@@ -108,7 +114,9 @@ GEO / PDP / 拍摄 / 种草 / 销售 / 客服 / 复盘 / 竞品分析等派生�
 
 需要迁移到另一台 Windows / macOS 电脑，或导入 WorkBuddy 时，直接查看 [换电脑安装与测试](docs/cross_platform_test_guide.md)。
 
-新项目统一使用 Agent-neutral Wiki 的五步流程：
+单次转换按 [SKILL.md](SKILL.md) 和单次提示词执行；WorkBuddy ZIP 中单次提示词位于 `references/compile_once.md`。可使用宿主Agent读文件工具，不要求安装CLI。
+
+明确要求建库的新项目使用 Agent-neutral Wiki 的五步流程：
 
 1. 初始化项目，并将 PDF / PPTX / DOCX / Markdown / TXT 等资料放入 `source/`：
 
