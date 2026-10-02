@@ -212,6 +212,8 @@ def _clean_evidence_line(line: str) -> str:
     cleaned = line.strip()
     if cleaned.startswith("#"):
         return ""
+    if re.match(r"^---\s+end of page\.page_number=\d+\s+---$", cleaned):
+        return ""
     cleaned = re.sub(r"^>\s*", "", cleaned)
     cleaned = re.sub(r"^[-*]\s+", "", cleaned)
     cleaned = re.sub(r"^\d+[.)、]\s*", "", cleaned)

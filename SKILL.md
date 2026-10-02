@@ -68,6 +68,10 @@ Use `prompts/10_compile_agent_neutral_wiki.md` and `schemas/agent_neutral_wiki.s
 
 When the CLI is unavailable in WorkBuddy, use WorkBuddy's native file-reading tools to read the same prepared evidence and produce the same `wiki/` contract. Explicitly record every unread file or page in `wiki/uncertainties.md`.
 
+For image-only or low-text pages, read the actual screenshot with the host Agent's vision/OCR tools before compiling the knowledge page. A saved screenshot or page anchor alone is not evidence that its contents were read. Persist recovered content with its page anchor; list pages that remain unread instead of claiming complete coverage.
+
+For visual evidence, separate verbatim text, observable appearance, and interpretation. Do not infer font names, permitted uses, color codes, or design rules from a logo/chart example unless the source states them. A model's claim that everything is clear is not a quality check; compare important statements against the image and preserve unresolved discrepancies.
+
 ## Source Conversion Engines
 
 Default:

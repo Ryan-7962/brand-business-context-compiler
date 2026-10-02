@@ -14,6 +14,8 @@ Read all of the following before you classify or summarize anything:
 
 Treat the complete transcript as the primary reading evidence. Source facts help navigation and traceability, but do not replace complete reading. Treat quality-report review rows as Agent inspection candidates: inspect their transcript text and available page/slide screenshot first, then escalate only what remains unread or uncertain. Use the version report to expose conflicts or version clues.
 
+If a page has no usable extracted text, read its actual screenshot using available vision/OCR tools and persist the recovered content with that page's anchor. Converter control markers are not facts. Do not count a screenshot that has merely been generated as a visually read page. Separate visible text and literal visual descriptions from interpretation; do not invent fonts, color codes or usage rules from examples. Verify important visual claims against the image, and record pages still unread if the tools cannot read them.
+
 ## Compilation Rules
 
 1. Infer each document's real structure, purpose, audience, and business role from its full context. Do not apply a fixed taxonomy or classify from filenames or keywords alone.

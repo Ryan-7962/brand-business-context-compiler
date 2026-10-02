@@ -5,6 +5,8 @@ from __future__ import annotations
 import re
 import zipfile
 import json
+import shutil
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Any
@@ -35,10 +37,7 @@ def _safe_stem(path: Path) -> str:
 
 
 def _iter_source_pdfs(project_dir: Path) -> list[Path]:
-    source_dir = project_dir / "source"
-    if not source_dir.exists():
-        return []
-    return sorted(source_dir.rglob("*.pdf"))
+    return _iter_supported_sources(project_dir, {".pdf"})
 
 
 def _source_sort_key(project_dir: Path, source_file: Path) -> str:
@@ -154,13 +153,6 @@ def _unsupported_source_hint(path: Path) -> str:
     return ""
 
 
-def _clear_generated_markdown_files(directory: Path) -> None:
-    if not directory.exists():
-        return
-    for path in directory.glob("*.md"):
-        path.unlink()
-
-
 def _iter_source_text_documents(project_dir: Path) -> list[Path]:
     source_dir = project_dir / "source"
     if not source_dir.exists():
@@ -174,17 +166,11 @@ def _iter_source_text_documents(project_dir: Path) -> list[Path]:
 
 
 def _iter_source_docx(project_dir: Path) -> list[Path]:
-    source_dir = project_dir / "source"
-    if not source_dir.exists():
-        return []
-    return sorted(source_dir.rglob("*.docx"))
+    return _iter_supported_sources(project_dir, {".docx"})
 
 
 def _iter_source_pptx(project_dir: Path) -> list[Path]:
-    source_dir = project_dir / "source"
-    if not source_dir.exists():
-        return []
-    return sorted(source_dir.rglob("*.pptx"))
+    return _iter_supported_sources(project_dir, {".pptx"})
 
 
 def _source_label(project_dir: Path, source_file: Path) -> str:
@@ -299,6 +285,52 @@ def convert_source(
     *,
     markitdown_factory: Callable[[], Any] | None = None,
 ) -> None:
+    """Stage all conversions before replacing the three generated outputs."""
+    with tempfile.TemporaryDirectory(prefix=".conversion-", dir=project_dir) as temporary_dir:
+        output_dir = Path(temporary_dir)
+        _convert_source_to_directory(
+            project_dir, engine, output_dir=output_dir, markitdown_factory=markitdown_factory
+        )
+        _publish_converted_outputs(output_dir, project_dir / "converted_markdown")
+    print(f"Converted source files into {project_dir / 'converted_markdown'}")
+
+
+def _publish_converted_outputs(output_dir: Path, converted_dir: Path) -> None:
+    managed_names = ("source_transcripts", "assets", "conversion_report.md")
+    backup_dir = Path(tempfile.mkdtemp(prefix=".conversion-backup-", dir=converted_dir.parent))
+    moved: list[str] = []
+    published: list[str] = []
+    existed = converted_dir.exists()
+    try:
+        converted_dir.mkdir(exist_ok=True)
+        for name in managed_names:
+            target = converted_dir / name
+            if target.exists() or target.is_symlink():
+                target.rename(backup_dir / name)
+                moved.append(name)
+        for name in managed_names:
+            (output_dir / name).rename(converted_dir / name)
+            published.append(name)
+    except BaseException:
+        # Restore only completed moves; leave backups intact if rollback itself fails.
+        for name in reversed(published):
+            (converted_dir / name).rename(output_dir / name)
+        for name in reversed(moved):
+            (backup_dir / name).rename(converted_dir / name)
+        if not existed and converted_dir.exists():
+            converted_dir.rmdir()
+        shutil.rmtree(backup_dir, ignore_errors=True)
+        raise
+    shutil.rmtree(backup_dir, ignore_errors=True)
+
+
+def _convert_source_to_directory(
+    project_dir: Path,
+    engine: str,
+    *,
+    output_dir: Path,
+    markitdown_factory: Callable[[], Any] | None = None,
+) -> None:
     """Convert source documents into Markdown transcripts.
 
     The first implementation intentionally keeps MinerU as an optional adapter
@@ -329,7 +361,7 @@ def convert_source(
         raise SystemExit(1)
 
     if engine == SUPPORTED_MARKITDOWN_ENGINE:
-        _convert_source_with_markitdown(project_dir, markitdown_factory=markitdown_factory)
+        _convert_source_with_markitdown(project_dir, output_dir=output_dir, markitdown_factory=markitdown_factory)
         return
 
     pdfs = _iter_source_pdfs(project_dir)
@@ -342,12 +374,11 @@ def convert_source(
     source_ids = {source: f"S{index:03d}" for index, source in enumerate(supported_sources, start=1)}
     source_manifest = _load_source_manifest(project_dir)
 
-    converted_dir = project_dir / "converted_markdown"
+    converted_dir = output_dir
     transcripts_dir = converted_dir / "source_transcripts"
     assets_root = converted_dir / "assets"
     transcripts_dir.mkdir(parents=True, exist_ok=True)
     assets_root.mkdir(parents=True, exist_ok=True)
-    _clear_generated_markdown_files(transcripts_dir)
 
     report_rows: list[list[str]] = []
     for text_source in text_sources:
@@ -568,6 +599,10 @@ def convert_source(
             raw_text = page.get_text("text").strip()
             chunk = chunks[page_index - 1] if page_index - 1 < len(chunks) else {}
             md_text = chunk.get("text", "").strip() if isinstance(chunk, dict) else str(chunk).strip()
+            image_prefixes = {str(asset_dir), asset_dir.as_posix(), str(asset_dir.resolve()), asset_dir.resolve().as_posix()}
+            for image_prefix in sorted(image_prefixes, key=len, reverse=True):
+                for separator in ("/", "\\"):
+                    md_text = md_text.replace(image_prefix + separator, f"../assets/{asset_dir_name}/")
             tables = chunk.get("tables") or [] if isinstance(chunk, dict) else []
             image_count = len(page.get_images(full=True))
             drawing_count = len(page.get_drawings())
@@ -635,12 +670,12 @@ def convert_source(
 
     report_rows.sort(key=lambda row: row[0])
     _write_conversion_report(converted_dir / "conversion_report.md", report_rows)
-    print(f"Converted {len(supported_sources)} source file(s) into {converted_dir}")
 
 
 def _convert_source_with_markitdown(
     project_dir: Path,
     *,
+    output_dir: Path,
     markitdown_factory: Callable[[], Any] | None = None,
 ) -> None:
     converter = _load_markitdown_converter(markitdown_factory)
@@ -651,12 +686,11 @@ def _convert_source_with_markitdown(
 
     source_ids = {source: f"S{index:03d}" for index, source in enumerate(supported_sources, start=1)}
     source_manifest = _load_source_manifest(project_dir)
-    converted_dir = project_dir / "converted_markdown"
+    converted_dir = output_dir
     transcripts_dir = converted_dir / "source_transcripts"
     assets_root = converted_dir / "assets"
     transcripts_dir.mkdir(parents=True, exist_ok=True)
     assets_root.mkdir(parents=True, exist_ok=True)
-    _clear_generated_markdown_files(transcripts_dir)
 
     report_rows: list[list[str]] = []
     for source_file in supported_sources:
@@ -742,7 +776,6 @@ def _convert_source_with_markitdown(
 
     report_rows.sort(key=lambda row: row[0])
     _write_conversion_report(converted_dir / "conversion_report.md", report_rows)
-    print(f"Converted {len(supported_sources)} source file(s) into {converted_dir}")
 
 
 def _load_markitdown_converter(markitdown_factory: Callable[[], Any] | None) -> Any:
