@@ -9,6 +9,8 @@
 
 ## 单次测试（默认）
 
+普通同事下载明确的[v0.2.0-pilot.1试用版](https://github.com/Ryan-7962/brand-business-context-compiler/releases/tag/v0.2.0-pilot.1)，不要误用旧版latest。Windows先用一份授权PDF和一份PPTX试跑，再基于MD生成一份实际brief；保留输出、WorkBuddy版本/模型、实际页数与具体异常。无须逐条人工批准，也不将真实资料上传GitHub。
+
 导入最新生成的 Skill ZIP 后，在 Codex 或 WorkBuddy 中发送：
 
 ```text
@@ -25,7 +27,7 @@
 普通同事优先按[中文使用说明](work_buddy_handoff_guide.md)直接导入ZIP，不需要开发环境。以下仅用于开发或备用转换工具。先安装 Git、Python 3.11 和 Codex，然后在 PowerShell 执行：
 
 ```powershell
-git clone https://github.com/Ryan-7962/brand-business-context-compiler.git
+git clone --branch codex/agent-neutral-wiki-v1 https://github.com/Ryan-7962/brand-business-context-compiler.git
 cd brand-business-context-compiler
 
 py -3.11 -m venv .venv
@@ -49,7 +51,7 @@ Expand-Archive .\dist\brand-business-context-compiler-workbuddy.zip `
 ## macOS：最短安装
 
 ```bash
-git clone https://github.com/Ryan-7962/brand-business-context-compiler.git
+git clone --branch codex/agent-neutral-wiki-v1 https://github.com/Ryan-7962/brand-business-context-compiler.git
 cd brand-business-context-compiler
 
 python3.11 -m venv .venv

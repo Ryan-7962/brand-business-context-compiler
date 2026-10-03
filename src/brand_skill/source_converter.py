@@ -7,6 +7,7 @@ import zipfile
 import json
 import shutil
 import tempfile
+import posixpath
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Any
@@ -216,24 +217,52 @@ def _extract_docx_text(path: Path) -> str:
 
 
 def _extract_pptx_slides(path: Path) -> list[str]:
+    namespace = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
+    presentation = "{http://schemas.openxmlformats.org/presentationml/2006/main}"
+    relationship = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
+    slides: list[str] = []
     try:
         with zipfile.ZipFile(path) as pptx:
             slide_names = sorted(
                 (name for name in pptx.namelist() if re.fullmatch(r"ppt/slides/slide\d+\.xml", name)),
                 key=_slide_number,
             )
-            slide_xmls = [pptx.read(name) for name in slide_names]
+            if "ppt/presentation.xml" in pptx.namelist():
+                rels = ElementTree.fromstring(pptx.read("ppt/_rels/presentation.xml.rels"))
+                targets = {rel.get("Id"): posixpath.normpath(posixpath.join("ppt", rel.attrib["Target"])).lstrip("/")
+                           for rel in rels if rel.get("TargetMode") != "External"}
+                root = ElementTree.fromstring(pptx.read("ppt/presentation.xml"))
+                slide_names = [targets[node.attrib[f"{relationship}id"]]
+                               for node in root.findall(f"{presentation}sldIdLst/{presentation}sldId")]
+            for name in slide_names:
+                root = ElementTree.fromstring(pptx.read(name))
+                texts = [node.text.strip() for node in root.iter(f"{namespace}t")
+                         if node.text and node.text.strip()]
+                if root.get("show") in {"0", "false"}:
+                    texts.insert(0, "隐藏幻灯片（不自动视为已批准内容）")
+                rel_path = posixpath.join(posixpath.dirname(name), "_rels", posixpath.basename(name) + ".rels")
+                if rel_path in pptx.namelist():
+                    rels = ElementTree.fromstring(pptx.read(rel_path))
+                    for rel in rels:
+                        if not rel.get("Type", "").endswith("/notesSlide") or rel.get("TargetMode") == "External":
+                            continue
+                        target = rel.attrib["Target"]
+                        notes_path = target.lstrip("/") if target.startswith("/") else posixpath.normpath(posixpath.join(posixpath.dirname(name), target))
+                        notes_root = ElementTree.fromstring(pptx.read(notes_path))
+                        notes = []
+                        for shape in notes_root.iter(f"{presentation}sp"):
+                            placeholder = shape.find(f".//{presentation}ph")
+                            if placeholder is not None and placeholder.get("type") in {"sldImg", "sldNum", "dt", "hdr", "ftr"}:
+                                continue
+                            notes.extend(node.text.strip() for node in shape.iter(f"{namespace}t")
+                                         if node.text and node.text.strip())
+                        if notes:
+                            texts.extend(["演讲者备注（来源内容，非批准口径）", *notes])
+                slides.append("\n".join(texts))
     except zipfile.BadZipFile as exc:
         print(f"Unable to read PPTX source: {path.name}")
         raise SystemExit(1) from exc
 
-    namespace = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
-    slides: list[str] = []
-    for slide_xml in slide_xmls:
-        root = ElementTree.fromstring(slide_xml)
-        texts = [node.text or "" for node in root.iter(f"{namespace}t")]
-        slide_text = "\n".join(text.strip() for text in texts if text and text.strip())
-        slides.append(slide_text)
     return slides
 
 
@@ -468,9 +497,9 @@ def _convert_source_to_directory(
         slides = _extract_pptx_slides(pptx)
         external_metadata = _external_source_metadata(project_dir, source_manifest, pptx)
         low_confidence_text = (
-            "PowerPoint 轻量转写未保留真实版式、图片、图表、动画和备注"
+            "PowerPoint 轻量转写未保留真实版式、图片、图表和动画"
             if any(slide.strip() for slide in slides)
-            else "未抽取到 slide 文本；PowerPoint 轻量转写未保留真实版式、图片、图表、动画和备注"
+            else "未抽取到 slide 文本；PowerPoint 轻量转写未保留真实版式、图片、图表和动画"
         )
 
         lines = [
@@ -487,15 +516,15 @@ def _convert_source_to_directory(
             f"- 页数：{len(slides)}",
             f"- 转写引擎：{engine}",
             "- 转写方式：PowerPoint 源稿转写",
-            "- 低置信度说明：轻量路径只抽取 slide 文本，不保留真实版式、图片、图表、动画和备注；关键页面需结合原 PPT 复核。",
+            "- 低置信度说明：轻量路径保留 slide 文本、隐藏状态与演讲者备注，不保留真实版式、图片、图表和动画；关键视觉信息需结合原 PPT 复核。",
             "",
         ]
 
         for slide_index, slide_text in enumerate(slides, start=1):
             page_low_confidence = (
-                "PowerPoint 轻量转写未保留真实版式、图片、图表、动画和备注"
+                "PowerPoint 轻量转写未保留真实版式、图片、图表和动画"
                 if slide_text.strip()
-                else "未抽取到 slide 文本；PowerPoint 轻量转写未保留真实版式、图片、图表、动画和备注"
+                else "未抽取到 slide 文本；PowerPoint 轻量转写未保留真实版式、图片、图表和动画"
             )
             lines.extend(
                 [
@@ -516,7 +545,7 @@ def _convert_source_to_directory(
                     "PowerPoint 表格按可见文本抽取，结构需人工复核。",
                     "",
                     "### Notes / Footnotes / Small Print",
-                    "PowerPoint 备注、角标、小字和动画信息未完整保留，需人工复核。",
+                    "演讲者备注（如有）已附于上方转写；角标、小字和动画信息未完整保留，需结合原件补读。",
                     "",
                     "### Low Confidence / Need Review",
                     f"- {page_low_confidence}",

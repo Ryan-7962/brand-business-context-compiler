@@ -5,6 +5,7 @@ import os
 import pytest
 
 from brand_skill.source_converter import (
+    _extract_pptx_slides,
     _iter_source_docx,
     _iter_source_pdfs,
     _iter_source_pptx,
@@ -12,6 +13,29 @@ from brand_skill.source_converter import (
 )
 from brand_skill.source_facts import _fact_candidates
 from brand_skill.source_versions import _likely_version_groups, _normalize_version_key
+
+
+def test_pptx_preserves_display_order_hidden_state_and_speaker_notes(tmp_path: Path) -> None:
+    from zipfile import ZipFile
+
+    source = tmp_path / "anonymous.pptx"
+    p = "http://schemas.openxmlformats.org/presentationml/2006/main"
+    a = "http://schemas.openxmlformats.org/drawingml/2006/main"
+    r = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    rel = "http://schemas.openxmlformats.org/package/2006/relationships"
+    with ZipFile(source, "w") as package:
+        package.writestr("ppt/presentation.xml", f'<p:presentation xmlns:p="{p}" xmlns:r="{r}"><p:sldIdLst><p:sldId r:id="r2"/><p:sldId r:id="r1"/></p:sldIdLst></p:presentation>')
+        package.writestr("ppt/_rels/presentation.xml.rels", f'<Relationships xmlns="{rel}"><Relationship Id="r1" Target="slides/slide1.xml"/><Relationship Id="r2" Target="slides/slide2.xml"/></Relationships>')
+        package.writestr("ppt/slides/slide1.xml", f'<p:sld xmlns:p="{p}" xmlns:a="{a}"><a:t>First XML</a:t></p:sld>')
+        package.writestr("ppt/slides/slide2.xml", f'<p:sld xmlns:p="{p}" xmlns:a="{a}" show="0"><a:t>Second XML</a:t></p:sld>')
+        package.writestr("ppt/slides/_rels/slide2.xml.rels", f'<Relationships xmlns="{rel}"><Relationship Id="n1" Type="{r}/notesSlide" Target="../notesSlides/notesSlide9.xml"/></Relationships>')
+        package.writestr("ppt/notesSlides/notesSlide9.xml", f'<p:notes xmlns:p="{p}" xmlns:a="{a}"><p:sp><p:ph type="body"/><a:t>Speaker detail</a:t></p:sp><p:sp><p:ph type="sldNum"/><a:t>99</a:t></p:sp></p:notes>')
+    slides = _extract_pptx_slides(source)
+    assert len(slides) == 2
+    assert "Second XML" in slides[0] and "隐藏" in slides[0]
+    assert "Speaker detail" in slides[0] and "演讲者备注" in slides[0]
+    assert "99" not in slides[0]
+    assert slides[1] == "First XML"
 
 
 def _generated_bytes(project_dir: Path) -> dict[str, bytes]:

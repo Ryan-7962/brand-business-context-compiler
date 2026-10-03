@@ -471,7 +471,7 @@ class Phase1WorkflowTests(unittest.TestCase):
             self.assertIn("PowerPoint 源稿转写", report_text)
             self.assertIn("2", report_text)
             self.assertIn("低置信度页数：2", report_text)
-            self.assertIn("PowerPoint 轻量转写未保留真实版式、图片、图表、动画和备注", report_text)
+            self.assertIn("PowerPoint 轻量转写未保留真实版式、图片、图表和动画", report_text)
 
     def test_convert_source_assigns_ids_by_source_path_across_file_types(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -45,3 +45,9 @@
 - [ ] Windows、PPTX原件/隐藏页/备注、下游对照收益与长期关联/更新仍待真实验收。旧CLI超时失败不被GUI成功抹去。
 
 本轮不增加Skill、引擎、平台或公共代码，不改已发布ZIP。私有证据在`_private_test_runs/product_marketing_20261002/gui_delivery/`；下一步优先小批量办公试用反馈，而非增加结构字段。
+
+## PPTX文字读取验收
+
+2026-10-03发现辅助CLI只提取slide文字，漏记隐藏状态与演讲者备注；先用匿名重排/隐藏/备注样本观察测试失败，再修现有函数，复用标准库ZIP/XML，不新增依赖或引擎。按presentation关系读取展示顺序，按notes关系保留备注，排除页码/日期等模板占位。
+
+真实34页产品培训PPTX经过CLI转写，与原件XML独立核对：34页齐全，第33/34页隐藏，14页正文备注完整进入对应页，原件哈希不变。163项测试及5项subtest通过。私有证据在`_private_test_runs/product_marketing_20261002/pptx_acceptance/`，检查入口`verify.py`。只证明文字/顺序/状态保留，不证明视觉语义或WorkBuddy PPTX全链路成功；已发布指令ZIP不含CLI，此修补不冒称已更新ZIP宿主能力。
