@@ -22,6 +22,10 @@ Use the host Agent's available file-reading and vision tools or existing prepare
 
 Once the native text and page inventory are available, save a detailed partial Markdown before extended visual reading. Mark unresolved regions explicitly; this checkpoint is not a complete delivery. You may update a checkpoint newly created during this run to supplement substantive gaps; outputs that existed before the run remain protected. Do not spend the entire run opening images without saving usable content. Keep temporary extraction files inside the authorized task directory and retain them for resuming after interruption.
 
+Make that checkpoint the next substantive action after reading the native text: do not defer it for a second layout inventory, positional-word dump, or full-document render. Supplement uncertain relationships after the detailed body is safely saved.
+
+The checkpoint must describe only work actually completed at its save time. Do not predeclare future visual checks or claim a saved revision without a successful write; tool requests without returned content do not establish completed reads.
+
 Choose visual targets by substantive source content and layout relationships, not simply the largest embedded image. Check the actual image format: changing a TIFF filename to `.png` does not convert it. Use existing host-supported decoding or original JPEG/PNG assets; a failed conversion is a specific preparation gap, not proof that the model lacks vision. Do not spend the reading run debugging binary formats.
 
 Persist recovered text and relationships after each small group of visual pages, before opening the next group. Resume from saved evidence after interruption rather than rereading successful pages or waiting until the entire visual pass to save.
