@@ -1,6 +1,6 @@
 # Brand Marketing Context Compiler
 
-> **给同事使用：** 下载[同事试用版](https://github.com/Ryan-7962/brand-business-context-compiler/releases/tag/v0.2.0-pilot.1)中的Skill ZIP和`START_HERE_ZH.md`，按[中文使用说明](docs/work_buddy_handoff_guide.md)导入技能、放入资料、发送提示词即可。默认不需要Git、Python或建Wiki。包不自带OCR引擎，实际文件读取依赖宿主Agent；请先用一份授权资料试跑。预处理证据流程已验证，原件32页CLI测试超时，GUI/Windows未完整验收；这不是正式全量部署版。
+> **给同事使用：** 下载[同事试用版](https://github.com/Ryan-7962/brand-business-context-compiler/releases/tag/v0.2.0-pilot.1)中的Skill ZIP和`START_HERE_ZH.md`，按[中文使用说明](docs/work_buddy_handoff_guide.md)导入技能、放入资料、发送提示词即可。默认不需要Git、Python或建Wiki。包不自带OCR引擎，实际文件读取依赖宿主Agent；请先用一份授权资料试跑。Mac WorkBuddy已实际安装、调用并交付过MD及brief；新一轮辅助读取测试取得32页PDF全文/视觉记录和34页PPTX文字检查点，仍有局部读取错误与人工修正。这些证据不保证四文件ZIP在任意宿主自动完成OCR；Windows未测且不是本机验收前置条件，这不是正式全量部署版。最新证据见[验证清单](docs/workbuddy_validation_checklist.md)。
 >
 > **换电脑后从这里开始：** [另一台电脑需要完成的真实 WorkBuddy A/B 测试](TEST_ON_ANOTHER_COMPUTER.md)
 >

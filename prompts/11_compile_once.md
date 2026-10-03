@@ -22,6 +22,12 @@ Use the host Agent's available file-reading and vision tools or existing prepare
 
 Once the native text and page inventory are available, save a detailed partial Markdown before extended visual reading. Mark unresolved regions explicitly; this checkpoint is not a complete delivery. You may update a checkpoint newly created during this run to supplement substantive gaps; outputs that existed before the run remain protected. Do not spend the entire run opening images without saving usable content. Keep temporary extraction files inside the authorized task directory and retain them for resuming after interruption.
 
+Choose visual targets by substantive source content and layout relationships, not simply the largest embedded image. Check the actual image format: changing a TIFF filename to `.png` does not convert it. Use existing host-supported decoding or original JPEG/PNG assets; a failed conversion is a specific preparation gap, not proof that the model lacks vision. Do not spend the reading run debugging binary formats.
+
+Persist recovered text and relationships after each small group of visual pages, before opening the next group. Resume from saved evidence after interruption rather than rereading successful pages or waiting until the entire visual pass to save.
+
+Keep writes inside the authorized output and temporary directories. Do not save document content or workflow feedback to host memory or unrelated project settings. This instruction is not a sandbox: report any host-side automatic writes outside that scope rather than claiming isolation.
+
 ## Write the Document
 
 Write in Chinese unless the user requests otherwise. Start with the original title, a short overview and an outline, followed by the substantive body.
