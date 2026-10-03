@@ -9,7 +9,9 @@
 
 ## 单次测试（默认）
 
-普通同事下载明确的[v0.2.0-pilot.1试用版](https://github.com/Ryan-7962/brand-business-context-compiler/releases/tag/v0.2.0-pilot.1)，不要误用旧版latest。Windows先用一份授权PDF和一份PPTX试跑，再基于MD生成一份实际brief；保留输出、WorkBuddy版本/模型、实际页数与具体异常。无须逐条人工批准，也不将真实资料上传GitHub。
+普通同事下载明确的[v0.2.0-pilot.1试用版](https://github.com/Ryan-7962/brand-business-context-compiler/releases/tag/v0.2.0-pilot.1)，不要误用旧版latest。Mac或Windows均可用一份授权PDF和一份PPTX试跑，再基于MD生成一份实际brief；保留输出、WorkBuddy版本/模型、实际页数与具体异常。核心功能可在Mac WorkBuddy验收，无须为此换电脑；Windows兼容性未测时单独注明。无须逐条人工批准，也不将真实资料上传GitHub。
+
+开发修复验证与上述同事试用分开：新指令尚未进入旧pilot ZIP。验证“读图前保存部分MD”时，仅在隔离测试Skill中替换为当前`prompts/11_compile_once.md`并核对实际加载文本；不能用旧发布包的结果宣称新约束已通过，也不覆盖既有发布资产。
 
 导入最新生成的 Skill ZIP 后，在 Codex 或 WorkBuddy 中发送：
 

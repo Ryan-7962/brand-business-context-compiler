@@ -14,10 +14,13 @@ Use the host Agent's available file-reading and vision tools or existing prepare
 
 - Inventory every supplied file. Establish actual page/slide counts from the file or reliable parser, not from filenames or model guesses. If unknown, say unknown.
 - Read all pages/slides, including tables, charts, image text, footnotes, hidden slides and speaker notes when present. Record hidden/notes status; do not treat them as approved copy.
+- Hidden status alone proves neither approval nor that content is improper. Preserve it as source content with approval status unspecified; do not invent a compliance verdict.
 - Use native text and actual visual inspection together when images carry meaning or extracted text is unclear. A rendered image or an anchor is not proof of reading.
 - Reuse already calibrated evidence. Retry unresolved key regions with available tools; do not pretend an unread region was empty or processed successfully.
 - Keep successful page evidence and retry only unresolved regions, not the entire file again. Encoded image data or image metadata alone is not visual understanding; if the host cannot expose readable image content, report that limitation instead of repeatedly opening the same images.
 - Record file creation/modification times and their origin only when available. Copy/sync timestamps are version clues, not business approval or effective dates.
+
+Once the native text and page inventory are available, save a detailed partial Markdown before extended visual reading. Mark unresolved regions explicitly; this checkpoint is not a complete delivery. You may update a checkpoint newly created during this run to supplement substantive gaps; outputs that existed before the run remain protected. Do not spend the entire run opening images without saving usable content. Keep temporary extraction files inside the authorized task directory and retain them for resuming after interruption.
 
 ## Write the Document
 
