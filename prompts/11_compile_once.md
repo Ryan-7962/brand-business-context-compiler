@@ -28,6 +28,8 @@ The checkpoint must describe only work actually completed at its save time. Do n
 
 Choose visual targets by substantive source content and layout relationships, not simply the largest embedded image. Check the actual image format: changing a TIFF filename to `.png` does not convert it. Use existing host-supported decoding or original JPEG/PNG assets; a failed conversion is a specific preparation gap, not proof that the model lacks vision. Do not spend the reading run debugging binary formats.
 
+For slide-layout reading, an already available native renderer can supplement PPTX text. Prefer a local rendering route; do not use an online conversion service without authorization. Verify the rendered-page-to-slide mapping and hidden-slide coverage rather than assuming an exported PDF includes everything. Extract speaker notes separately from the original when the rendering omits them. Static rendering does not establish that animations or embedded media were inspected.
+
 Persist recovered text and relationships after each small group of visual pages, before opening the next group. Resume from saved evidence after interruption rather than rereading successful pages or waiting until the entire visual pass to save.
 
 Keep writes inside the authorized output and temporary directories. Do not save document content or workflow feedback to host memory or unrelated project settings. This instruction is not a sandbox: report any host-side automatic writes outside that scope rather than claiming isolation.
