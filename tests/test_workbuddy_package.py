@@ -90,6 +90,8 @@ def test_workbuddy_prompt_escalates_only_compilation_blockers(tmp_path: Path) ->
 
     assert "does not block faithful Wiki compilation" in prompt_text
     assert "Do not add generic disclaimers" in prompt_text
+    assert "An index entry is navigation" in prompt_text
+    assert "self-testing, or third-party testing" in prompt_text
 
 
 def test_workbuddy_package_supports_standalone_conversion(tmp_path: Path) -> None:
@@ -109,6 +111,8 @@ def test_workbuddy_package_supports_standalone_conversion(tmp_path: Path) -> Non
     assert "distinct output names" in prompt
     assert "Cover and section-divider pages" in prompt
     assert "superscript-to-footnote mismatch" in prompt
+    assert "self-testing, or third-party testing" in prompt
+    assert "does not prove source absence" in prompt
 
 
 def test_workbuddy_package_excludes_sensitive_content_and_absolute_paths(tmp_path: Path) -> None:

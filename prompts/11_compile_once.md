@@ -52,6 +52,8 @@ Cover and section-divider pages still require explicit accounting: preserve subs
 
 Distinguish source statements, proposals, decisions, results and AI interpretation where this affects meaning. Do not turn a plan into an accomplished result, an ingredient claim into a finished-product claim, or one variant's evidence into the entire range. Do not infer currency, units, sample size, efficacy approval or missing table-column ownership.
 
+Consumer agreement percentages do not establish objective efficacy, self-testing, or third-party testing. Preserve their source wording; establish testing methods only from actual report evidence. A missing index entry or an uninspected section does not prove source absence: qualify the actual reading scope rather than claiming the whole document lacks the information.
+
 Do not relabel all statements as plans merely because approval/execution status is unstated. Do not expose converter boilerplate or lack of manual rechecking as reading failures. Keep decorative layout narration out unless the layout is substantive knowledge (for example, design guidelines or table ownership). State actual ambiguity near the affected fact; do not duplicate status disclaimers or corrected OCR errors throughout the document.
 
 Keep only a short, concrete reading-status note: observed coverage, unread files/regions, and genuine limitations. When a key region remains unclear, identify its location, affected content and the specific remedy (higher-resolution crop, original file, test report, or a targeted human answer). Do not add generic disclaimers or request missing business fields that do not block interpretation. Source information not provided is simply not provided; it is not an OCR error.
