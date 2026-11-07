@@ -1,36 +1,50 @@
-# Brand Marketing Context Compiler
+# 品牌资料转 MD 与 AI 复用助手
 
-> **换电脑后从这里开始：** [另一台电脑需要完成的真实 WorkBuddy A/B 测试](TEST_ON_ANOTHER_COMPUTER.md)
->
-> **交给另一台 Codex 继续开发：** [Windows Codex 项目交接](CODEX_HANDOFF.md)
+Brand Business Context Compiler · WorkBuddy / Codex / Claude Agent Skill
 
-将品牌方“给人看的”Marketing 资料，例如活动方案、广告公司提案、新品上市方案、销售策略、经销商大会 PPT、抖音爆品打法计划书、爆款视频复盘、投放总结、产品培训资料、品牌策略 PPT，编译为 **AI 更容易理解、检索、引用、审核和复用的结构化品牌上下文知识库**。
+将品牌方案、产品培训、竞品分析、分镜与复盘等 PPTX、PDF、DOCX 资料整理为详细、可追溯的 Markdown，保留业务事实、表格关系、来源位置和待核对内容，供后续 AI 生成 Brief、回答产品问题和开展竞品分析时复用。
 
-本项目第一阶段不是做复杂平台，也不是直接生成 GEO / PDP / 拍摄 / 种草 brief，而是沉淀一组可被 Codex / Claude / ChatGPT / Work Buddy 等 AI 代理稳定执行的 Skills。核心结构可以理解为三层：
+作者已在个人实际工作中完成试用，并于 2026 年 11 月 6 日完成一份 55 页营销提案的直接读取与 Skill 转译对照。项目的重点是逐页覆盖检查、来源追溯、异常披露与资料复用。
+
+## 可以用来做什么
+
+- **整理品牌资料**：把方案、培训和复盘资料编译成详细中文 MD，保留关键数字、适用条件、策略和执行信息。
+- **处理图文与表格**：结合宿主 Agent 的文字、视觉或 OCR 能力，整理竞品表、图表和分镜中的文字与关系。
+- **核对来源**：使用真实页码或 slide 锚点定位原件，记录仍未读清的位置及资料自身缺失的信息。
+- **复用业务上下文**：将整理后的 MD 提供给 Agent，继续生成 Brief、FAQ、竞品对比或专题分析，需要持续积累时再建立 Wiki。
+
+## 2026-11-06 实际资料对照
+
+本次对照使用一份 55 页营销提案。直接读取侧先统计全文件原生文字，再由独立 Agent 对 6 个代表页看图整理。Skill 侧已有全量 55 页 MD 成品。以下结果来自作者提供的本地对照报告及指标文件，原始业务资料与详细测试记录在本地保存。
+
+| 检查项 | 直接读取侧 | Skill 转译侧 |
+|---|---|---|
+| 页级交付记录 | 指定抽检 6 页中，5 页形成章节，1 页缺失 | 55 页连续章节、55 个来源锚点 |
+| 共同覆盖的 5 页核心数字与文案 | 本次对照未发现冲突 | 本次对照未发现冲突 |
+| 竞品表 | 分为多张表 | 整理为一行一款的 7 款竞品对照 |
+| 未读清内容披露 | 抽样结果中 6 处 | 全量成品中 15 处，标明具体位置 |
+| 后续使用 | 从原件或抽样回答继续整理 | 可基于带来源的 MD 检索、引用及派生内容 |
+
+本次样本验证了 Skill 的页级覆盖记录、规整结构和异常披露。直接读取侧的深读范围为 6 页，Skill 成品范围为 55 页，两侧范围不同。55 个锚点表示页级结构覆盖，全文语义准确率、处理速度和时间收益需要另行测量。直接读取采用原生文字统计与独立 Agent 看图组合，PDF 专用工具在本文件上曾因缺少本地 OCR 引擎失败。
+
+## 同事如何开始
+
+1. 下载[同事试用版](https://github.com/Ryan-7962/brand-business-context-compiler/releases/tag/v0.2.0-pilot.3)中的 Skill ZIP 与 `START_HERE_ZH.md`。
+2. 按[中文使用说明](docs/work_buddy_handoff_guide.md)安装到 WorkBuddy，准备一份可用于测试的资料。
+3. 发送任务，要求详细整理正文、保留来源并标出真实读取缺口。
+4. 核对结果后，将 MD 用于新的业务任务，继续生成 Brief、问答或竞品分析。
+
+可按以下方式描述任务，并结合所用版本支持的流程执行。
 
 ```text
-Raw Sources：同事直接丢进来的 PDF / PPT / DOCX / MD / TXT 等资料
-→ Compiler Skill：本项目负责转写、抽事实、建索引、写入 Wiki
-→ Structured Wiki：后续 Agent 优先读取的品牌 / 业务上下文库
+请调用 brand-business-context-compiler Skill，整理我提供的品牌资料。
+保留关键数字、适用条件、表格关系及真实来源位置，结合页面图片处理图文内容。
+交付详细中文 Markdown，并标出仍未读清、来源冲突或资料未提供的信息。
 ```
 
-后续 GEO、PDP、拍摄、种草、销售、客服、复盘等工作产出，应优先基于 Structured Wiki 生成，而不是每次重新临时读取一堆原始 PPT / PDF。
+读取与视觉处理依赖所用 Agent 的工具能力。上述 11 月对照属于作者实际使用记录，GitHub 同事试用包为独立版本，安装与使用方式以该包说明为准。
 
-第一阶段默认流程：
-
-1. 先把 PDF / PPT / 长图 / 文档尽量保真地转成 Markdown。
-2. 再识别资料类型、文件目的、目标读者、业务阶段和关键信息。
-3. 将资料完整转述成 AI-readable Marketing Semantic Transcript。
-4. 抽取关键事实、claim、策略、执行动作、风险和待确认项。
-5. 生成 Context Asset Index，把资料沉淀为可复用的品牌上下文资产。
-6. 生成 Context Library Update Plan，说明本次资料如何并入长期品牌知识库。
-7. 生成 Exception Review Queue，只在识别异常时请用户修正。
-
-更新后的项目目标见 [docs/project_goal.md](docs/project_goal.md)。当前定位可简化为：把“临时把 PDF/PPT 发给 AI 读”升级为“持续积累、可追溯、可复用的本地品牌 / 业务上下文系统”。
-
-`SKILL.md` 是 AI Agent 的技能入口，说明第一阶段边界、默认 CLI 工作流、source engine 评估规则、人工复核范围和验收命令。`prompt_bundle.md`、`prompts/` 和 `schemas/` 是第一阶段 Prompt / Schema 包。`verify-contract` 会检查这些入口和核心文件是否存在，避免项目只剩代码和文档而没有可执行 skill 包。
-
-## Skill 组结构
+## 开发与兼容模块
 
 | Skill | 第一阶段职责 |
 |---|---|
@@ -47,7 +61,7 @@ Raw Sources：同事直接丢进来的 PDF / PPT / DOCX / MD / TXT 等资料
 
 ## 核心原则
 
-- 不是“总结 PPT”，而是“品牌 Marketing 资料 AI 语义编译”。
+- 保留品牌资料的业务语义、数字条件和可追溯来源。
 - 先做 Source-to-Markdown 保真转述，再做 Marketing 语义结构化。
 - 第一阶段先生成 AI-readable 营销语义底稿，后续再派生不同场景 brief。
 - 不把所有资料强行套成产品项、SKU 或香型。
@@ -60,7 +74,7 @@ Raw Sources：同事直接丢进来的 PDF / PPT / DOCX / MD / TXT 等资料
 
 详见 [docs/test_fixture_privacy_rules.md](docs/test_fixture_privacy_rules.md)。
 
-## 第一阶段默认产物
+## 完整流程产物
 
 ```text
 outputs/
@@ -108,7 +122,7 @@ GEO / PDP / 拍摄 / 种草 / 销售 / 客服 / 复盘 / 竞品分析等派生�
 
 需要迁移到另一台 Windows / macOS 电脑，或导入 WorkBuddy 时，直接查看 [换电脑安装与测试](docs/cross_platform_test_guide.md)。
 
-新项目统一使用 Agent-neutral Wiki 的五步流程：
+需要持续建库时，可使用 Agent-neutral Wiki 的五步流程：
 
 1. 初始化项目，并将 PDF / PPTX / DOCX / Markdown / TXT 等资料放入 `source/`：
 

@@ -1,9 +1,9 @@
 ---
 name: brand-business-context-compiler
-description: Use when converting brand, marketing, sales, product, meeting, campaign, training, review, competitor, or channel materials into a local AI-readable context library.
+description: Use when compiling brand and business PDF, PPTX, DOCX, or text materials into detailed, source-traceable Markdown for AI reuse, with page coverage, structured tables, and unresolved reading gaps.
 ---
 
-# Brand / Business Context Compiler
+# 品牌资料转 MD 与 AI 复用助手
 
 ## What This Skill Is
 
